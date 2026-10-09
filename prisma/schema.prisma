@@ -1,0 +1,495 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Catalog model (v3, Oct 2026)
+//
+//   Product  "iPhone 11 Pro"             one page, owned by Bonétat
+//   Variant  "256 Go, Vert nuit"         what the device IS (storage, color…)
+//   Finish   "Vert nuit" on iPhone 11 Pro  a color as sold, owns the catalog photos
+//   Offer    one physical unit            condition, battery, price, unit photos
+//
+// Buyers never see which partner owns an offer: the cheapest ACTIVE offer
+// for the chosen variant + grade wins, ties go to the best quality score.
+// ─────────────────────────────────────────────────────────────────────
+
+enum Role {
+  BUYER
+  VENDOR
+  ADMIN
+}
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
+enum ConditionGrade {
+  COMME_NEUF
+  TRES_BON
+  BON
+  CORRECT
+}
+
+enum DeviceKind {
+  PHONE
+  TABLET
+  LAPTOP
+  WATCH
+  CONSOLE
+  OTHER
+}
+
+enum OfferStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  INACTIVE
+  REJECTED
+  /// The unit is in an order. Back to ACTIVE if that order is cancelled.
+  SOLD
+}
+
+/// Coarse color, shared across brands: drives the "Couleur" filter and
+/// keeps the buyer's color when switching between sibling models.
+enum ColorFamily {
+  BLACK
+  WHITE
+  GREY
+  SILVER
+  GOLD
+  BLUE
+  GREEN
+  PURPLE
+  PINK
+  RED
+  YELLOW
+  ORANGE
+  OTHER
+}
+
+enum ImageAngle {
+  FRONT
+  BACK
+  SIDE
+  DETAIL
+}
+
+enum ImageSource {
+  ICECAT
+  PRESS_KIT
+  OWN_SHOOT
+  OTHER
+}
+
+enum ImageStatus {
+  DRAFT
+  APPROVED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  DISPUTED
+}
+
+enum FulfillmentStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  COD
+  FLOUCI
+  KONNECT
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+}
+
+enum Locale {
+  FR
+  AR
+}
+
+model User {
+  id             String   @id @default(cuid())
+  phone          String   @unique
+  name           String?
+  email          String?
+  role           Role     @default(BUYER)
+  locale         Locale   @default(FR)
+  notifySms      Boolean  @default(true)
+  notifyWhatsapp Boolean  @default(true)
+  notifyPromos   Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  vendor    Vendor?
+  orders    Order[]
+  reviews   Review[]
+  sessions  Session[]
+  addresses Address[]
+  favorites Favorite[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("otp_codes")
+}
+
+/// A buyer's saved delivery address
+model Address {
+  id          String   @id @default(cuid())
+  userId      String
+  label       String
+  fullName    String
+  phone       String
+  governorate String
+  delegation  String?
+  line        String
+  notes       String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+/// A partner workshop. Never shown to buyers — only to the partner and admins.
+model Vendor {
+  id            String       @id @default(cuid())
+  userId        String       @unique
+  storeName     String
+  description   String?
+  instagramUrl  String?
+  status        VendorStatus @default(PENDING)
+  /// Internal partner code shown on packing slips (e.g. TN-0142)
+  partnerCode   String?      @unique
+  rating        Float?
+  reviewCount   Int          @default(0)
+  /// 0–100, breaks price ties in the buy box
+  qualityScore  Int          @default(90)
+  legalName     String?
+  taxId         String?
+  rne           String?
+  contactName   String?
+  phone         String?
+  pickupAddress String?
+  pickupHours   String?
+  rib           String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offers     Offer[]
+  orderItems OrderItem[]
+  reviews    Review[]
+  payouts    Payout[]
+
+  @@map("vendors")
+}
+
+model Category {
+  id       String     @id @default(cuid())
+  nameFr   String
+  slug     String     @unique
+  kind     DeviceKind @default(PHONE)
+  position Int        @default(0)
+  tagline  String?
+  icon     String?
+  parentId String?
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@map("categories")
+}
+
+/// Canonical product page in the Bonétat catalog (e.g. "iPhone 11 Pro").
+model Product {
+  id               String     @id @default(cuid())
+  categoryId       String
+  brand            String
+  model            String
+  slug             String     @unique
+  kind             DeviceKind @default(PHONE)
+  /// Family shared by sibling products ("iphone-11" groups 11 / 11 Pro / 11 Pro Max)
+  series           String?
+  /// Short name shown in the model switcher ("11 Pro")
+  seriesLabel      String?
+  seriesOrder      Int        @default(0)
+  /// Drawing hint for the illustration (number of rear cameras)
+  cameraCount      Int?
+  description      String
+  /// Reference price of the equivalent NEW device
+  newPriceMillimes Int?
+  specsJson        Json?
+  releaseYear      Int?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  category Category  @relation(fields: [categoryId], references: [id])
+  finishes Finish[]
+  variants Variant[]
+
+  @@index([brand])
+  @@index([series])
+  @@map("products")
+}
+
+/// A color as the manufacturer sells it, for one product ("Bleu alpin" on iPhone 13 Pro).
+/// Catalog photos hang off the finish, never off a variant: 128 Go and 256 Go look the same.
+model Finish {
+  id        String      @id @default(cuid())
+  productId String
+  /// Stable across products ("bleu-alpin"), used to keep the color when switching sibling models
+  slug      String
+  nameFr    String
+  nameAr    String?
+  hex       String
+  family    ColorFamily
+  /// Other names for this color ("Sierra Blue"), used by image importers and sibling matching
+  aliases   String[]    @default([])
+  position  Int         @default(0)
+
+  product  Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  images   CatalogImage[]
+  variants Variant[]
+
+  @@unique([productId, slug])
+  @@map("finishes")
+}
+
+/// Bonétat-owned catalog photo of one finish from one angle. Only APPROVED ones are shown.
+model CatalogImage {
+  id          String      @id @default(cuid())
+  finishId    String
+  angle       ImageAngle
+  position    Int         @default(0)
+  /// Storage path without size suffix, content-hashed: catalog/<product>/<finish>/<hash>
+  key         String      @unique
+  width       Int
+  height      Int
+  /// Tiny base64 placeholder shown while the image loads
+  blurDataUrl String?
+  source      ImageSource
+  /// Icecat id or original URL, for audit
+  sourceRef   String?
+  status      ImageStatus @default(DRAFT)
+  createdAt   DateTime    @default(now())
+
+  finish Finish @relation(fields: [finishId], references: [id], onDelete: Cascade)
+
+  @@index([finishId, status])
+  @@map("catalog_images")
+}
+
+/// What the device IS: one combination of the product's spec axes.
+/// Owned by Bonétat; partners attach offers to it.
+model Variant {
+  id               String  @id @default(cuid())
+  productId        String
+  storageGb        Int?
+  ramGb            Int?
+  finishId         String
+  /// Free axis for what storage/RAM/color don't cover: "41 mm, GPS", "Wi-Fi + Cellular", "Édition digitale"
+  option           String?
+  /// Overrides Product.newPriceMillimes for this variant
+  newPriceMillimes Int?
+  position         Int     @default(0)
+  /// "256|8|-|bleu-alpin", see variantSignature(). Postgres treats NULLs as distinct,
+  /// so a unique index on the nullable axes alone would let duplicates through.
+  signature        String
+
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  finish    Finish     @relation(fields: [finishId], references: [id])
+  offers    Offer[]
+  favorites Favorite[]
+
+  @@unique([productId, signature])
+  @@index([finishId])
+  @@map("variants")
+}
+
+/// One physical unit a partner sells. No quantity: three identical phones are three offers.
+model Offer {
+  id                    String         @id @default(cuid())
+  variantId             String
+  vendorId              String
+  conditionGrade        ConditionGrade
+  /// Measured battery health in %
+  batteryHealth         Int?
+  imei                  String?
+  warrantyMonths        Int            @default(12)
+  priceMillimes         Int
+  /// Set when the partner lowers the price, drives the "Prix en baisse" tag
+  previousPriceMillimes Int?
+  priceChangedAt        DateTime?
+  sellerNote            String?
+  status                OfferStatus    @default(PENDING_REVIEW)
+  rejectionReason       String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  variant    Variant      @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  vendor     Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  photos     OfferPhoto[]
+
+  @@index([variantId, status])
+  @@index([vendorId, status])
+  @@map("offers")
+}
+
+/// Partner photo of the actual unit, shown when this offer is in the buy box.
+model OfferPhoto {
+  id        String   @id @default(cuid())
+  offerId   String
+  /// Storage path without size suffix: offers/<offerId>/<hash>
+  key       String   @unique
+  width     Int
+  height    Int
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  offer Offer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@index([offerId])
+  @@map("offer_photos")
+}
+
+model Favorite {
+  id                 String   @id @default(cuid())
+  userId             String
+  variantId          String
+  alertEnabled       Boolean  @default(false)
+  alertPriceMillimes Int?
+  /// Price when the buyer started following, to show the trend
+  startPriceMillimes Int?
+  createdAt          DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variant Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, variantId])
+  @@map("favorites")
+}
+
+model Order {
+  id                  String        @id @default(cuid())
+  /// Human reference, e.g. BN-20418
+  number              String        @unique
+  buyerId             String
+  status              OrderStatus   @default(PENDING)
+  paymentMethod       PaymentMethod @default(COD)
+  totalMillimes       Int
+  shippingFeeMillimes Int           @default(0)
+  shippingAddress     Json
+  courier             String?
+  notes               String?
+  deliveredAt         DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  buyer User        @relation(fields: [buyerId], references: [id])
+  items OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                 String            @id @default(cuid())
+  orderId            String
+  offerId            String
+  vendorId           String
+  priceMillimes      Int
+  commissionMillimes Int               @default(0)
+  /// Snapshots, so order history survives catalog edits
+  title              String
+  configLabel        String
+  grade              ConditionGrade
+  batteryHealth      Int?
+  warrantyMonths     Int               @default(12)
+  fulfillmentStatus  FulfillmentStatus @default(PENDING)
+  shippedAt          DateTime?
+
+  order  Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  offer  Offer   @relation(fields: [offerId], references: [id])
+  vendor Vendor  @relation(fields: [vendorId], references: [id])
+  review Review?
+
+  @@index([vendorId])
+  @@map("order_items")
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  orderItemId String   @unique
+  buyerId     String
+  vendorId    String
+  rating      Int
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+  buyer     User      @relation(fields: [buyerId], references: [id])
+  vendor    Vendor    @relation(fields: [vendorId], references: [id])
+
+  @@map("reviews")
+}
+
+model Payout {
+  id                 String       @id @default(cuid())
+  vendorId           String
+  period             String
+  grossMillimes      Int
+  commissionMillimes Int
+  netMillimes        Int
+  status             PayoutStatus @default(PENDING)
+  paidAt             DateTime?
+  createdAt          DateTime     @default(now())
+
+  vendor Vendor @relation(fields: [vendorId], references: [id])
+
+  @@map("payouts")
+}
