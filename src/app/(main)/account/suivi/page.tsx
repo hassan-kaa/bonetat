@@ -52,7 +52,7 @@ export default async function FollowsPage() {
                 kind: p.kind,
                 cameras: p.cameraCount,
                 colorHex: f.variant.finish.hex,
-                imageKey: f.variant.finish.images[0]?.key ?? null,
+                imageKey: f.variant.finish.images[0]?.key ?? p.coverKey,
                 href: productHref(p.slug, f.variantId, best?.conditionGrade),
                 currentPriceMillimes: best?.priceMillimes ?? null,
                 startPriceMillimes: f.startPriceMillimes,

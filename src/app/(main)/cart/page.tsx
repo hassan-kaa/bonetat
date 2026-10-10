@@ -13,7 +13,7 @@ type Check = {
   offerId: string;
   available: boolean;
   priceMillimes?: number;
-  replacement?: { offerId: string; priceMillimes: number; batteryHealth: number | null } | null;
+  replacement?: { offerId: string; priceMillimes: number; batteryHealth: number | null; vendorName: string } | null;
 };
 
 export default function CartPage() {
@@ -43,7 +43,7 @@ export default function CartPage() {
               changes.push(
                 `${item.name} (${item.config}) vient d’être vendu. Nous l’avons remplacé par un appareil identique, même état${r.priceMillimes !== item.priceMillimes ? `, à ${formatPrice(r.priceMillimes)}` : ", même prix"}.`
               );
-              return [{ ...item, offerId: r.offerId, priceMillimes: r.priceMillimes, batteryHealth: r.batteryHealth }];
+              return [{ ...item, offerId: r.offerId, priceMillimes: r.priceMillimes, batteryHealth: r.batteryHealth, vendorName: r.vendorName }];
             }
             if (c.priceMillimes !== item.priceMillimes) changes.push(`Le prix de ${item.name} est passé à ${formatPrice(c.priceMillimes!)}.`);
             return [{ ...item, priceMillimes: c.priceMillimes! }];
@@ -99,6 +99,7 @@ export default function CartPage() {
                   {GRADES[item.grade].line}
                   {item.batteryHealth ? `, batterie ${item.batteryHealth} %` : ""}, garantie 12 mois
                 </p>
+                {item.vendorName && <p className="text-[13px] text-ink-muted">Vendu par {item.vendorName}</p>}
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-xs text-ink-muted">Pièce unique</span>

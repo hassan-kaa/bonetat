@@ -30,6 +30,10 @@ export type ConfigOffer = {
   warrantyMonths: number;
   /** Tie-breaker: higher wins at equal price. Never shown to buyers. */
   qualityScore: number;
+  /** The shop selling this unit, shown to the buyer ("Vendu par …") */
+  vendorName: string;
+  /** Storage keys of the store's own photos of this unit */
+  photos?: string[];
   /** Last tie-breaker: the unit listed first sells first (ms since epoch) */
   listedAt: number;
 };
@@ -58,13 +62,44 @@ export function selectionOf(o: ConfigOffer): Selection {
 }
 
 /** Cheapest offer; equal price → best quality score → listed first */
-export function cheapest<T extends ConfigOffer>(list: T[]): T | null {
-  if (list.length === 0) return null;
-  return list.reduce((best, o) => {
-    if (o.priceMillimes !== best.priceMillimes) return o.priceMillimes < best.priceMillimes ? o : best;
-    if (o.qualityScore !== best.qualityScore) return o.qualityScore > best.qualityScore ? o : best;
-    return o.listedAt < best.listedAt ? o : best;
+/**
+ * A unit with the store's own photos beats a cheaper one without, when it costs at most
+ * this much more. Undercutting by 1 DT then no longer beats a shop that shows the real device.
+ */
+export const PHOTO_PREMIUM = 0.02;
+
+const byPrice = (a: ConfigOffer, b: ConfigOffer) =>
+  a.priceMillimes - b.priceMillimes || b.qualityScore - a.qualityScore || a.listedAt - b.listedAt;
+const hasPhotos = (o: ConfigOffer) => (o.photos?.length ?? 0) > 0;
+
+/** Buy-box order: price, then shop quality, then listed first, with photos winning inside the PHOTO_PREMIUM band */
+export function rankUnits<T extends ConfigOffer>(list: T[]): T[] {
+  const sorted = [...list].sort(byPrice);
+  if (sorted.length < 2) return sorted;
+  const band = sorted[0].priceMillimes * (1 + PHOTO_PREMIUM);
+  return sorted.sort((a, b) => {
+    if (a.priceMillimes <= band && b.priceMillimes <= band && hasPhotos(a) !== hasPhotos(b)) return hasPhotos(a) ? -1 : 1;
+    return byPrice(a, b);
   });
+}
+
+/** The unit the buy box shows: the cheapest, unless a unit with real photos is within PHOTO_PREMIUM */
+export function cheapest<T extends ConfigOffer>(list: T[]): T | null {
+  return rankUnits(list)[0] ?? null;
+}
+
+/**
+ * The offers list: one row per shop (its best unit, with how many identical units it has),
+ * in buy-box order. "Dupliquer" can't flood the list with copies.
+ */
+export function unitsByShop<T extends ConfigOffer>(list: T[]): { best: T; count: number }[] {
+  const rows = new Map<string, { best: T; count: number }>();
+  for (const o of rankUnits(list)) {
+    const row = rows.get(o.vendorName);
+    if (row) row.count++;
+    else rows.set(o.vendorName, { best: o, count: 1 });
+  }
+  return [...rows.values()];
 }
 
 export function matches(o: ConfigOffer, s: Selection): boolean {
@@ -99,9 +134,21 @@ export function resolve(offers: ConfigOffer[], s: Selection, fixed: Axis): Confi
   return cheapest(pool);
 }
 
-/** Every distinct value of an axis across the product's variants (not only those in stock) */
+/** Every distinct value in a list, first occurrence order */
 export function axisValues<T extends string | number | null>(values: T[]): T[] {
   return [...new Set(values)];
+}
+
+/**
+ * The values a buyer can pick on an axis: only those with at least one unit for sale.
+ * A storage, color or version nobody sells never appears on the page.
+ * Numbers sort ascending; colors and versions keep the catalog order given in `order`.
+ */
+export function sellableValues(offers: ConfigOffer[], axis: Exclude<Axis, "grade">, order: (string | number)[] = []): (string | number)[] {
+  const values = axisValues(offers.map((o) => valueOf(o, axis))).filter((v): v is string | number => v !== null);
+  if (values.every((v) => typeof v === "number")) return (values as number[]).sort((a, b) => a - b);
+  const rank = (v: string | number) => (order.indexOf(v) === -1 ? Infinity : order.indexOf(v));
+  return values.sort((a, b) => rank(a) - rank(b));
 }
 
 export type AxisOption<V> = {

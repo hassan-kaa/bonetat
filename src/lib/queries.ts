@@ -1,4 +1,5 @@
 import "server-only";
+import { cpuFamily, hasDedicatedGpu, laptopText } from "./pc-filters";
 import type { ConditionGrade, Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import { displayName, variantLabel } from "./catalog";
@@ -26,9 +27,9 @@ export const finishWithFront = {
 const DAY = 24 * 60 * 60 * 1000;
 
 type ProductForCards = {
-  variants: Prisma.VariantGetPayload<{
-    include: { finish: true; offers: { include: { vendor: { select: { qualityScore: true } } } } };
-  }>[];
+  variants: (Prisma.VariantGetPayload<{ include: { finish: true } }> & {
+    offers: (Prisma.OfferGetPayload<{ include: { vendor: { select: { qualityScore: true; storeName: true } } } }> & { photos?: { key: string }[] })[];
+  })[];
 };
 
 export function toConfigOffers(product: ProductForCards): ConfigOffer[] {
@@ -46,6 +47,8 @@ export function toConfigOffers(product: ProductForCards): ConfigOffer[] {
       batteryHealth: o.batteryHealth,
       warrantyMonths: o.warrantyMonths,
       qualityScore: o.vendor.qualityScore,
+      vendorName: o.vendor.storeName,
+      photos: o.photos?.map((p) => p.key) ?? [],
       listedAt: o.createdAt.getTime(),
     }))
   );
@@ -85,7 +88,8 @@ async function topSellerVariantIds(): Promise<Set<string>> {
  */
 export async function getVariantCards(opts: {
   where?: Prisma.ProductWhereInput;
-  grade?: ConditionGrade;
+  /** Union: a card shows the cheapest unit among these grades */
+  grades?: ConditionGrade[];
   sort?: "deal" | "price-asc" | "price-desc" | "new";
   take?: number;
   onePerProduct?: boolean;
@@ -99,8 +103,8 @@ export async function getVariantCards(opts: {
         include: {
           finish: finishWithFront,
           offers: {
-            where: { ...SELLABLE, ...(opts.grade ? { conditionGrade: opts.grade } : {}) },
-            include: { vendor: { select: { qualityScore: true } } },
+            where: { ...SELLABLE, ...(opts.grades?.length ? { conditionGrade: { in: opts.grades } } : {}) },
+            include: { vendor: { select: { qualityScore: true, storeName: true } } },
           },
         },
       },
@@ -139,9 +143,17 @@ export async function getVariantCards(opts: {
         name: displayName(p),
         config: variantLabel(v, p.kind),
         kind: p.kind,
+        brand: p.brand,
+        ramGb: v.ramGb,
+        storageGb: v.storageGb,
+        cpu: p.kind === "LAPTOP" ? cpuFamily(laptopText(p, v), p.brand) : null,
+        gpu: p.kind === "LAPTOP" && hasDedicatedGpu(laptopText(p, v)),
         cameras: p.cameraCount,
         colorHex: v.finish.hex,
-        imageKey: v.finish.images[0]?.key ?? null,
+        imageKey: v.finish.images[0]?.key ?? p.coverKey,
+        imageIsCover: !v.finish.images[0] && !!p.coverKey,
+        vendorName: best.vendorName,
+        offerCount: v.offers.length,
         grade: best.grade,
         batteryHealth: best.batteryHealth,
         priceMillimes: best.priceMillimes,

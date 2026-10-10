@@ -71,7 +71,7 @@ export const orderItemInclude = {
       variant: {
         select: {
           finish: { select: { hex: true, images: { where: { status: "APPROVED", angle: "FRONT" }, orderBy: { position: "asc" }, take: 1, select: { key: true } } } },
-          product: { select: { kind: true, cameraCount: true, slug: true } },
+          product: { select: { kind: true, cameraCount: true, slug: true, coverKey: true } },
         },
       },
     },
@@ -80,12 +80,12 @@ export const orderItemInclude = {
 
 export function toItemView(i: {
   id: string; title: string; configLabel: string; grade: ConditionGrade; batteryHealth: number | null; priceMillimes: number;
-  offer: { variant: { finish: { hex: string; images: { key: string }[] }; product: { kind: DeviceKind; cameraCount: number | null } } };
+  offer: { variant: { finish: { hex: string; images: { key: string }[] }; product: { kind: DeviceKind; cameraCount: number | null; coverKey: string | null } } };
 }): ItemView {
   return {
     id: i.id, title: i.title, configLabel: i.configLabel, grade: i.grade, batteryHealth: i.batteryHealth,
     priceMillimes: i.priceMillimes, kind: i.offer.variant.product.kind, colorHex: i.offer.variant.finish.hex,
-    imageKey: i.offer.variant.finish.images[0]?.key ?? null, cameras: i.offer.variant.product.cameraCount,
+    imageKey: i.offer.variant.finish.images[0]?.key ?? i.offer.variant.product.coverKey, cameras: i.offer.variant.product.cameraCount,
   };
 }
 

@@ -1,10 +1,13 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  /// pg_trgm: typo-tolerant search on the reference catalog ("elitebok 8 g1i" still finds it)
+  extensions = [pg_trgm]
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -59,6 +62,20 @@ enum OfferStatus {
 
 /// Coarse color, shared across brands: drives the "Couleur" filter and
 /// keeps the buyer's color when switching between sibling models.
+enum ProductStatus {
+  ACTIVE
+  /// Created by a store, live, waiting for admin to confirm, merge or correct
+  PROVISIONAL
+  /// Duplicate folded into another product (mergedIntoId); its URL redirects there
+  MERGED
+}
+
+enum SuggestionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 enum ColorFamily {
   BLACK
   WHITE
@@ -247,54 +264,156 @@ model Category {
 
 /// Canonical product page in the Bonétat catalog (e.g. "iPhone 11 Pro").
 model Product {
-  id               String     @id @default(cuid())
-  categoryId       String
-  brand            String
-  model            String
-  slug             String     @unique
-  kind             DeviceKind @default(PHONE)
+  id                String        @id @default(cuid())
+  categoryId        String
+  brand             String
+  model             String
+  /// Range inside the brand ("Vostro", "EliteBook", "Galaxy S"), picked from ProductLine
+  line              String?
+  /// What identifies the model inside its line ("15 3520", "8 G1i", "S23")
+  modelNumber       String?
+  /// "dell|vostro|15 3520": brand + line + model number, normalized. One product per key.
+  canonicalKey      String        @unique
+  status            ProductStatus @default(ACTIVE)
+  mergedIntoId      String?
+  /// Set when a store created the product from the publish flow
+  createdByVendorId String?
+  /// The reference (Icecat) entry it was created from, if any
+  referenceId       String?
+  /// Where the model came from: "seed", "curated", "icecat", "wikidata", "store"
+  source            String        @default("seed")
+  /// normalized brand + line + model, trigram-indexed: what stores search the catalog with
+  searchText        String        @default("")
+  /// The model's official main photo (any color), shown when a color has no photo of its own
+  coverKey          String?
+  slug              String        @unique
+  kind              DeviceKind    @default(PHONE)
   /// Family shared by sibling products ("iphone-11" groups 11 / 11 Pro / 11 Pro Max)
-  series           String?
+  series            String?
   /// Short name shown in the model switcher ("11 Pro")
-  seriesLabel      String?
-  seriesOrder      Int        @default(0)
+  seriesLabel       String?
+  seriesOrder       Int           @default(0)
   /// Drawing hint for the illustration (number of rear cameras)
-  cameraCount      Int?
-  description      String
+  cameraCount       Int?
+  description       String
   /// Reference price of the equivalent NEW device
-  newPriceMillimes Int?
-  specsJson        Json?
-  releaseYear      Int?
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  newPriceMillimes  Int?
+  specsJson         Json?
+  releaseYear       Int?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
-  category Category  @relation(fields: [categoryId], references: [id])
-  finishes Finish[]
-  variants Variant[]
+  category        Category         @relation(fields: [categoryId], references: [id])
+  finishes        Finish[]
+  variants        Variant[]
+  specSuggestions SpecSuggestion[]
 
   @@index([brand])
   @@index([series])
+  @@index([searchText(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("products")
+}
+
+/// Brands a store can pick from (never typed). Also the brand list the Icecat index is filtered on.
+model Brand {
+  id       String        @id @default(cuid())
+  name     String        @unique
+  slug     String        @unique
+  position Int           @default(0)
+  lines    ProductLine[]
+
+  @@map("brands")
+}
+
+/// Ranges inside a brand ("EliteBook", "Vostro"). Stores pick one, or propose a new one (reviewed with the product).
+model ProductLine {
+  id       String      @id @default(cuid())
+  brandId  String
+  name     String
+  slug     String
+  kind     DeviceKind?
+  /// false while a store-proposed line waits for review
+  approved Boolean     @default(true)
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@unique([brandId, slug])
+  @@map("product_lines")
+}
+
+/// Icecat index rows for every brand on the Brand list. Search source for "C'est l'un de ces modèles ?", never shown to buyers.
+model ReferenceProduct {
+  id          String     @id @default(cuid())
+  icecatId    Int        @unique
+  brand       String
+  modelName   String
+  productCode String
+  /// normalized brand + model name + product code
+  searchText  String
+  picWidth    Int        @default(0)
+  /// From the Icecat category: lets a store pick a reference model in one click
+  kind        DeviceKind
+
+  @@index([searchText(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@map("reference_products")
+}
+
+/// A store's correction to a product's shared specs, applied only when admin accepts it
+model SpecSuggestion {
+  id        String           @id @default(cuid())
+  productId String
+  vendorId  String
+  /// [{ label, from, to }]
+  changes   Json
+  status    SuggestionStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("spec_suggestions")
+}
+
+/// Every smart-listing interpretation: cost tracking, rate limiting, prompt improvement
+model ListingDraft {
+  id           String   @id @default(cuid())
+  vendorId     String
+  /// "paste" | "link" | "screenshot"
+  source       String
+  input        String
+  extracted    Json?
+  offerId      String?
+  inputTokens  Int?
+  outputTokens Int?
+  createdAt    DateTime @default(now())
+
+  @@index([vendorId, createdAt])
+  @@map("listing_drafts")
 }
 
 /// A color as the manufacturer sells it, for one product ("Bleu alpin" on iPhone 13 Pro).
 /// Catalog photos hang off the finish, never off a variant: 128 Go and 256 Go look the same.
 model Finish {
-  id        String      @id @default(cuid())
-  productId String
+  id          String      @id @default(cuid())
+  productId   String
   /// Stable across products ("bleu-alpin"), used to keep the color when switching sibling models
-  slug      String
-  nameFr    String
-  nameAr    String?
-  hex       String
-  family    ColorFamily
+  slug        String
+  nameFr      String
+  nameAr      String?
+  hex         String
+  family      ColorFamily
   /// Other names for this color ("Sierra Blue"), used by image importers and sibling matching
-  aliases   String[]    @default([])
-  position  Int         @default(0)
+  aliases     String[]    @default([])
+  position    Int         @default(0)
+  /// The Icecat product this color's catalog photos come from (one per color: every storage looks the same)
+  icecatId    Int?
+  /// How icecatId was chosen: "exact" (color name or alias), "family" (only color of that family), "manual"
+  icecatMatch String?
 
-  product  Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
-  images   CatalogImage[]
-  variants Variant[]
+  product          Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  images           CatalogImage[]
+  variants         Variant[]
+  icecatCandidates IcecatCandidate[]
 
   @@unique([productId, slug])
   @@map("finishes")
@@ -302,21 +421,24 @@ model Finish {
 
 /// Bonétat-owned catalog photo of one finish from one angle. Only APPROVED ones are shown.
 model CatalogImage {
-  id          String      @id @default(cuid())
-  finishId    String
-  angle       ImageAngle
-  position    Int         @default(0)
+  id           String      @id @default(cuid())
+  finishId     String
+  angle        ImageAngle
+  position     Int         @default(0)
   /// Storage path without size suffix, content-hashed: catalog/<product>/<finish>/<hash>
-  key         String      @unique
-  width       Int
-  height      Int
+  key          String      @unique
+  width        Int
+  height       Int
+  /// Original resolution, so the review screen can warn about blurry upscales
+  sourceWidth  Int?
+  sourceHeight Int?
   /// Tiny base64 placeholder shown while the image loads
-  blurDataUrl String?
-  source      ImageSource
+  blurDataUrl  String?
+  source       ImageSource
   /// Icecat id or original URL, for audit
-  sourceRef   String?
-  status      ImageStatus @default(DRAFT)
-  createdAt   DateTime    @default(now())
+  sourceRef    String?
+  status       ImageStatus @default(DRAFT)
+  createdAt    DateTime    @default(now())
 
   finish Finish @relation(fields: [finishId], references: [id], onDelete: Cascade)
 
@@ -379,6 +501,30 @@ model Offer {
   @@index([variantId, status])
   @@index([vendorId, status])
   @@map("offers")
+}
+
+/// An Icecat product the sync found for a color but couldn't match with certainty.
+/// Shown on the review screen so Kaa confirms the right one in one click.
+model IcecatCandidate {
+  id          String   @id @default(cuid())
+  finishId    String
+  icecatId    Int
+  title       String
+  /// Icecat's coarse color ("Noir") and marketing name ("Phantom Black")
+  color       String?
+  colorName   String?
+  picWidth    Int?
+  /// Icecat's main image URL, shown as a small preview in the admin only (never on the site)
+  previewUrl  String?
+  /// Reseller listing of a refurbished unit: often branded on the screen, check before using
+  refurbished Boolean  @default(false)
+  score       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  finish Finish @relation(fields: [finishId], references: [id], onDelete: Cascade)
+
+  @@unique([finishId, icecatId])
+  @@map("icecat_candidates")
 }
 
 /// Partner photo of the actual unit, shown when this offer is in the buy box.
@@ -492,4 +638,18 @@ model Payout {
   vendor Vendor @relation(fields: [vendorId], references: [id])
 
   @@map("payouts")
+}
+
+/// A message to one user: offer validated, correction asked, order placed / confirmed / shipped…
+/// Shown live (toast) by the page they have open, without refreshing.
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  href      String?
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+
+  @@index([userId, createdAt])
+  @@map("notifications")
 }

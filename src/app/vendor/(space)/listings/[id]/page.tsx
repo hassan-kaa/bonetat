@@ -5,6 +5,8 @@ import { getVendorUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { GRADES, displayName, variantLabel } from "@/lib/catalog";
 import EditOffer from "./EditOffer";
+import SuggestSpecs from "./SuggestSpecs";
+import OfferPhotos from "./OfferPhotos";
 
 export const metadata: Metadata = { title: "Modifier l’offre" };
 
@@ -14,7 +16,7 @@ export default async function EditOfferPage({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const offer = await prisma.offer.findFirst({
     where: { id, vendorId: auth.vendor.id },
-    include: { variant: { include: { product: true, finish: true } } },
+    include: { variant: { include: { product: true, finish: true } }, photos: { orderBy: { position: "asc" }, select: { id: true, key: true } } },
   });
   if (!offer) notFound();
   const p = offer.variant.product;
@@ -35,9 +37,15 @@ export default async function EditOfferPage({ params }: { params: Promise<{ id: 
           sellerNote: offer.sellerNote ?? "",
           status: offer.status,
           rejectionReason: offer.rejectionReason,
+          grade: offer.conditionGrade,
+          batteryHealth: offer.batteryHealth,
+          imei: offer.imei,
+          kind: p.kind,
         }}
       />
-      <p className="text-[13px] text-ink-muted">L’état et la batterie ne se modifient pas : pour un autre état, publiez une nouvelle offre, elle repassera en contrôle.</p>
+      <p className="text-[13px] text-ink-muted">L’état et la batterie ne se modifient que si Bonétat demande une correction. Pour un autre appareil, publiez une nouvelle offre.</p>
+      <OfferPhotos offerId={offer.id} photos={offer.photos} editable={offer.status !== "SOLD"} />
+      <SuggestSpecs productId={p.id} specs={Array.isArray(p.specsJson) ? (p.specsJson as [string, string][]) : []} />
     </>
   );
 }

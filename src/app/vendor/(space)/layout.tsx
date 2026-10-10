@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import Logo from "@/components/brand/Logo";
 import LogoutButton from "@/components/auth/LogoutButton";
 import { ToastProvider } from "@/components/ui/Toast";
+import LiveUpdates from "@/components/live/LiveUpdates";
 import VendorNav from "./VendorNav";
 
 export default async function VendorLayout({ children }: { children: React.ReactNode }) {
@@ -19,6 +20,7 @@ export default async function VendorLayout({ children }: { children: React.React
 
   return (
     <ToastProvider>
+      <LiveUpdates />
       <div className="flex min-h-screen flex-wrap bg-chalk">
         <aside className="flex w-full flex-col gap-[22px] bg-ink px-4 py-6 text-white lg:sticky lg:top-0 lg:h-screen lg:w-[270px]">
           <div className="px-2">

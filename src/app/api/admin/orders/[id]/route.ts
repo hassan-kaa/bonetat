@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { notify, vendorUserIds } from "@/lib/notify";
 
 const schema = z.object({ status: z.enum(["CONFIRMED", "DELIVERED", "CANCELLED", "DISPUTED"]) });
 
@@ -36,6 +37,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         await tx.order.update({ where: { id }, data: { status } });
       }
     });
+    const shops = await vendorUserIds([...new Set(order.items.map((i) => i.vendorId))]);
+    const ref = order.number;
+    const messages: Record<string, [string, string]> = {
+      CONFIRMED: [`Commande ${ref} confirmée, l’atelier prépare votre colis`, `Commande ${ref} confirmée : à expédier`],
+      DELIVERED: [`Commande ${ref} livrée. Bonne utilisation !`, `Commande ${ref} livrée : paiement au prochain virement`],
+      CANCELLED: [`Commande ${ref} annulée`, `Commande ${ref} annulée : l’appareil est remis en vente`],
+      DISPUTED: [`Réclamation ouverte sur la commande ${ref}`, `Réclamation ouverte sur la commande ${ref}`],
+    };
+    const [toBuyer, toShops] = messages[status];
+    await notify([order.buyerId], { title: toBuyer, href: `/account/orders/${order.id}` });
+    await notify(shops, { title: toShops, href: "/vendor/orders" });
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors[0].message }, { status: 400 });

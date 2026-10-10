@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description:
     "Téléphones, tablettes, ordinateurs et montres reconditionnés par des ateliers tunisiens vérifiés, contrôlés par Bonétat, garantis 12 mois et payés à la livraison.",
   keywords: ["téléphone reconditionné", "Tunisie", "iPhone occasion", "Samsung reconditionné", "MacBook reconditionné"],
-  openGraph: { siteName: "Bonétat", locale: "fr_TN", type: "website" },
+  openGraph: { siteName: "Bonétat", locale: "fr_TN", type: "website", images: [{ url: "/brand/app-icon-512.png", width: 512, height: 512 }] },
 };
 
 export const viewport: Viewport = {

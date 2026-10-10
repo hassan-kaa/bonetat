@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  cheapest, initialSelection, matches, optionsFor, resolve, selectionOf, winner, type ConfigOffer,
+  cheapest, initialSelection, rankUnits, unitsByShop, matches, optionsFor, resolve, selectionOf, sellableValues, winner, type ConfigOffer,
 } from "./configurator";
 
 // A small iPhone-like catalog: 2 storages × 2 finishes, a few grades, one unit per offer
@@ -21,6 +21,7 @@ function offer(o: Partial<ConfigOffer>): ConfigOffer {
     warrantyMonths: 12,
     qualityScore: 90,
     listedAt: 1_000,
+    vendorName: "TechStore Sousse",
     ...o,
   };
 }
@@ -115,5 +116,79 @@ describe("initialSelection", () => {
 
   it("ignores an unknown grade string and returns the overall cheapest", () => {
     expect(initialSelection(all, { grade: "PAS_UN_ETAT" })).toBe(cheapBon);
+  });
+});
+
+describe("3 iPhone 11 in stock: Noir Bon, Noir Correct, Rouge Bon", () => {
+  const base = { variantId: "", storageGb: 128, ramGb: null, option: null, colorHex: "#000", warrantyMonths: 12, qualityScore: 90, listedAt: 1, batteryHealth: 85, vendorName: "TechStore Sousse" };
+  const noirBon = { ...base, offerId: "noir-bon", variantId: "noir", finishId: "noir", grade: "BON" as const, priceMillimes: 700_000 };
+  const noirCorrect = { ...base, offerId: "noir-correct", variantId: "noir", finishId: "noir", grade: "CORRECT" as const, priceMillimes: 600_000 };
+  const rougeBon = { ...base, offerId: "rouge-bon", variantId: "rouge", finishId: "rouge", grade: "BON" as const, priceMillimes: 720_000 };
+  const stock = [noirBon, noirCorrect, rougeBon];
+  const grades = (from: ConfigOffer) =>
+    optionsFor(stock, selectionOf(from), "grade", ["CORRECT", "BON", "TRES_BON", "COMME_NEUF"]).map((o) => o.target?.offerId ?? null);
+
+  it("disables Très bon and Comme neuf: no unit exists in those grades", () => {
+    expect(grades(noirBon)).toEqual(["noir-correct", "noir-bon", null, null]);
+  });
+
+  it("from Rouge Bon, Correct is reachable but moves the buyer to Noir (the only Correct unit)", () => {
+    expect(grades(rougeBon)).toEqual(["noir-correct", "rouge-bon", null, null]);
+  });
+});
+
+describe("sellableValues: only what is for sale is shown", () => {
+  // iPhone 13 demo stock: Lumière stellaire exists in the catalog but has no unit
+  const stock = [
+    offer({ storageGb: 256, finishId: "minuit" }),
+    offer({ storageGb: 128, finishId: "bleu" }),
+    offer({ storageGb: 128, finishId: "minuit" }),
+    offer({ storageGb: 256, finishId: "rose" }),
+  ];
+  const catalogOrder = ["minuit", "lumiere", "rose", "bleu"];
+
+  it("lists storages with stock, ascending", () => {
+    expect(sellableValues(stock, "storage")).toEqual([128, 256]);
+  });
+
+  it("lists colors with stock in catalog order, never a color nobody sells", () => {
+    expect(sellableValues(stock, "color", catalogOrder)).toEqual(["minuit", "rose", "bleu"]);
+  });
+
+  it("returns nothing for an axis the product doesn't have", () => {
+    expect(sellableValues(stock, "ram")).toEqual([]);
+  });
+
+  it("every listed value leads to a unit (never a dead option)", () => {
+    for (const color of sellableValues(stock, "color", catalogOrder)) {
+      expect(resolve(stock, { ...selectionOf(stock[0]), color: color as string }, "color")).not.toBeNull();
+    }
+  });
+});
+
+describe("photos in the buy box", () => {
+  const base = { variantId: "v", grade: "BON" as const, storageGb: 128, ramGb: null, option: null, finishId: "f", colorHex: "#000", batteryHealth: 90, warrantyMonths: 12, qualityScore: 90, listedAt: 0 };
+  const unit = (offerId: string, dt: number, vendorName: string, photos: string[] = [], extra: object = {}) => ({ ...base, offerId, priceMillimes: dt * 1000, vendorName, photos, ...extra });
+
+  it("a unit with photos wins within 2 % of the cheapest", () => {
+    const plain = unit("plain", 1000, "A");
+    const shown = unit("shown", 1019, "B", ["k"]);
+    expect(cheapest([plain, shown])).toBe(shown);
+  });
+
+  it("price wins beyond 2 %", () => {
+    const plain = unit("plain", 1000, "A");
+    const shown = unit("shown", 1021, "B", ["k"]);
+    expect(cheapest([plain, shown])).toBe(plain);
+  });
+
+  it("keeps price order inside the photo group and after the band", () => {
+    const order = rankUnits([unit("c", 1100, "C"), unit("b", 1015, "B", ["k"]), unit("a", 1000, "A"), unit("d", 1010, "D", ["k"])]).map((o) => o.offerId);
+    expect(order).toEqual(["d", "b", "a", "c"]);
+  });
+
+  it("groups a shop's identical units into one row", () => {
+    const rows = unitsByShop([unit("a1", 1000, "A"), unit("b1", 1005, "B"), unit("a2", 1000, "A", [], { listedAt: 5 }), unit("a3", 1050, "A")]);
+    expect(rows.map((r) => [r.best.offerId, r.count])).toEqual([["a1", 3], ["b1", 1]]);
   });
 });

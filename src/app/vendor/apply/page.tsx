@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { COMMISSION_LABEL } from "@/lib/money";
 import { redirect } from "next/navigation";
 import { Banknote, ShieldCheck, Truck } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
@@ -28,7 +29,7 @@ export default async function ApplyPage() {
           </p>
           <ul className="flex flex-col gap-4 text-[15px]">
             <li className="flex gap-3"><Truck className="h-6 w-6 flex-none text-brand" aria-hidden="true" /><span><b className="font-semibold">On s’occupe du client.</b> Confirmation par téléphone, livraison, réclamations.</span></li>
-            <li className="flex gap-3"><Banknote className="h-6 w-6 flex-none text-brand" aria-hidden="true" /><span><b className="font-semibold">Paiement tous les 15 jours.</b> Le livreur encaisse, on vous vire le net. Commission de 5 %.</span></li>
+            <li className="flex gap-3"><Banknote className="h-6 w-6 flex-none text-brand" aria-hidden="true" /><span><b className="font-semibold">Paiement tous les 15 jours.</b> Le livreur encaisse, on vous vire le net. Commission de {COMMISSION_LABEL} par vente.</span></li>
             <li className="flex gap-3"><ShieldCheck className="h-6 w-6 flex-none text-brand" aria-hidden="true" /><span><b className="font-semibold">Une seule règle :</b> respecter la grille d’état Bonétat et la garantie de 12 mois.</span></li>
           </ul>
         </section>

@@ -103,7 +103,7 @@ export default function GradeHero({
         )}
         {current && (
           <p className="text-center text-sm text-ink-muted">
-            Changez l’état : le téléphone, le prix et la batterie minimale ({GRADES[current.grade].minBattery} %) suivent.{" "}
+            Changez l’état : le téléphone et le prix suivent.{" "}
             <Link href={current.href} className="font-medium text-brand underline-offset-4 hover:underline">Voir cet appareil</Link>
           </p>
         )}

@@ -141,3 +141,20 @@
     @apply left-[23px];
   }
 }
+
+/* Two-handle price slider: two stacked range inputs, only their thumbs catch the pointer */
+.range-dual { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; background: transparent; pointer-events: none; -webkit-appearance: none; appearance: none; }
+.range-dual:focus { outline: none; }
+.range-dual::-webkit-slider-runnable-track { background: transparent; height: 100%; }
+.range-dual::-moz-range-track { background: transparent; }
+.range-dual::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; pointer-events: auto; cursor: grab;
+  width: 22px; height: 22px; margin-top: 1px; border-radius: 9999px;
+  background: #fff; border: 2px solid #1747C8; box-shadow: 0 1px 4px rgba(10, 20, 60, .2);
+}
+.range-dual::-moz-range-thumb {
+  pointer-events: auto; cursor: grab; width: 18px; height: 18px; border-radius: 9999px;
+  background: #fff; border: 2px solid #1747C8; box-shadow: 0 1px 4px rgba(10, 20, 60, .2);
+}
+.range-dual:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(23, 71, 200, .25); }
+.range-dual:active::-webkit-slider-thumb { cursor: grabbing; }

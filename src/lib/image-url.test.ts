@@ -29,6 +29,11 @@ describe("imageUrl", () => {
     expect(imageUrl("k")).toBe("https://img.bonetat.tn/k-1600.webp");
   });
 
+  it("falls back to the local dev folder when no base URL is set", async () => {
+    const { imageUrl } = await load();
+    expect(imageUrl("k", 400)).toBe("/media/k-400.webp");
+  });
+
   it("the next/image loader uses the same rule", async () => {
     const { storedImageLoader } = await load("https://img.bonetat.tn");
     expect(storedImageLoader({ src: "k", width: 640 })).toBe("https://img.bonetat.tn/k-800.webp");

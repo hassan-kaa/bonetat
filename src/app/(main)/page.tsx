@@ -1,40 +1,33 @@
 import Link from "next/link";
-import type { ConditionGrade } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 import { SELLABLE, categoryFloors, finishWithFront, getVariantCards, productHref } from "@/lib/queries";
-import { GRADES, GRADE_ORDER, displayName, variantLabel } from "@/lib/catalog";
+import { GRADES, GRADE_ORDER } from "@/lib/catalog";
 import { formatPrice } from "@/lib/money";
 import DeviceArt from "@/components/products/DeviceArt";
 import DeviceVisual from "@/components/products/DeviceVisual";
 import VariantCard from "@/components/products/VariantCard";
-import GradeHero, { type HeroGrade } from "@/components/home/GradeHero";
+import HomeHero, { type HeroSide } from "@/components/home/HomeHero";
 
 export const dynamic = "force-dynamic";
 
-async function getHero() {
-  // Show a real product with the most conditions in stock, so every button has a real price
-  const product = await prisma.product.findFirst({
-    where: { slug: "iphone-11-pro" },
-    include: { variants: { include: { finish: true, offers: { where: SELLABLE } } } },
-  }) ?? await prisma.product.findFirst({
-    where: { kind: "PHONE", variants: { some: { offers: { some: SELLABLE } } } },
-    include: { variants: { include: { finish: true, offers: { where: SELLABLE } } } },
-  });
-  if (!product) return null;
-  const variant = [...product.variants].sort(
-    (a, b) => new Set(b.offers.map((o) => o.conditionGrade)).size - new Set(a.offers.map((o) => o.conditionGrade)).size || a.position - b.position
-  )[0];
-  const newPrice = variant.newPriceMillimes ?? product.newPriceMillimes;
-  const grades: HeroGrade[] = [...GRADE_ORDER].reverse().flatMap((grade: ConditionGrade) => {
-    const offers = variant.offers.filter((o) => o.conditionGrade === grade);
-    if (offers.length === 0) return [];
-    const price = Math.min(...offers.map((o) => o.priceMillimes));
-    return [{ grade, priceMillimes: price, discount: newPrice ? Math.round((1 - price / newPrice) * 100) : 0, href: productHref(product.slug, variant.id, grade) }];
-  });
+/** One hero side per priority category: real floor price, real best saving, a real photo */
+async function heroSide(kind: "PHONE" | "LAPTOP"): Promise<HeroSide> {
+  const cards = await getVariantCards({ where: { kind }, sort: "deal" });
+  const saving = (c: (typeof cards)[number]) => (c.newPriceMillimes ? Math.round((1 - c.priceMillimes / c.newPriceMillimes) * 100) : 0);
+  // The showcase: an own-color photo first, a model cover otherwise, best deal first
+  const showcase = cards.find((c) => c.imageKey && !c.imageIsCover) ?? cards.find((c) => c.imageKey);
   return {
-    product: { name: displayName(product), config: variantLabel(variant, product.kind), colorHex: variant.finish.hex, cameras: product.cameraCount },
-    grades,
+    kind,
+    title: kind === "PHONE" ? "Téléphones" : "Ordinateurs",
+    brands: kind === "PHONE" ? "iPhone, Samsung, Xiaomi, Google" : "MacBook, ThinkPad, EliteBook, PC gamer",
+    href: kind === "PHONE" ? "/catalog?type=phone" : "/catalog?type=laptop",
+    cta: kind === "PHONE" ? "Voir les téléphones" : "Voir les ordinateurs",
+    floorMillimes: cards.length ? Math.min(...cards.map((c) => c.priceMillimes)) : null,
+    maxDiscount: Math.max(0, ...cards.map(saving)),
+    count: cards.length,
+    imageKey: showcase?.imageKey ?? null,
+    imageAlt: showcase?.name ?? "",
   };
 }
 
@@ -57,7 +50,7 @@ async function getArrivals() {
       kind: p.kind,
       cameras: p.cameraCount,
       colorHex: o.variant.finish.hex,
-      imageKey: o.variant.finish.images[0]?.key ?? null,
+      imageKey: o.variant.finish.images[0]?.key ?? p.coverKey,
       href: productHref(p.slug, o.variantId, o.conditionGrade),
     });
     if (out.length === 10) break;
@@ -66,8 +59,9 @@ async function getArrivals() {
 }
 
 export default async function HomePage() {
-  const [hero, categories, floors, arrivals, deals, user] = await Promise.all([
-    getHero(),
+  const [phonesSide, laptopsSide, categories, floors, arrivals, deals, user] = await Promise.all([
+    heroSide("PHONE"),
+    heroSide("LAPTOP"),
     prisma.category.findMany({ orderBy: { position: "asc" } }),
     categoryFloors(),
     getArrivals(),
@@ -79,25 +73,15 @@ export default async function HomePage() {
     : new Set<string>();
 
   const phones = categories.filter((c) => c.kind === "PHONE");
-  const others = categories.filter((c) => c.kind !== "PHONE");
+  // Computers get their own wide tile right after phones: MacBook and PC together
+  const laptopFloor = Math.min(...categories.filter((c) => c.kind === "LAPTOP").map((c) => floors.get(c.id) ?? Infinity));
+  const hasLaptops = categories.some((c) => c.kind === "LAPTOP");
+  const others = categories.filter((c) => c.kind !== "PHONE" && c.kind !== "LAPTOP");
   const phoneArt: Record<string, [string, string]> = { iphone: ["#43544A", "#F2D4D7"], android: ["#BFD3E6", "#22252C"] };
 
   return (
     <div className="container-page flex flex-col gap-16 pb-6 pt-6">
-      {hero && hero.grades.length > 0 && (
-        <GradeHero
-          product={hero.product}
-          grades={hero.grades}
-          popular={[
-            { label: "iPhone 13", href: "/catalog?q=iPhone+13" },
-            { label: "Galaxy S23", href: "/catalog?q=Galaxy+S23" },
-            { label: "iPad Air", href: "/catalog?q=iPad+Air" },
-            { label: "MacBook Air M1", href: "/catalog?q=MacBook+Air" },
-            { label: "Apple Watch", href: "/catalog?q=Apple+Watch" },
-            { label: "PlayStation 5", href: "/catalog?q=PlayStation" },
-          ]}
-        />
-      )}
+      <HomeHero phones={phonesSide} laptops={laptopsSide} />
 
       {/* Categories */}
       <section aria-labelledby="categories" className="flex flex-col items-center gap-7">
@@ -134,6 +118,28 @@ export default async function HomePage() {
               </Link>
             );
           })}
+          {hasLaptops && (
+            <Link
+              href="/catalog?type=laptop"
+              className="relative col-span-2 flex h-[240px] flex-col justify-between overflow-hidden rounded-[32px] bg-brand-tint px-8 py-[30px] transition hover:-translate-y-1 hover:shadow-lift lg:col-span-6"
+            >
+              <span className="relative z-[1] max-w-[60%]">
+                <span className="block text-[30px] font-semibold leading-[1.05] tracking-[-0.035em] sm:text-[34px]">Ordinateurs portables</span>
+                <span className="mt-2 block text-[15px] text-ink-soft">MacBook, ThinkPad, EliteBook, PC gamer. Filtrez par processeur, RAM et carte graphique.</span>
+              </span>
+              {laptopFloor !== Infinity && (
+                <span className="relative z-[1] flex items-baseline gap-2 text-[15px]">
+                  dès <b className="text-[26px] font-semibold tracking-[-0.03em]">{formatPrice(laptopFloor)}</b>
+                </span>
+              )}
+              <span aria-hidden="true" className="absolute -bottom-10 right-[200px] hidden -rotate-[4deg] sm:block">
+                <DeviceArt kind="LAPTOP" color="#B9C7E6" width={230} />
+              </span>
+              <span aria-hidden="true" className="absolute -bottom-6 -right-10 rotate-[3deg] sm:right-6">
+                <DeviceArt kind="LAPTOP" color="#5A606C" width={260} />
+              </span>
+            </Link>
+          )}
           {others.map((c) => {
             const floor = floors.get(c.id);
             const art: Record<string, string> = {
@@ -144,7 +150,7 @@ export default async function HomePage() {
               <Link
                 key={c.id}
                 href={`/catalog?category=${c.slug}`}
-                className="col-span-1 flex flex-col items-center gap-4 overflow-hidden rounded-[28px] border-[1.5px] border-line bg-white px-3.5 py-5 text-center transition hover:-translate-y-1 hover:border-brand hover:shadow-lift lg:col-span-2 lg:h-[220px] lg:flex-row lg:gap-5 lg:px-[26px] lg:text-left"
+                className="col-span-1 flex flex-col items-center gap-4 overflow-hidden rounded-[28px] border-[1.5px] border-line bg-white px-3.5 py-5 text-center transition hover:-translate-y-1 hover:border-brand hover:shadow-lift lg:col-span-3 lg:h-[220px] lg:flex-row lg:gap-5 lg:px-[26px] lg:text-left"
               >
                 <span aria-hidden="true" className="grid h-[132px] w-[132px] flex-none place-items-center rounded-full bg-brand-tint">
                   <DeviceArt kind={c.kind} color={art[c.slug] ?? "#B9C7E6"} width={width} />
@@ -214,7 +220,7 @@ export default async function HomePage() {
       <section id="etat" aria-labelledby="etats" className="rounded-[36px] border border-line bg-white p-7 sm:p-11">
         <h2 id="etats" className="text-[30px] font-semibold tracking-[-0.03em]">Quatre états, une seule règle : on vous dit tout.</h2>
         <p className="mb-[30px] mt-2.5 max-w-[40em] text-base leading-normal text-ink-muted">
-          Chaque appareil est noté par Bonétat selon la même grille, quel que soit l’atelier qui l’a préparé. La batterie minimale est mesurée, pas estimée.
+          Chaque appareil est noté par Bonétat selon la même grille, quel que soit l’atelier qui l’a préparé. La batterie est mesurée, pas estimée, et affichée pour chaque appareil.
         </p>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
           {[...GRADE_ORDER].reverse().map((g) => (
@@ -222,7 +228,6 @@ export default async function HomePage() {
               <span className="meter w-[72px]">{[1, 2, 3, 4].map((i) => <span key={i} data-on={i <= GRADES[g].level} />)}</span>
               <h3 className="mb-1.5 mt-4 text-[19px] font-semibold">{GRADES[g].label}</h3>
               <p className="text-sm leading-normal text-ink-soft">{GRADES[g].description}</p>
-              <p className="mt-3.5 text-sm font-medium">Batterie ≥ {GRADES[g].minBattery} %</p>
             </div>
           ))}
         </div>

@@ -6,6 +6,7 @@ import { calcCommission, formatPrice } from "@/lib/money";
 import { SHIPPING_FEE_MILLIMES, displayName, variantLabel } from "@/lib/catalog";
 import { addressSchema } from "@/lib/validation";
 import { newOrderNumber } from "@/lib/orders";
+import { adminIds, notify, vendorUserIds } from "@/lib/notify";
 
 const shippingSchema = addressSchema.omit({ isDefault: true }).extend({ label: z.string().trim().min(1).max(40).default("Maison") });
 
@@ -107,6 +108,10 @@ export async function POST(req: NextRequest) {
       });
     });
 
+    const shops = [...new Set(offers.map((o) => o.vendorId))];
+    await notify([user.id], { title: `Commande ${order.number} reçue : Bonétat vous appelle pour confirmer`, href: `/account/orders/${order.id}` });
+    await notify(await vendorUserIds(shops), { title: `Nouvelle commande ${order.number} : en attente de confirmation`, href: "/vendor/orders" });
+    await notify(await adminIds(), { title: `Nouvelle commande ${order.number} à confirmer`, href: "/admin/orders" });
     return NextResponse.json({ success: true, orderId: order.id, number: order.number });
   } catch (err) {
     if (err instanceof OrderError) return NextResponse.json({ error: err.message }, { status: 409 });

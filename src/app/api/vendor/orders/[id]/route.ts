@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getVendorUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { syncOrderStatus } from "@/lib/orders";
+import { notify } from "@/lib/notify";
 
 const schema = z.object({ action: z.literal("ship") });
 
@@ -23,6 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       await tx.orderItem.update({ where: { id }, data: { fulfillmentStatus: "SHIPPED", shippedAt: new Date() } });
       await syncOrderStatus(item.orderId, tx);
     });
+    await notify([item.order.buyerId], { title: `${item.title} est en route (commande ${item.order.number})`, href: `/account/orders/${item.orderId}` });
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof z.ZodError) return NextResponse.json({ error: "Action inconnue" }, { status: 400 });

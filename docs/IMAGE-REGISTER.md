@@ -24,16 +24,16 @@ Product   iPhone 13 Pro
 
 ## 2. Where the photos come from (free)
 
-Decided 2026-10-09: Icecat didn't work out, and no free licensed alternative exists (brand newsrooms like Samsung Mobile Press are non-commercial only). So **we shoot our own photos for every brand**, and use official images only where we hold **written permission**.
+Decided 2026-10-09 (final): **Open Icecat for every brand it covers.** Shooting the whole catalog ourselves doesn't scale.
 
 | Source | Brands | Cost | Role |
 | --- | --- | --- | --- |
-| **Own shoot on partner units** | All | About 0 to 60 DT once (paper, lamps or a folding light box) | **Primary.** Fully ours, consistent, and unique to Bonétat (better for Google than the same press image every shop uses). |
-| **Written permission from Tunisian distributors** (official Samsung, Xiaomi, Lenovo... importers) | Whatever they agree to | 0 DT | **Accelerator.** Distributors already hand image packs to their resellers. An email reply saying "yes, for your listings" is your license. Keep it. |
+| **Open Icecat** (free registration) | Samsung, Xiaomi, Lenovo, Dell, HP, Sony... | 0 DT | **Primary.** Fetched by the import script from an Icecat product ID. |
+| **Illustration** (`DeviceArt`, already built) | Apple, and any color Icecat lacks | 0 DT | **Default fallback.** Drawn in the color's hex with an "Illustration" badge. Never broken. |
+| **Own shoot, top Apple models only** | Apple | About 0 to 60 DT once | **Optional.** Only the 5 to 10 best-selling iPhones, if the illustration hurts conversion. |
+| **Icecat paid tier** | Apple + everything | Paid | **Later.** When Apple sells enough that real photos are worth the subscription. |
 
-**Do not use:** brand newsroom / press images (Apple, Samsung: editorial or non-commercial only), GSMArena, Back Market, Amazon, Google Images, Wikimedia Commons (legal but inconsistent).
-
-**What would flip this:** if shooting stays under about 15 colors a week for a month, budget for a paid image feed (Icecat Full or similar) after launch.
+**Do not use:** brand newsroom / press images (Apple, Samsung: editorial or non-commercial only), GSMArena, Back Market, Amazon, Google Images. Copyrighted, and scraping breaks their terms.
 
 ---
 
@@ -41,13 +41,15 @@ Decided 2026-10-09: Icecat didn't work out, and no free licensed alternative exi
 
 Who does what: **[Kaa]** = manual curation. **[Code]** = something we build together in a session. Do them in this order.
 
-### Step 0. Ask distributors for permission [Kaa, 1 h, in parallel with everything else]
+### Step 0. Icecat account and license check [Kaa, 30 min]
 
-1. List the official importers / distributors in Tunisia for each brand you carry (your partners know them; they buy from them).
-2. Send one short email each (template below). Ask for their reseller image pack and written permission to show it on Bonétat listings, resized and on our background.
-3. File every "yes" in `DECISIONS.md` with the date and the scope (which brands, which uses). No written yes = we shoot.
-
-> Bonjour, Bonétat est une place de marché tunisienne d'appareils reconditionnés, vendus par des ateliers partenaires agréés. Nous souhaitons afficher les visuels officiels [marque] sur nos fiches produit, redimensionnés sur notre fond neutre, sans modification de l'appareil. Pourriez-vous nous transmettre votre pack visuels revendeurs et nous confirmer par écrit cette autorisation ? Merci.
+1. Register free at icecat.biz (Open Icecat) and note your username: the import script needs it.
+2. Read the Open Content License and write the answers in `DECISIONS.md`:
+   - Can we **store copies** on our own storage (not hotlink)?
+   - Can we **modify** them (resize, pad onto our background)?
+   - Is **attribution** required ("Content by Icecat")? If yes, we add it to the footer.
+   - Are any of our brands restricted?
+3. Anything unclear: email Icecat with our use case and keep the reply.
 
 ### Step 1. Freeze the catalog list [Kaa, 2 to 3 h]
 
@@ -60,84 +62,59 @@ Before photos, decide **which products and colors exist**. Photos follow the lis
 
 Target for launch: about 60 models, 4 colors on average, so **about 240 finishes**.
 
-### Step 2. Storage on Cloudflare R2 [Code, 1 session]
+### Step 2. Storage [Built 2026-10-09; R2 account needed before launch]
 
-Free tier (check the current numbers on Cloudflare's pricing page): about 10 GB of storage and no fees for bandwidth. 240 finishes × 3 angles × 3 sizes at about 80 KB is about 170 MB, far below the limit.
+`src/lib/storage.ts`. In dev, files go to `public/media/` on your machine: nothing to set up. Before launch:
 
-1. **[Kaa]** Create a Cloudflare account, create a bucket `bonetat-images`, create an API token with read/write on that bucket.
-2. **[Kaa]** Until `bonetat.tn` is on Cloudflare, enable the bucket's `r2.dev` public URL (fine for dev, rate-limited). At launch, connect `img.bonetat.tn` instead.
-3. **[Code]** Add to `.env`: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `NEXT_PUBLIC_IMAGE_BASE_URL`.
-4. **[Code]** `src/lib/storage.ts`: upload a file, create a presigned upload URL (for partner photos later). Uses the S3-compatible SDK (`@aws-sdk/client-s3`), because R2 speaks the S3 protocol.
+1. **[Kaa]** Create a Cloudflare account, a bucket `bonetat-images`, and an API token with read/write on it.
+2. **[Kaa]** Connect `img.bonetat.tn` to the bucket (or its `r2.dev` URL until the domain is on Cloudflare).
+3. **[Kaa]** Set `STORAGE_DRIVER=r2`, `NEXT_PUBLIC_IMAGE_BASE_URL` and the `R2_*` variables (see `.env.example`). Re-run the imports once: same images, same names, now on R2.
 
-### Step 3. The normalizer [Code, same session]
+### Step 3. The normalizer [Built 2026-10-09]
 
-`src/lib/images.ts`, built on `sharp` (the standard Node image library). Every image, from any source, goes through it once:
+`src/lib/images.ts`: strips metadata, trims the white border, centers the device at 80 % on a **white** 1600 × 1600 square (Icecat images are cut out on white; any other background leaves halos), exports 400 / 800 / 1600 WebP and a blur placeholder, and names files by a hash of their pixels.
 
-1. Auto-rotate from camera metadata, then **strip all metadata** (EXIF: GPS location, phone owner).
-2. Trim the empty border around the device.
-3. Fit the device into the center of a 1600 × 1600 canvas, device height about 80 % of the frame, background `#F2F4F7`.
-4. Export WebP at 400, 800 and 1600 px, plus a tiny blurred placeholder.
-5. Name the files by a hash of their content: `catalog/<product>/<finish>/<hash>-800.webp`. Same image = same name; a new image = a new name. That's why the CDN can cache forever.
+### Step 4. Optional: shoot the top Apple models [Kaa, only if needed]
 
-### Step 4. Shoot setup [Kaa, 1 h to build once]
+Skip this until the illustration measurably hurts Apple sales. If you do it: a fixed rig (phone on a stand, taped spots, two identical lamps, plain paper background), all colors of one model in one session, FRONT / BACK / SIDE in that order, and borrow "Comme neuf" units from a partner. Files go in the drop folder (step 5) and follow the same import.
 
-The goal is that photo #200 looks like photo #1. Consistency comes from a fixed rig, not from talent.
-
-**Make it portable.** The devices are at the partners', so bring the rig to them: a folding light box (or two lamps + a roll of paper) fits in a bag. One visit to a partner's shop covers every model and color they have in "Comme neuf". Ask for it during onboarding: "15 minutes to photograph your best units, and your listings look better from day one."
-
-- **Place:** a table next to a window with indirect daylight (no direct sun), or 2 desk lamps with the same bulbs at 45° on each side.
-- **Background:** a large sheet of matte white or light grey paper curved from the wall to the table (no corner line). The normalizer replaces the background anyway, so a clean edge matters more than the exact color.
-- **Camera:** your phone on a fixed stand (a tripod or a stack of books), **never handheld**. Mark the stand's spot and the device's spot on the table with tape.
-- **Settings:** lock focus and exposure (long-press on the screen), no zoom, 1x lens, no portrait mode, no filter.
-- **Device:** clean, screen off for FRONT (or a plain black wallpaper), no case, no screen protector glare.
-- **Angles:** FRONT (screen facing camera), BACK, SIDE (left edge, 3/4 view). Same order every time.
-- **Background removal:** `rembg` (free, open-source, runs on your laptop) cuts the device out; the import script runs it for you.
-
-### Step 5. The drop folder [Kaa, ongoing]
-
-Everything to import lands in one folder, named so the script knows exactly where it goes:
+### Automatic sync [Built 2026-10-09]: the default way to fill photos
 
 ```
-catalog-src/
-  iphone-13-pro/
-    bleu-alpin/
-      front.jpg
-      back.jpg
-      side.jpg
-    graphite/
-      front.jpg
-  samsung-galaxy-s23/
-    noir-fantome/
-      front.png         ← a distributor pack image works the same way
+npm run images:sync                                  # every color without an Icecat link
+npm run images:sync -- --product=samsung-galaxy-s23  # one product
+npm run images:sync -- --dry-run                     # show the matches, change nothing
+npm run images:sync -- --refresh-index               # re-download the Icecat index now
 ```
 
-- Folder names = product slug and finish slug from the database (the admin screen will show them).
-- File names = the angle. Anything else is ignored.
-- Shoot straight into the right folder name (or rename right after the session), never later from memory.
-- `catalog-src/` stays out of git (raw files are big). Keep a backup copy on a drive.
+Needs `ICECAT_USERNAME`, `ICECAT_PASSWORD` (index download) and the tokens in `.env`. What it does:
 
-### Step 6. The import script [Code, 1 session]
+1. **Index:** downloads the Open Icecat index once (281 MB, about 4 minutes), keeps our brands' usable rows (about 64,000) in `.cache/icecat/`, and refreshes it weekly or when a new brand enters the catalog.
+2. **Model:** finds the index entries of each product. Rejects other models of the family (Ultra, Plus, FE, Pro, Digital, another generation, 2-in-1).
+3. **Color:** reads each entry's color fields ("Couleur du produit = Noir", "Nom de la couleur = Phantom Black") and matches them to our color name, aliases, or a color family only one of our colors has.
+4. **Certain match, official listing:** imports the gallery and puts the main image online as the front photo.
+5. **Anything else becomes a suggestion** on the review screen, with a preview: unsure colors, and every **refurbished reseller listing** (often the only Apple source on the free tier). Those carry the reseller's branding on the screen ("TEQ CYCLE", "GRADE A"), so check the preview before clicking "Utiliser".
+6. Every confirmed match teaches the color's manufacturer name as an alias, so the next model matches by itself.
 
-`npm run images:import [product-slug]`:
+First run on the demo catalog: 10 colors online automatically (Samsung, Dell, Lenovo, Nintendo), 21 suggestions (17 of them iPhones from refurbished listings), 20 not on the free Icecat (Google, Xiaomi, most Apple, some Samsung colors).
 
-1. Reads `catalog-src/`, folder by folder.
-2. Checks that the product and finish exist; otherwise it stops with a clear message (a typo never creates a phantom color).
-3. Runs `rembg` (background removal) when the image isn't already a transparent cut-out, then the normalizer.
-4. Uploads to R2, creates `CatalogImage` rows as `DRAFT` with `source` (OWN_SHOOT, or PRESS_KIT for a distributor pack) and `sourceRef` (file name, or the permission reference).
-5. Skips images already imported (same content hash), so you can rerun it safely.
-6. Prints a summary: imported, skipped, errors.
+### Step 5 and 6. Import from the admin [Built 2026-10-09]
 
-### Step 7. Review screen [Code, 1 session]
+**Admin → Photos du catalogue → a product → each color has an Icecat field.**
 
-`/admin/catalog/[product]`, one row per color, one column per angle:
+1. Paste one of: the **manufacturer code** (`SM-S911BZKDEUB`, easiest: printed on the box, on the brand's site, and on Icecat), the **EAN barcode**, or the **Icecat ID**. If Icecat spells the brand differently, write `Brand:CODE`.
+2. Click **Importer**. The toast shows Icecat's own title for the product: **read the color in it** (it ends with "Noir", "Vert"...). That's your check against a wrong mapping.
+3. Up to 8 gallery images arrive as drafts. Icecat doesn't label angles, so the main image is guessed as Face, then Dos, Profil, Détail.
 
-- Approve, reject (archive) or swap an image. Only approved images go live.
-- Edit the color's name, hex, family, aliases.
-- Review side by side with the other colors of the same product, so mismatched framing jumps out.
+One code per color is enough: pick any storage, every storage looks the same.
 
-### Step 8. Coverage view [Code, small]
+### Step 7. Review [Built 2026-10-09]
 
-`/admin/catalog`: every product with its colors, marked **complete** (FRONT + BACK approved), **partial**, or **illustration**. Sorted by demand: colors with live offers and no photo first. This is your to-do list for each curation session.
+Same screen. For each image: fix the angle in the dropdown, **Valider** (one image per angle goes live; validating another one swaps them), **Retirer** (back to draft) or **✕** (archive). "Basse résolution" means the source is under 800 px: prefer another image if the gallery has one.
+
+### Step 8. Coverage view [Built 2026-10-09]
+
+`/admin/catalog`: every product with its colors as swatches, green border = face + back validated, orange = face only, dotted = illustration. Sorted so products with **colors on sale but without a photo** come first. This is your to-do list for each session.
 
 ### Step 9. Partner unit photos [Code, 1 session, after step 2]
 
@@ -154,17 +131,14 @@ Separate from the register, but it uses the same storage and normalizer (without
 
 | Session | Length | Output |
 | --- | --- | --- |
-| Shoot at a partner | 2 h | About 15 to 20 colors × 3 angles (one model at a time, all its colors in a row) |
-| Import + review | 45 min | Run the import, approve everything from the week, fix rejects |
-| Distributor follow-up | 15 min | Chase pending permission emails, file the yeses |
+| Sync + review | 30 min | Run `npm run images:sync`, confirm the suggestions, add BACK / SIDE where useful |
+| Manual codes | as needed | Paste a code only for colors the sync can't find |
 
-**Numbers to hold:** 2 shoots a week gives about 240 finishes in 6 to 8 weeks, less with every distributor pack you get. Prioritise by the coverage view, not by what's easy to shoot. Check the coverage view every Sunday; the number to watch is **"colors with live offers but no photo"**. Keep it at 0 for the top 20 models before launch.
-
----
+**Numbers to hold:** 2 sessions a week covers every non-Apple color of a 60-model launch catalog in about 3 weeks. Check the coverage view every Sunday; the number to watch is **"colors with live offers but no photo"** (excluding Apple).
 
 ## 5. Failure modes to watch
 
-1. **Shooting is slower than planned.** Partners can't host you, or devices rotate fast. Count it every Sunday; under 15 colors a week for a month means budgeting a paid feed after launch.
-2. **Inconsistent shots** (different light, angle drift). Prevent it with the taped rig and by shooting all colors of one model in one session; catch it on the review screen, where colors sit side by side.
-3. **A color is never in a partner's hands.** It stays on the illustration, visible to buyers as "Illustration". Ask the next partner who lists it, or the distributor.
-4. **Wrong color label** (a "Graphite" photo filed under "Noir"). The import refuses unknown folders, and the review screen shows the hex swatch next to the photo.
+1. **Icecat images vary in angle, crop and background** even after normalization. The review screen puts colors side by side; archive the odd one out and pick another image from the same Icecat gallery.
+2. **License says no copies or no modification.** Then we'd have to hotlink Icecat's URLs unmodified, which breaks the uniform background. Check step 0 before building the import.
+3. **Apple stays on illustrations.** Visible to buyers as "Illustration". Watch Apple conversion against Samsung; if it lags clearly, do step 4 for the top models.
+4. **Wrong color mapping** (a "Graphite" Icecat ID under "Noir"). The review screen shows our hex swatch next to the photo.

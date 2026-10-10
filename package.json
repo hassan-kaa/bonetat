@@ -8,13 +8,18 @@
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",
-    "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
+    "db:seed": "NODE_OPTIONS='--conditions=react-server' ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "images:sync": "NODE_OPTIONS='--conditions=react-server' ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/photos-sync.ts",
+    "catalog:reference": "NODE_OPTIONS='--conditions=react-server' ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/reference-sync.ts",
+    "listing:eval": "NODE_OPTIONS='--conditions=react-server' ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/listing-eval.ts",
+    "catalog:build": "NODE_OPTIONS='--conditions=react-server' ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/catalog-build.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
     "@fontsource-variable/readex-pro": "^5.3.0",
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-avatar": "^1.1.2",
@@ -26,6 +31,7 @@
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.2",
     "@radix-ui/react-toast": "^1.2.4",
+    "aws4fetch": "^1.0.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cookies-next": "^4.3.0",
@@ -35,6 +41,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "server-only": "^0.0.1",
+    "sharp": "^0.35.5",
     "tailwind-merge": "^2.5.4",
     "zod": "^3.23.8",
     "zustand": "^5.0.2"

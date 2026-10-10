@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { GRADES } from "@/lib/catalog";
 import { formatPrice } from "@/lib/money";
 import { formatDate } from "@/lib/utils";
-import { LogoMark } from "@/components/brand/Logo";
+import { LogoMark, Wordmark } from "@/components/brand/Logo";
 import PrintButton from "./PrintButton";
 import type { ShippingAddress } from "@/types";
 
@@ -32,9 +32,9 @@ export default async function PackingSlip({ params }: { params: Promise<{ id: st
       <div className="mx-auto flex max-w-[720px] flex-col gap-8">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <LogoMark className="h-11 w-11 rounded-[14px] text-2xl" />
+            <LogoMark variant="black" className="h-12" />
             <div>
-              <b className="text-2xl font-bold tracking-[-0.03em]">bonétat</b>
+              <Wordmark tone="black" className="text-[28px]" />
               <p className="text-sm text-ink-muted">Contrôlé et garanti par Bonétat</p>
             </div>
           </div>

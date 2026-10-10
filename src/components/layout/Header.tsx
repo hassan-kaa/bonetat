@@ -14,7 +14,7 @@ export type NavUser = {
   vendorApproved: boolean;
 } | null;
 
-export type NavCategory = { slug: string; nameFr: string };
+export type NavCategory = { slug: string; nameFr: string; kind: string };
 
 export default function Header({ user, categories }: { user: NavUser; categories: NavCategory[] }) {
   const [open, setOpen] = useState(false);
@@ -84,10 +84,10 @@ export default function Header({ user, categories }: { user: NavUser; categories
 
       <div className={cn("container-page pb-3 md:block", open ? "block" : "hidden")}>
         <nav aria-label="Catégories" className="flex flex-col gap-1 text-[15px] md:flex-row md:flex-wrap md:gap-x-6 md:gap-y-1 md:text-sm">
-          {categories.map((c) => (
+          {navItems(categories).map((c) => (
             <Link
-              key={c.slug}
-              href={`/catalog?category=${c.slug}`}
+              key={c.href}
+              href={c.href}
               onClick={() => setOpen(false)}
               className="py-1.5 text-ink-muted hover:text-ink md:py-0"
             >
@@ -101,4 +101,14 @@ export default function Header({ user, categories }: { user: NavUser; categories
       </div>
     </header>
   );
+}
+
+/** Phones, then every laptop (MacBook and PC) as one "Ordinateurs" entry, then the rest */
+function navItems(categories: NavCategory[]) {
+  const item = (c: NavCategory) => ({ href: `/catalog?category=${c.slug}`, nameFr: c.nameFr });
+  return [
+    ...categories.filter((c) => c.kind === "PHONE").map(item),
+    ...(categories.some((c) => c.kind === "LAPTOP") ? [{ href: "/catalog?type=laptop", nameFr: "Ordinateurs" }] : []),
+    ...categories.filter((c) => c.kind !== "PHONE" && c.kind !== "LAPTOP").map(item),
+  ];
 }

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import Logo from "@/components/brand/Logo";
 import LogoutButton from "@/components/auth/LogoutButton";
 import { ToastProvider } from "@/components/ui/Toast";
+import LiveUpdates from "@/components/live/LiveUpdates";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getSessionUser();
@@ -21,10 +22,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/orders", label: "Commandes", n: toConfirm },
     { href: "/admin/listings", label: "Offres à contrôler", n: toReview },
     { href: "/admin/vendors", label: "Ateliers partenaires", n: toApprove },
+    { href: "/admin/catalog/new-models", label: "Modèles ajoutés", n: 0 },
+    { href: "/admin/catalog", label: "Photos du catalogue", n: 0 },
   ];
 
   return (
     <ToastProvider>
+      <LiveUpdates />
       <div className="flex min-h-screen flex-wrap bg-chalk">
         <aside className="flex w-full flex-col gap-6 bg-ink px-4 py-6 text-white lg:sticky lg:top-0 lg:h-screen lg:w-[260px]">
           <div className="px-2"><Logo href="/admin" tone="white" suffix="admin" /></div>

@@ -7,9 +7,11 @@ import { useMemo, useState } from "react";
 import type { DeviceKind, ImageAngle } from "@prisma/client";
 import { Banknote, BatteryCharging, Check, Heart, RotateCcw, ShieldCheck, ShoppingBag, Trash2, Truck } from "lucide-react";
 import DeviceArt from "@/components/products/DeviceArt";
+import { LogoMark } from "@/components/brand/Logo";
+import GradingDialog from "@/components/grading/GradingDialog";
 import { GRADES, GRADE_ORDER, formatStorage, variantLabel } from "@/lib/catalog";
 import {
-  axisValues, optionsFor, selectionOf, type Axis, type AxisOption, type ConfigOffer,
+  optionsFor, sellableValues, selectionOf, unitsByShop, type Axis, type AxisOption, type ConfigOffer,
 } from "@/lib/configurator";
 import { formatPrice, savings, discountPercent } from "@/lib/money";
 import { useCart } from "@/store/cart";
@@ -41,6 +43,8 @@ type Props = {
     kind: DeviceKind;
     cameras: number | null;
     newPriceMillimes: number | null;
+    /** The model's official photo in any color, used when the selected color has none */
+    coverKey: string | null;
   };
   variants: ConfigVariant[];
   offers: ConfigOffer[];
@@ -72,35 +76,47 @@ export default function Configurator({
   const [followed, setFollowed] = useState<Set<string>>(() => new Set(followedVariantIds));
   // The angle survives a color change: on "Dos" in blue, switching to green stays on "Dos"
   const [angle, setAngle] = useState<ImageAngle>("FRONT");
+  const [showAllShops, setShowAllShops] = useState(false);
+  /** A real photo of the unit shown in the main frame instead of the catalog shot */
+  const [unitPhoto, setUnitPhoto] = useState<string | null>(null);
+  /** Cursor position over the main photo, in % of the frame: zoom follows it */
+  const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
 
   const sel = selectionOf(current);
   const variant = variants.find((v) => v.id === current.variantId)!;
   const newPrice = variant.newPriceMillimes ?? product.newPriceMillimes;
   const saved = savings(current.priceMillimes, newPrice);
   const discount = discountPercent(current.priceMillimes, newPrice);
-  const unitsHere = offers.filter((o) => o.variantId === current.variantId && o.grade === current.grade).length;
+  // Every unit of this exact configuration and grade, one row per shop, in buy-box order
+  const sameUnits = offers.filter((o) => o.variantId === current.variantId && o.grade === current.grade);
+  const unitsHere = sameUnits.length;
+  const shops = unitsByShop(sameUnits);
+  const lowest = Math.min(...sameUnits.map((o) => o.priceMillimes));
+  const shownShops = showAllShops ? shops : shops.slice(0, 3);
   const finish = finishes.find((f) => f.id === current.finishId)!;
   const inCart = hydrated && cartItems.some((i) => i.offerId === current.offerId);
   const isFollowed = followed.has(current.variantId);
   const config = variantLabel(variant, product.kind);
 
-  // Axis values come from the catalog (variants), not from stock, so sold-out options still show
+  // Only values with a unit for sale: a storage, color or version nobody sells is never shown.
+  // An axis with a single value isn't a choice, so it's not shown as one (the config label carries it).
   const axes = useMemo(() => {
     const list: { axis: Axis; values: (string | number | null)[] }[] = [];
-    const storages = axisValues(variants.map((v) => v.storageGb)).filter((x) => x !== null).sort((a, b) => (a as number) - (b as number));
-    const rams = axisValues(variants.map((v) => v.ramGb)).filter((x) => x !== null).sort((a, b) => (a as number) - (b as number));
-    const opts = axisValues(variants.map((v) => v.option)).filter((x) => x !== null);
-    const colors = axisValues(variants.map((v) => v.finishId));
+    const rams = sellableValues(offers, "ram");
+    const storages = sellableValues(offers, "storage");
+    const opts = sellableValues(offers, "option", variants.map((v) => v.option ?? ""));
+    const colors = sellableValues(offers, "color", finishes.map((f) => f.id));
     if (rams.length > 1) list.push({ axis: "ram", values: rams });
     if (storages.length > 1) list.push({ axis: "storage", values: storages });
     if (opts.length > 1) list.push({ axis: "option", values: opts });
     list.push({ axis: "color", values: colors });
     return list;
-  }, [variants]);
+  }, [offers, variants, finishes]);
 
-  function select(target: ConfigOffer | null) {
+  function select(target: ConfigOffer | null, photo: string | null = null) {
     if (!target) return;
     setCurrent(target);
+    setUnitPhoto(photo);
     const q = new URLSearchParams({ v: target.variantId, g: target.grade });
     window.history.replaceState(null, "", `/products/${product.slug}?${q}`);
   }
@@ -119,7 +135,8 @@ export default function Configurator({
       newPriceMillimes: newPrice,
       kind: product.kind,
       colorHex: current.colorHex,
-      imageKey: finish.images.find((i) => i.angle === "FRONT")?.key ?? null,
+      imageKey: finish.images.find((i) => i.angle === "FRONT")?.key ?? product.coverKey,
+      vendorName: current.vendorName,
       cameras: product.cameras,
     });
   }
@@ -147,25 +164,45 @@ export default function Configurator({
   }
 
   const gradeOptions = optionsFor(offers, sel, "grade", [...GRADE_ORDER].reverse());
-  const photos = finish.images;
+  // The color's own photos; otherwise the model's cover, clearly marked as another color
+  const ownPhotos = finish.images;
+  const coverOnly = ownPhotos.length === 0 && !!product.coverKey;
+  const photos = coverOnly ? [{ angle: "FRONT" as ImageAngle, key: product.coverKey! }] : ownPhotos;
   const photo = photos.find((i) => i.angle === angle) ?? photos[0];
+  const realPhoto = unitPhoto && current.photos?.includes(unitPhoto) ? unitPhoto : null;
+  const stageKey = realPhoto ?? photo?.key ?? null;
+
+  function moveZoom(e: React.MouseEvent<HTMLDivElement>) {
+    const r = e.currentTarget.getBoundingClientRect();
+    setZoom({ x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
+  }
 
   return (
     <>
       <div className="flex flex-wrap items-start gap-10">
         {/* ── Visual ── */}
         <section aria-label="Visuel" className="flex min-w-0 flex-[1_1_520px] flex-col gap-4 lg:sticky lg:top-28">
-          <div className="relative grid h-[380px] place-items-center overflow-hidden rounded-[32px] bg-brand sm:h-[600px]">
-            <span aria-hidden="true" className="absolute left-1/2 top-1/2 h-[470px] w-[470px] -translate-x-1/2 -translate-y-1/2 rounded-full border-[1.5px] border-white/15" />
-            <span aria-hidden="true" className="absolute left-1/2 top-1/2 h-[330px] w-[330px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[.07]" />
-            {photo ? (
+          {/* Photos are on pure white, so they get a white stage; the illustration keeps the blue one */}
+          <div
+            className={cn("relative grid h-[380px] place-items-center overflow-hidden rounded-[32px] sm:h-[600px]", stageKey ? "border border-line bg-white" : "bg-brand", stageKey && "cursor-zoom-in")}
+            onMouseMove={stageKey ? moveZoom : undefined}
+            onMouseLeave={() => setZoom(null)}
+          >
+            {!photo && (
+              <>
+                <span aria-hidden="true" className="absolute left-1/2 top-1/2 h-[470px] w-[470px] -translate-x-1/2 -translate-y-1/2 rounded-full border-[1.5px] border-white/15" />
+                <span aria-hidden="true" className="absolute left-1/2 top-1/2 h-[330px] w-[330px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[.07]" />
+              </>
+            )}
+            {stageKey ? (
               <Image
                 loader={storedImageLoader}
-                src={photo.key}
-                alt={`${product.name} ${config}, ${ANGLE_LABELS[photo.angle].toLowerCase()}`}
+                src={stageKey}
+                alt={realPhoto ? `Photo réelle de l’appareil, ${product.name}` : `${product.name} ${config}, ${ANGLE_LABELS[photo!.angle].toLowerCase()}`}
                 fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-contain p-10"
+                sizes="100vw"
+                className={cn("transition-transform duration-150 ease-out", realPhoto ? "object-contain bg-chalk" : "object-contain p-10")}
+                style={zoom ? { transform: "scale(2.2)", transformOrigin: `${zoom.x}% ${zoom.y}%` } : undefined}
                 priority
               />
             ) : (
@@ -182,34 +219,70 @@ export default function Configurator({
                 </span>
               </>
             )}
-            {discount && (
+            {discount && !zoom && (
               <span className="absolute right-4 top-4 flex h-[96px] w-[96px] rotate-[9deg] sm:right-6 sm:top-6 sm:h-[116px] sm:w-[116px] flex-col items-center justify-center rounded-full bg-gain text-white shadow-[0_10px_24px_rgba(10,20,60,.28)]">
                 <span className="text-[25px] font-bold leading-none tracking-[-0.03em] sm:text-[30px]">−{discount} %</span>
                 <span className="mt-1 text-[13px] opacity-90">vs le neuf</span>
               </span>
             )}
-            {!photo && (
+            {!stageKey && (
               <span className="absolute left-4 top-4 rounded-full bg-white/15 px-3 py-1.5 text-xs font-medium text-white sm:left-6 sm:top-6">
                 Illustration, photo bientôt disponible
               </span>
             )}
-            <span className="absolute bottom-[22px] left-6 rounded-full bg-white/15 px-3.5 py-2 text-sm font-medium text-white">{config}</span>
-            {photo && <span className="absolute bottom-[26px] right-6 hidden text-xs text-white/75 sm:block">Photo de référence Bonétat</span>}
+            {!zoom && (realPhoto ? (
+              <span className="absolute bottom-[22px] left-6 rounded-full bg-ink/75 px-3.5 py-2 text-sm font-medium text-white">Photo réelle, prise par {current.vendorName}</span>
+            ) : (
+              <span className={cn("absolute bottom-[22px] left-6 rounded-full px-3.5 py-2 text-sm font-medium", stageKey ? "bg-chalk text-ink" : "bg-white/15 text-white")}>{config}</span>
+            ))}
+            {photo && !realPhoto && !coverOnly && !zoom && <span className="absolute bottom-[26px] right-6 hidden text-xs text-ink-muted sm:block">Photo de référence du modèle</span>}
+            {coverOnly && !realPhoto && !zoom && (
+              <span className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-chalk px-3 py-1.5 text-xs font-medium text-ink-soft sm:left-6 sm:top-6">
+                <span className="h-3 w-3 rounded-full border border-ink/20" style={{ background: current.colorHex }} aria-hidden="true" />
+                Photo du modèle, couleur indicative
+              </span>
+            )}
           </div>
-          {photos.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto">
-              {photos.map((img) => (
-                <button
-                  key={img.key}
-                  type="button"
-                  onClick={() => setAngle(img.angle)}
-                  aria-label={ANGLE_LABELS[img.angle]}
-                  aria-pressed={img.key === photo?.key}
-                  className={cn("relative h-20 w-20 flex-none overflow-hidden rounded-2xl border-2 bg-white", img.key === photo?.key ? "border-brand" : "border-transparent")}
-                >
-                  <Image loader={storedImageLoader} src={img.key} alt="" fill sizes="80px" className="object-contain p-1.5" />
-                </button>
-              ))}
+          {/* One strip: catalog shots, then the shop's photos of this very unit */}
+          {photos.length + (current.photos?.length ?? 0) > 1 && (
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {photos.map((img) => (
+                  <button
+                    key={img.key}
+                    type="button"
+                    onClick={() => { setAngle(img.angle); setUnitPhoto(null); }}
+                    aria-label={ANGLE_LABELS[img.angle]}
+                    aria-pressed={img.key === stageKey}
+                    className={cn("relative h-20 w-20 flex-none overflow-hidden rounded-2xl border-2 bg-white", img.key === stageKey ? "border-brand" : "border-line")}
+                  >
+                    <Image loader={storedImageLoader} src={img.key} alt="" fill sizes="80px" className="object-contain p-1.5" />
+                  </button>
+                ))}
+                {current.photos && current.photos.length > 0 && (
+                  <>
+                    {photos.length > 0 && <span aria-hidden="true" className="mx-1 w-px flex-none self-stretch bg-line" />}
+                    {current.photos.map((key, i) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setUnitPhoto(key)}
+                        aria-label={`Photo réelle ${i + 1} de l’appareil, prise par ${current.vendorName}`}
+                        aria-pressed={key === stageKey}
+                        className={cn("relative h-20 w-20 flex-none overflow-hidden rounded-2xl border-2 bg-chalk", key === stageKey ? "border-brand" : "border-line")}
+                      >
+                        <Image loader={storedImageLoader} src={key} alt="" fill sizes="80px" className="object-cover" />
+                        <span className="absolute inset-x-1 bottom-1 rounded-md bg-ink/75 py-0.5 text-center text-[10px] font-medium text-white">Réelle</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+              {current.photos && current.photos.length > 0 && (
+                <p className="text-[13px] text-ink-muted">
+                  <b className="font-medium text-ink">Réelle</b> : photos de l’appareil que vous recevrez, prises par {current.vendorName}
+                </p>
+              )}
             </div>
           )}
 
@@ -249,7 +322,7 @@ export default function Configurator({
           <div>
             <div className="mb-2.5 flex items-baseline justify-between gap-3">
               <h2 className="text-[15px] font-semibold">État</h2>
-              <Link href="/grading" className="text-[13px] text-brand hover:underline">Comment on note l’état</Link>
+              <GradingDialog current={current.grade} />
             </div>
             <div className="grid grid-cols-2 gap-2.5">
               {gradeOptions.map((o) => (
@@ -266,7 +339,9 @@ export default function Configurator({
                     <span className="text-[15px] font-medium">{GRADES[o.value].label}</span>
                     <span className="text-[15px] font-semibold">{o.target ? formatPrice(o.target.priceMillimes) : "Épuisé"}</span>
                   </span>
-                  <span className="text-xs text-ink-muted">Batterie ≥ {GRADES[o.value].minBattery} %</span>
+                  {o.target?.batteryHealth != null && (
+                    <span className="text-xs text-ink-muted">Batterie {o.target.batteryHealth} %</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -337,6 +412,7 @@ export default function Configurator({
             <div>
               <span className="block text-[40px] font-semibold leading-tight tracking-[-0.03em] tabular-nums">{formatPrice(current.priceMillimes)}</span>
               {saved && <p className="mt-1 text-sm font-semibold text-gain">{formatPrice(saved)} de moins que le neuf</p>}
+              <p className="mt-1.5 text-sm text-ink-muted">Vendu par <b className="font-medium text-ink">{current.vendorName}</b></p>
             </div>
             <div className="grid gap-3 text-sm sm:grid-cols-2">
               <span className="flex items-center gap-2.5"><ShieldCheck className="h-5 w-5 text-brand" aria-hidden="true" />Garantie Bonétat {current.warrantyMonths} mois</span>
@@ -376,14 +452,71 @@ export default function Configurator({
               )}
             </p>
             <div className="flex items-start gap-3 border-t border-line pt-4">
-              <span className="grid h-9 w-9 flex-none place-items-center rounded-xl bg-brand font-bold text-white">b</span>
+              <span className="grid h-9 w-9 flex-none place-items-center rounded-xl bg-[linear-gradient(135deg,#2F6CFC,#3B1CC9_52%,#7A44F5)]">
+                <LogoMark variant="white" className="h-[19px]" />
+              </span>
               <p className="text-sm leading-normal">
                 <b className="font-semibold">Contrôlé et garanti par Bonétat</b>
                 <br />
-                <span className="text-ink-muted">Expédié depuis un atelier partenaire certifié. En cas de souci, c’est Bonétat qui vous répond.</span>
+                <span className="text-ink-muted">Expédié par {current.vendorName}, atelier partenaire certifié. En cas de souci, c’est Bonétat qui vous répond.</span>
               </p>
             </div>
           </div>
+
+          {shops.length > 1 && (
+            <div className="rounded-[24px] border border-line bg-white p-5">
+              <h2 className="mb-3 text-[15px] font-semibold">
+                {shops.length} ateliers proposent cette configuration <span className="font-normal text-ink-muted">({config}, {GRADES[current.grade].label.toLowerCase()})</span>
+              </h2>
+              <ul className="flex flex-col divide-y divide-line-soft">
+                {shownShops.map(({ best: o, count }) => {
+                  const chosen = o.vendorName === current.vendorName;
+                  const extra = o.priceMillimes - lowest;
+                  return (
+                    <li key={o.offerId} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
+                      <div className="min-w-0 flex-1 text-sm">
+                        <p>
+                          <b className="text-base font-semibold">{formatPrice(o.priceMillimes)}</b>
+                          {extra > 0 && <span className="ml-1.5 text-[13px] text-ink-muted">+{formatPrice(extra)}</span>}
+                          <span className="ml-2 text-ink-muted">par <span className="text-ink">{o.vendorName}</span></span>
+                        </p>
+                        <p className="text-[13px] text-ink-muted">
+                          {o.batteryHealth !== null ? `Batterie ${o.batteryHealth} %` : "Sans batterie"}
+                          {count > 1 && ` · ${count} disponibles`}
+                        </p>
+                        {o.photos && o.photos.length > 0 && (
+                          <span className="mt-1.5 flex items-center gap-1.5">
+                            <span className="pill bg-brand-tint text-[12px] text-brand">Photos réelles</span>
+                            {o.photos.map((key) => (
+                              <button
+                                key={key}
+                                type="button"
+                                onClick={() => { select(o, key); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                                aria-label={`Voir la photo de l’appareil de ${o.vendorName}`}
+                                className="relative h-8 w-8 overflow-hidden rounded-lg bg-chalk ring-brand hover:ring-2"
+                              >
+                                <Image loader={storedImageLoader} src={key} alt="" fill sizes="32px" className="object-cover" />
+                              </button>
+                            ))}
+                          </span>
+                        )}
+                      </div>
+                      {chosen ? (
+                        <span className="pill bg-brand-tint text-brand">Sélectionnée</span>
+                      ) : (
+                        <button type="button" onClick={() => select(o)} className="btn-secondary btn-sm">Choisir</button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+              {shops.length > 3 && (
+                <button type="button" onClick={() => setShowAllShops(!showAllShops)} className="mt-3 text-sm font-medium text-brand hover:underline">
+                  {showAllShops ? "Voir moins" : `Voir les ${shops.length} ateliers`}
+                </button>
+              )}
+            </div>
+          )}
         </section>
         <div className="w-full lg:hidden">
           <Passport current={current} kind={product.kind} />

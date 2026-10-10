@@ -1,9 +1,11 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { GRADES, displayName, variantLabel } from "@/lib/catalog";
 import { formatPrice } from "@/lib/money";
 import { SELLABLE } from "@/lib/queries";
 import { formatDateTime } from "@/lib/utils";
+import { imageUrl } from "@/lib/image-url";
 import ListingActions from "./ListingActions";
 
 export const metadata: Metadata = { title: "Offres à contrôler" };
@@ -12,7 +14,7 @@ export default async function AdminListings() {
   const pending = await prisma.offer.findMany({
     where: { status: "PENDING_REVIEW" },
     orderBy: { createdAt: "asc" },
-    include: { vendor: true, variant: { include: { product: true, finish: true } } },
+    include: { vendor: true, variant: { include: { product: true, finish: true } }, photos: { orderBy: { position: "asc" }, select: { key: true } } },
   });
   // Market reference for each pending config: the current best live price
   const refs = await prisma.offer.findMany({
@@ -25,7 +27,7 @@ export default async function AdminListings() {
   return (
     <>
       <h1 className="page-title">Offres à contrôler</h1>
-      <p className="-mt-2 text-[15px] text-ink-muted">Vérifiez que l’état annoncé respecte la grille (batterie minimale, IMEI) avant la mise en ligne.</p>
+      <p className="-mt-2 text-[15px] text-ink-muted">Vérifiez l’état annoncé, la batterie mesurée et l’IMEI. Validez, ou demandez une correction à l’atelier : il corrige et renvoie l’offre.</p>
       <div className="overflow-x-auto rounded-[26px] border border-line bg-white">
         {pending.length === 0 ? (
           <p className="p-8 text-center text-[15px] text-ink-muted">Rien à contrôler.</p>
@@ -38,12 +40,26 @@ export default async function AdminListings() {
                 return (
                   <tr key={o.id}>
                     <td>{o.vendor.storeName}<br /><span className="text-[13px] text-ink-muted">{o.vendor.partnerCode}</span></td>
-                    <td>{displayName(o.variant.product)}<br /><span className="text-[13px] text-ink-muted">{variantLabel(o.variant, o.variant.product.kind)}</span></td>
+                    <td>
+                      {displayName(o.variant.product)}
+                      {o.variant.product.status === "PROVISIONAL" && <Link href="/admin/catalog/new-models" className="pill ml-2 bg-amber-50 text-amber-800">nouveau modèle</Link>}
+                      <br /><span className="text-[13px] text-ink-muted">{variantLabel(o.variant, o.variant.product.kind)}</span>
+                      {o.photos.length > 0 && (
+                        <span className="mt-1.5 flex gap-1.5">
+                          {o.photos.map((ph) => (
+                            <a key={ph.key} href={imageUrl(ph.key, 1600)} target="_blank" rel="noreferrer" title="Photo de l’atelier : vérifier qu’aucun numéro ni lien n’apparaît">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={imageUrl(ph.key, 400)} alt="Photo de l’appareil" className="h-12 w-12 rounded-lg border border-line object-cover" />
+                            </a>
+                          ))}
+                        </span>
+                      )}
+                    </td>
                     <td>
                       {GRADES[o.conditionGrade].label}
                       <br />
                       <span className="text-[13px] text-ink-muted">
-                        {o.batteryHealth ? `Batterie ${o.batteryHealth} % (min ${GRADES[o.conditionGrade].minBattery})` : "Sans batterie"}
+                        {o.batteryHealth ? `Batterie ${o.batteryHealth} %` : "Sans batterie"}
                         {o.imei ? `, IMEI ${o.imei}` : ""}
                       </span>
                     </td>

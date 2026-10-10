@@ -46,6 +46,7 @@ export default function VariantCard({ card, followed = false }: { card: VariantC
       kind: card.kind,
       colorHex: card.colorHex,
       imageKey: card.imageKey,
+      vendorName: card.vendorName,
       cameras: card.cameras,
     });
   }
@@ -77,6 +78,7 @@ export default function VariantCard({ card, followed = false }: { card: VariantC
             artClassName={cn(card.kind === "PHONE" && "translate-y-[34px] -rotate-6")}
             alt={`${card.name}, ${card.config}`}
             sizes="(max-width: 640px) 50vw, 300px"
+            approximate={card.imageIsCover}
           />
           {tag && (
             <span className={cn("absolute left-3 top-3 flex items-center gap-1.5 rounded-full py-1.5 pl-2.5 pr-3 text-[13px] font-semibold", tag.className)}>
@@ -106,6 +108,10 @@ export default function VariantCard({ card, followed = false }: { card: VariantC
             {card.batteryHealth ? `, batterie ${card.batteryHealth} %` : ""}
           </span>
           <span className="text-ink-muted">Garantie 12 mois</span>
+          <span className="text-[13px] text-ink-muted">
+            Par {card.vendorName}
+            {card.offerCount > 1 && <b className="ml-1.5 font-medium text-brand">· {card.offerCount} offres</b>}
+          </span>
         </Link>
         <div className="mt-auto flex flex-col gap-0.5">
           <b className="text-[28px] font-semibold leading-tight tracking-[-0.035em]">{formatPrice(card.priceMillimes)}</b>

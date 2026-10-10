@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { notify } from "@/lib/notify";
 
 const schema = z.object({
   status: z.enum(["PENDING", "APPROVED", "SUSPENDED"]).optional(),
@@ -21,6 +22,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         ? `TN-${String(100 + (await prisma.vendor.count({ where: { partnerCode: { not: null } } })) + 1).padStart(4, "0")}`
         : undefined;
     await prisma.vendor.update({ where: { id }, data: { ...data, ...(partnerCode ? { partnerCode } : {}) } });
+    if (data.status === "APPROVED" && vendor.status !== "APPROVED") {
+      await notify([vendor.userId], { title: "Votre compte partenaire est validé : publiez votre première offre", href: "/vendor/listings/new" });
+    }
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors[0].message }, { status: 400 });

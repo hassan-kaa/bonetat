@@ -26,7 +26,7 @@ const STATUS: Record<OfferStatus, { label: string; cls: string }> = {
   ACTIVE: { label: "En ligne", cls: "bg-gain-tint text-gain" },
   INACTIVE: { label: "En pause", cls: "bg-slate-100 text-slate-600" },
   PENDING_REVIEW: { label: "En contrôle", cls: "bg-amber-50 text-amber-800" },
-  REJECTED: { label: "Refusée", cls: "bg-pop-tint text-pop-dark" },
+  REJECTED: { label: "À corriger", cls: "bg-pop-tint text-pop-dark" },
   DRAFT: { label: "Brouillon", cls: "bg-slate-100 text-slate-600" },
   SOLD: { label: "Vendue", cls: "bg-brand-tint text-brand" },
 };

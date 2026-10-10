@@ -24,7 +24,7 @@ export default async function DevicesPage() {
           variant: {
             select: {
               finish: { select: { hex: true, images: { where: { status: "APPROVED", angle: "FRONT" }, orderBy: { position: "asc" }, take: 1, select: { key: true } } } },
-              product: { select: { kind: true, cameraCount: true } },
+              product: { select: { kind: true, cameraCount: true, coverKey: true } },
             },
           },
         },
@@ -53,7 +53,7 @@ export default async function DevicesPage() {
           <article key={item.id} className="flex flex-wrap items-center gap-[26px] rounded-[28px] border border-line bg-white p-6">
             <span className="grid h-[190px] w-[150px] flex-none place-items-center overflow-hidden rounded-[24px] bg-brand">
               <DeviceVisual
-                imageKey={item.offer.variant.finish.images[0]?.key ?? null}
+                imageKey={item.offer.variant.finish.images[0]?.key ?? item.offer.variant.product.coverKey}
                 kind={kind}
                 colorHex={item.offer.variant.finish.hex}
                 cameras={item.offer.variant.product.cameraCount}

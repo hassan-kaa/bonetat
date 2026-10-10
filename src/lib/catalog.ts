@@ -4,41 +4,41 @@ import type { ConditionGrade, DeviceKind } from "@prisma/client";
 /** Best condition first */
 export const GRADE_ORDER: ConditionGrade[] = ["COMME_NEUF", "TRES_BON", "BON", "CORRECT"];
 
+/**
+ * The grade describes how the device LOOKS and that it fully works. Battery health is a
+ * separate, measured number per unit: a "Comme neuf" phone can have a 78 % battery.
+ */
 export const GRADES: Record<
   ConditionGrade,
-  { label: string; line: string; level: number; minBattery: number; description: string; criteria: string[] }
+  { label: string; line: string; level: number; description: string; criteria: string[] }
 > = {
   COMME_NEUF: {
     label: "Comme neuf",
     line: "Comme neuf",
     level: 4,
-    minBattery: 90,
     description: "Aucune trace, même de près. Aspect identique au neuf.",
-    criteria: ["Aucune trace visible, même de près", "Batterie ≥ 90 %", "Écran et châssis impeccables"],
+    criteria: ["Aucune trace visible, même de près", "Écran et châssis impeccables", "100 % fonctionnel, testé"],
   },
   TRES_BON: {
     label: "Très bon",
     line: "Très bon état",
     level: 3,
-    minBattery: 85,
     description: "Micro-rayures invisibles à 20 cm. Écran impeccable.",
-    criteria: ["Micro-rayures invisibles à 20 cm", "Batterie ≥ 85 %", "Écran sans défaut"],
+    criteria: ["Micro-rayures invisibles à 20 cm", "Écran sans défaut", "100 % fonctionnel, testé"],
   },
   BON: {
     label: "Bon",
     line: "Bon état",
     level: 2,
-    minBattery: 80,
     description: "Quelques traces visibles de près, écran sans rayure une fois allumé.",
-    criteria: ["Traces d’usage visibles de près", "Batterie ≥ 80 %", "100 % fonctionnel, testé"],
+    criteria: ["Traces d’usage visibles de près", "Écran sans rayure une fois allumé", "100 % fonctionnel, testé"],
   },
   CORRECT: {
     label: "Correct",
     line: "État correct",
     level: 1,
-    minBattery: 75,
     description: "Rayures visibles sur le contour ou l’écran éteint. Tout fonctionne parfaitement.",
-    criteria: ["Rayures marquées possibles", "Batterie ≥ 75 %", "100 % fonctionnel, testé"],
+    criteria: ["Rayures marquées possibles", "100 % fonctionnel, testé"],
   },
 };
 
@@ -50,6 +50,18 @@ export const KIND_LABELS: Record<DeviceKind, string> = {
   CONSOLE: "Console",
   OTHER: "Appareil",
 };
+
+/** Platform floor for every grade: below this, the battery is replaced before the device is listed */
+export const MIN_BATTERY_HEALTH = 75;
+
+/** Why a measured battery can't be listed, or null if it can. Devices without a battery (consoles) always pass. */
+export function batteryProblem(kind: DeviceKind, battery: number | null): string | null {
+  if (kind === "CONSOLE") return null;
+  if (battery === null || Number.isNaN(battery)) return "Indiquez la santé de la batterie mesurée";
+  if (battery > 100) return "La santé de la batterie va jusqu’à 100 %";
+  if (battery < MIN_BATTERY_HEALTH) return `Batterie sous ${MIN_BATTERY_HEALTH} % : remplacez-la avant la mise en vente`;
+  return null;
+}
 
 /** Bonétat's standard warranty — every offer gets at least this */
 export const WARRANTY_MONTHS = 12;

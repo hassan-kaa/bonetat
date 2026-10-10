@@ -16,6 +16,15 @@ npm run dev
 npm test                      # unit tests (Vitest), pure logic only, no database needed
 ```
 
+Catalog data (needs the Icecat and Anthropic keys in `.env`, see `.env.example`):
+
+```bash
+npm run catalog:reference     # load the Icecat reference catalog (~60,000 devices), source for the catalog and for photos
+npm run catalog:build         # fill the catalog in advance (curated list + Icecat + Wikidata); db:seed runs it too
+npm run images:sync           # match every color to Icecat and import its photos (suggestions for the uncertain ones)
+npm run listing:eval          # run the real store posts in scripts/fixtures through the smart listing (costs ~0.01 $)
+```
+
 Open http://localhost:3000
 
 > Upgrading from schema v3 (Oct 2026): variants now need a `finishId` and a `signature`, so `db push` refuses while old rows exist. Run `npx prisma db push --force-reset` (drops every table, dev data only), then re-seed.
@@ -64,10 +73,10 @@ The buyer picks state, storage, RAM, version and color. `src/lib/configurator.ts
 | `/vendor/dashboard` | Partner | Sales, items to ship, quality score, buy-box share, next payout |
 | `/vendor/orders` | Partner | Ship confirmed items, print the Bonétat slip |
 | `/vendor/listings` | Partner | Inline price edits, position vs best price, pause, « Dupliquer » for identical units |
-| `/vendor/listings/new` | Partner | 4-step publish flow, grade ⇄ battery rule enforced |
+| `/vendor/listings/new` | Partner | Paste a Facebook / Instagram post (or screenshots, or a link): the form fills itself. Or search manually; a model we don't carry is created on the spot (duplicate-checked) |
 | `/vendor/payouts` | Partner | Current half-month period and past transfers |
 | `/vendor/profile` | Partner | Legal and bank details (admin-only visibility) |
-| `/admin/*` | Admin | Orders (confirm / delivered / cancel), offer moderation, partners |
+| `/admin/*` | Admin | Orders (confirm / delivered / cancel), offer moderation, partners, catalog photos, new models (confirm / correct / merge) and spec corrections |
 
 ## Order lifecycle
 

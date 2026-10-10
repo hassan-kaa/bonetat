@@ -26,3 +26,9 @@ next-env.d.ts
 
 # raw catalog photos before import (big files, backed up separately)
 catalog-src/
+
+# images written by the local storage driver (dev)
+public/media/
+
+# Icecat index and API response cache (sync script)
+.cache/

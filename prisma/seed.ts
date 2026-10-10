@@ -4,6 +4,10 @@
 import { PrismaClient, ColorFamily, ConditionGrade, DeviceKind, Prisma } from "@prisma/client";
 import { variantSignature } from "../src/lib/variants";
 import { slugify } from "../src/lib/utils";
+import { canonicalKey, splitModel } from "../src/lib/product-identity";
+import { BRAND_LINES } from "../src/lib/brands";
+import { calcCommission } from "../src/lib/money";
+import { buildCatalog } from "../src/lib/catalog-build";
 
 const prisma = new PrismaClient();
 const G = ConditionGrade;
@@ -26,10 +30,11 @@ function hash(s: string): number {
 const CATEGORIES = [
   { slug: "iphone", nameFr: "iPhone", kind: DeviceKind.PHONE, tagline: "Du 11 au 15 Pro" },
   { slug: "android", nameFr: "Téléphones Android", kind: DeviceKind.PHONE, tagline: "Samsung, Xiaomi, Google" },
+  // Computers right after phones: a priority category (many PC shops at launch)
+  { slug: "macbook", nameFr: "MacBook", kind: DeviceKind.LAPTOP },
+  { slug: "ordinateurs", nameFr: "PC portables", kind: DeviceKind.LAPTOP, tagline: "ThinkPad, EliteBook, gaming" },
   { slug: "ipad", nameFr: "iPad", kind: DeviceKind.TABLET },
   { slug: "tablettes-android", nameFr: "Tablettes Android", kind: DeviceKind.TABLET },
-  { slug: "macbook", nameFr: "MacBook", kind: DeviceKind.LAPTOP },
-  { slug: "ordinateurs", nameFr: "Ordinateurs portables", kind: DeviceKind.LAPTOP },
   { slug: "montres", nameFr: "Montres connectées", kind: DeviceKind.WATCH },
   { slug: "consoles", nameFr: "Consoles et manettes", kind: DeviceKind.CONSOLE },
 ] as const;
@@ -240,17 +245,38 @@ const PRODUCTS: ProductSeed[] = [
   },
   {
     slug: "lenovo-thinkpad-t14-gen2", category: "ordinateurs", brand: "Lenovo", model: "ThinkPad T14 Gen 2", kind: "LAPTOP",
-    year: 2021, newPrice: 2800, base: 990, rams: [16], storages: [256, 512], storageStep: 110, options: ["Intel Core i5"],
+    year: 2021, newPrice: 2800, base: 990, rams: [16], storages: [256, 512], storageStep: 110, options: ["Intel Core i5 11e gén."],
     colors: [["Noir", "#5A606C"]],
     description: "Le portable pro increvable : clavier excellent, nombreux ports, réparable.",
     specs: { Écran: "14 pouces, Full HD", Processeur: "Intel Core i5 11e gén.", Ports: "USB-C, USB-A, HDMI, RJ45", Sortie: "2021" },
   },
   {
     slug: "dell-xps-13", category: "ordinateurs", brand: "Dell", model: "XPS 13 9310", kind: "LAPTOP",
-    year: 2021, newPrice: 4200, base: 1690, rams: [16], storages: [512], options: ["Intel Core i7"],
+    year: 2021, newPrice: 4200, base: 1690, rams: [16], storages: [512], options: ["Intel Core i7 11e gén."],
     colors: [["Argent", "#C9D1DE"]],
     description: "Ultra-compact, écran bord à bord et finition aluminium.",
     specs: { Écran: "13,4 pouces, Full HD+", Processeur: "Intel Core i7 11e gén.", Poids: "1,27 kg", Sortie: "2021" },
+  },
+  {
+    slug: "hp-elitebook-840-g8", category: "ordinateurs", brand: "HP", model: "EliteBook 840 G8", kind: "LAPTOP",
+    year: 2021, newPrice: 3300, base: 1090, rams: [8, 16], ramStep: 120, storages: [256, 512], storageStep: 110, options: ["Intel Core i5 11e gén.", "Intel Core i7 11e gén."], optionStep: 250,
+    colors: [["Argent", "#C9D1DE"]],
+    description: "Le portable d’entreprise le plus revendu en Tunisie : robuste, léger, clavier rétroéclairé.",
+    specs: { Écran: "14 pouces, Full HD", Processeur: "Intel Core 11e gén.", Ports: "USB-C, USB-A, HDMI", Sortie: "2021" },
+  },
+  {
+    slug: "lenovo-legion-5", category: "ordinateurs", brand: "Lenovo", model: "Legion 5", kind: "LAPTOP",
+    year: 2021, newPrice: 4900, base: 2390, rams: [16], storages: [512, 1000], storageStep: 150, options: ["AMD Ryzen 7 Série 5000, RTX 3060 6 Go"],
+    colors: [["Gris ardoise", "#4A4F59"]],
+    description: "PC gamer 15,6 pouces 165 Hz : joue aux jeux récents en qualité élevée.",
+    specs: { Écran: "15,6 pouces, 165 Hz", Processeur: "AMD Ryzen 7 5800H", "Carte graphique": "NVIDIA GeForce RTX 3060", Sortie: "2021" },
+  },
+  {
+    slug: "asus-tuf-gaming-f15", category: "ordinateurs", brand: "Asus", model: "TUF Gaming F15", kind: "LAPTOP",
+    year: 2022, newPrice: 3600, base: 1790, rams: [16], storages: [512], options: ["Intel Core i5 11e gén., RTX 3050 4 Go"],
+    colors: [["Noir", "#2B2E35"]],
+    description: "Le PC gamer abordable : solide, bien refroidi, écran 144 Hz.",
+    specs: { Écran: "15,6 pouces, 144 Hz", Processeur: "Intel Core i5-11400H", "Carte graphique": "NVIDIA GeForce RTX 3050", Sortie: "2022" },
   },
   // ── Watches ──
   {
@@ -284,16 +310,122 @@ const PRODUCTS: ProductSeed[] = [
   },
 ];
 
-const GRADE_ADD: Record<ConditionGrade, number> = { CORRECT: 0, BON: 0.06, TRES_BON: 0.12, COMME_NEUF: 0.2 };
-const MIN_BATTERY: Record<ConditionGrade, number> = { CORRECT: 75, BON: 80, TRES_BON: 85, COMME_NEUF: 90 };
-const GRADES: ConditionGrade[] = [G.CORRECT, G.BON, G.TRES_BON, G.COMME_NEUF];
-const NOTES = [
-  "Batterie remplacée neuve",
-  "Coque et verre trempé offerts",
-  "Boîte d’origine incluse",
-  "Facture d’origine fournie",
-  null, null, null, null,
-];
+// ─────────────────────────────────────────────────────────────────────
+// Demo stock: a few hand-picked units per product, one physical device each.
+// Small on purpose, so every configurator behavior can be checked by hand:
+// the product page shows ONLY storages / colors / versions that have a unit for sale.
+//
+// [storage, ram, option, color, grade, price DT, battery %, shop]
+//   shop: 0 TechStore Sousse (quality 96) · 1 PhoneLand Sfax (91) · 2 SmartFix Tunis (98) · 3 MobiCenter Nabeul (89)
+// ─────────────────────────────────────────────────────────────────────
+type Unit = [storage: number | null, ram: number | null, option: string | null, color: string, grade: ConditionGrade, price: number, battery: number | null, shop: 0 | 1 | 2 | 3];
+const { CORRECT, BON, TRES_BON, COMME_NEUF } = G;
+
+const STOCK: Record<string, Unit[]> = {
+  // iPhone 13: THE test page.
+  //  · Opens on the cheapest unit of the whole page: 128 Go Minuit, Correct, 1190 DT.
+  //  · 128 Minuit Bon exists twice (1290 and 1340): only 1290 is ever shown, "2 exemplaires".
+  //  · Bleu exists only in Très bon: picking Bleu from Correct switches the grade to Très bon.
+  //  · Comme neuf exists only in 256 Go Minuit: picking it switches the storage to 256.
+  //  · Lumière stellaire has no unit: it never appears.
+  "iphone-13": [
+    [128, null, null, "Minuit", CORRECT, 1190, 81, 1],
+    [128, null, null, "Minuit", BON, 1290, 86, 1],
+    [128, null, null, "Minuit", BON, 1340, 92, 0],
+    [128, null, null, "Minuit", TRES_BON, 1450, 88, 2],
+    [128, null, null, "Bleu", TRES_BON, 1480, 90, 0],
+    [256, null, null, "Minuit", COMME_NEUF, 1790, 97, 2],
+    [256, null, null, "Rose", BON, 1450, 84, 1],
+  ],
+  // iPhone 11 family: the model switcher. 11 Pro Max has no unit, so it isn't offered.
+  "iphone-11": [
+    [64, null, null, "Rouge", CORRECT, 640, 78, 2],
+    [64, null, null, "Noir", BON, 690, 83, 0],
+    [128, null, null, "Vert", TRES_BON, 820, 89, 1],
+  ],
+  "iphone-11-pro": [
+    [64, null, null, "Gris sidéral", BON, 1090, 85, 2],
+    [256, null, null, "Vert nuit", TRES_BON, 1290, 91, 0],
+  ],
+  "iphone-12": [
+    [64, null, null, "Bleu", BON, 990, 84, 1],
+    [128, null, null, "Noir", TRES_BON, 1190, 90, 0],
+  ],
+  "iphone-13-pro": [
+    [128, null, null, "Graphite", BON, 1790, 86, 2],
+    [256, null, null, "Bleu alpin", COMME_NEUF, 2190, 98, 0],
+  ],
+  "iphone-14-pro": [[128, null, null, "Violet intense", TRES_BON, 2490, 92, 1]],
+  "iphone-15": [
+    [128, null, null, "Noir", BON, 2690, 95, 0],
+    [128, null, null, "Rose", TRES_BON, 2790, 99, 2],
+  ],
+  // Samsung: these colors have catalog photos (Icecat).
+  // Galaxy S23: THE "several shops, same unit" page. It opens on 128 Go Noir fantôme, Bon, sold by 4 shops:
+  //  · PhoneLand 1690 is the cheapest, but SmartFix 1720 has real photos and is within 2 %: SmartFix holds the buy box.
+  //  · TechStore has 2 identical units at 1750: one row, "2 disponibles".
+  //  · 4 shops: the list shows 3, then "Voir les 4 ateliers".
+  "samsung-galaxy-s23": [
+    [128, null, null, "Noir fantôme", BON, 1690, 87, 1],
+    [128, null, null, "Noir fantôme", BON, 1720, 93, 2],
+    [128, null, null, "Noir fantôme", BON, 1750, 90, 0],
+    [128, null, null, "Noir fantôme", BON, 1750, 89, 0],
+    [128, null, null, "Noir fantôme", BON, 1790, 91, 3],
+    [128, null, null, "Crème", TRES_BON, 1790, 91, 0],
+    [256, null, null, "Vert", COMME_NEUF, 2090, 96, 2],
+  ],
+  "samsung-galaxy-s24": [
+    [256, null, null, "Violet cobalt", CORRECT, 2490, 88, 2],
+    [256, null, null, "Gris marbre", BON, 2590, 93, 1],
+    [256, null, null, "Noir onyx", TRES_BON, 2690, 95, 0],
+  ],
+  "samsung-galaxy-a54": [
+    [128, null, null, "Awesome Graphite", BON, 790, 86, 1],
+    [128, null, null, "Awesome Violet", TRES_BON, 850, 90, 0],
+  ],
+  "xiaomi-redmi-note-13-pro": [[256, 8, null, "Noir minuit", BON, 690, 89, 2]],
+  "google-pixel-7a": [[128, null, null, "Charbon", TRES_BON, 990, 91, 1]],
+  // iPad Air 5: storage AND version (Wi-Fi / Cellular) axes.
+  "ipad-air-5": [
+    [64, null, "Wi-Fi", "Gris sidéral", BON, 1390, 88, 0],
+    [256, null, "Wi-Fi + Cellular", "Bleu", TRES_BON, 1890, 93, 2],
+  ],
+  "ipad-9": [[64, null, "Wi-Fi", "Argent", BON, 790, 85, 1]],
+  "samsung-galaxy-tab-s8": [[128, null, "Wi-Fi", "Rose doré", TRES_BON, 1490, 94, 2]],
+  "lenovo-tab-p11": [[128, null, "Wi-Fi", "Gris ardoise", BON, 490, 82, 0]],
+  // MacBook Air M1: RAM axis. 16 Go exists only with 512 Go: picking 16 switches the SSD to 512.
+  "macbook-air-m1": [
+    [256, 8, null, "Gris sidéral", BON, 1690, 87, 0],
+    [256, 8, null, "Argent", TRES_BON, 1790, 92, 2],
+    [512, 16, null, "Gris sidéral", COMME_NEUF, 2390, 98, 1],
+  ],
+  "macbook-pro-14-m1-pro": [[512, 16, null, "Argent", TRES_BON, 3590, 93, 2]],
+  "lenovo-thinkpad-t14-gen2": [[256, 16, "Intel Core i5 11e gén.", "Noir", BON, 1190, 84, 1]],
+  "dell-xps-13": [[512, 16, "Intel Core i7 11e gén.", "Argent", TRES_BON, 1890, 90, 0]],
+  // PCs: enough spread to test the computer filters (processor, RAM, SSD, graphics card).
+  "hp-elitebook-840-g8": [
+    [256, 8, "Intel Core i5 11e gén.", "Argent", CORRECT, 1090, 79, 0],
+    [256, 16, "Intel Core i5 11e gén.", "Argent", BON, 1240, 85, 1],
+    [512, 16, "Intel Core i7 11e gén.", "Argent", TRES_BON, 1590, 91, 2],
+  ],
+  "lenovo-legion-5": [[512, 16, "AMD Ryzen 7 Série 5000, RTX 3060 6 Go", "Gris ardoise", TRES_BON, 2590, 88, 0]],
+  "asus-tuf-gaming-f15": [[512, 16, "Intel Core i5 11e gén., RTX 3050 4 Go", "Noir", BON, 1890, 86, 1]],
+  // Watch: version axis (case size).
+  "apple-watch-series-8": [
+    [null, null, "41 mm, GPS", "Minuit", BON, 590, 86, 2],
+    [null, null, "45 mm, GPS", "Minuit", TRES_BON, 690, 91, 0],
+    [null, null, "41 mm, GPS", "Argent", COMME_NEUF, 720, 97, 1],
+  ],
+  "samsung-galaxy-watch-6": [[null, null, "44 mm", "Graphite", BON, 390, 88, 1]],
+  // Consoles: no battery.
+  "sony-playstation-5": [
+    [null, null, "Édition digitale", "Blanc", TRES_BON, 1150, null, 2],
+    [null, null, "Standard", "Blanc", BON, 1290, null, 0],
+  ],
+  "nintendo-switch-oled": [[null, null, null, "Blanc", BON, 790, null, 1]],
+};
+
+const NOTES = ["Boîte d’origine incluse", "Coque et verre trempé offerts", "Chargeur d’origine", null, null];
 
 /** Every variant the product really exists in: the axes, minus the declared holes */
 function lineup(p: ProductSeed) {
@@ -315,6 +447,18 @@ function lineup(p: ProductSeed) {
   return rows;
 }
 
+/** Curated catalog photos and Icecat links survive a reseed: they are set aside and reattached by product + color */
+async function keepCatalogPhotos() {
+  return prisma.finish.findMany({
+    where: { OR: [{ images: { some: {} } }, { icecatId: { not: null } }] },
+    select: {
+      slug: true, icecatId: true, icecatMatch: true, aliases: true,
+      product: { select: { slug: true } },
+      images: { select: { angle: true, position: true, key: true, width: true, height: true, sourceWidth: true, sourceHeight: true, blurDataUrl: true, source: true, sourceRef: true, status: true } },
+    },
+  });
+}
+
 async function wipe() {
   await prisma.review.deleteMany();
   await prisma.orderItem.deleteMany();
@@ -333,10 +477,15 @@ async function wipe() {
   await prisma.otpCode.deleteMany();
   await prisma.vendor.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.specSuggestion.deleteMany();
+  await prisma.listingDraft.deleteMany();
+  await prisma.productLine.deleteMany();
+  await prisma.brand.deleteMany();
 }
 
 async function main() {
-  console.log("Wiping dev database…");
+  const kept = await keepCatalogPhotos();
+  console.log(`Wiping dev database (keeping ${kept.reduce((n, f) => n + f.images.length, 0)} catalog photos)…`);
   await wipe();
 
   // ── People ──
@@ -358,8 +507,13 @@ async function main() {
       legalName: "SmartFix SARL", taxId: "1122334/C/M/000", rne: "B0456782021", pickupAddress: "Rue du Lac Biwa, Les Berges du Lac, 1053 Tunis",
       pickupHours: "Lun. à sam., 10 h à 19 h", rib: "04 018 0112233445566 77", shopPhone: "+21671960330",
     },
+    {
+      phone: "+21666666666", name: "Walid Hammami", storeName: "MobiCenter Nabeul", partnerCode: "TN-0171", quality: 89,
+      legalName: "MobiCenter SUARL", taxId: "5566778/D/M/000", rne: "B0778892022", pickupAddress: "Avenue Farhat Hached, 8000 Nabeul",
+      pickupHours: "Lun. à sam., 9 h à 18 h", rib: "25 010 0556677889900 11", shopPhone: "+21672285440",
+    },
   ];
-  const vendors = [];
+  const vendors: Prisma.VendorGetPayload<object>[] = [];
   for (const v of vendorDefs) {
     const user = await prisma.user.create({ data: { phone: v.phone, name: v.name, role: "VENDOR" } });
     vendors.push(
@@ -399,6 +553,13 @@ async function main() {
   });
   console.log("✓ People");
 
+  // ── Brands and lines ──
+  for (const [i, [name, lines]] of Object.entries(BRAND_LINES).entries()) {
+    await prisma.brand.create({
+      data: { name, slug: slugify(name), position: i, lines: { create: lines.map((l) => ({ name: l, slug: slugify(l) })) } },
+    });
+  }
+
   // ── Catalog ──
   const catId: Record<string, string> = {};
   for (const [i, c] of CATEGORIES.entries()) {
@@ -409,12 +570,16 @@ async function main() {
   let variantCount = 0;
   let offerCount = 0;
   let finishCount = 0;
+  let photoCount = 0;
   const variantIds: Record<string, string> = {}; // "slug|storage|ram|option|color"
 
   for (const p of PRODUCTS) {
+    const split = splitModel(p.model, BRAND_LINES[p.brand] ?? []);
+    if (!split) throw new Error(`Seed error: can't split "${p.model}" into line + model number`);
     const product = await prisma.product.create({
       data: {
         slug: p.slug, categoryId: catId[p.category], brand: p.brand, model: p.model, kind: p.kind,
+        line: split.line, modelNumber: split.modelNumber, canonicalKey: canonicalKey({ brand: p.brand, ...split }),
         series: p.series, seriesLabel: p.seriesLabel, seriesOrder: p.seriesOrder ?? 0, cameraCount: p.cameras,
         description: p.description, newPriceMillimes: p.newPrice * 1000, specsJson: Object.entries(p.specs) as Prisma.InputJsonValue, releaseYear: p.year,
       },
@@ -425,11 +590,20 @@ async function main() {
     for (const [i, [name, hex]] of p.colors.entries()) {
       const family = FAMILY[name];
       if (!family) throw new Error(`Seed error: no color family for "${name}"`);
-      finishes.push(
-        await prisma.finish.create({
-          data: { productId: product.id, slug: slugify(name), nameFr: name, hex, family, aliases: ALIASES[name] ?? [], position: i },
-        })
-      );
+      const slug = slugify(name);
+      const old = kept.find((f) => f.product.slug === p.slug && f.slug === slug);
+      const finish = await prisma.finish.create({
+        data: {
+          productId: product.id, slug, nameFr: name, hex, family, position: i,
+          aliases: [...new Set([...(ALIASES[name] ?? []), ...(old?.aliases ?? [])])],
+          icecatId: old?.icecatId ?? null, icecatMatch: old?.icecatMatch ?? null,
+        },
+      });
+      if (old?.images.length) {
+        await prisma.catalogImage.createMany({ data: old.images.map((img) => ({ ...img, finishId: finish.id })) });
+        photoCount += old.images.length;
+      }
+      finishes.push(finish);
     }
 
     let position = 0;
@@ -446,70 +620,72 @@ async function main() {
       });
       variantCount++;
       variantIds[[p.slug, storage, ram, option, color].map(String).join("|")] = variant.id;
+    }
 
-      // Offers, one physical unit each: not every variant/grade is in stock, that's what makes the switcher interesting
-      for (const grade of GRADES) {
-        const k = hash(`${p.slug}|${storage}|${ram}|${option}|${color}|${grade}`);
-        if (k % 7 < 2) continue; // ~30% gaps
-        const competitors = k % 11 === 0 ? 3 : k % 5 === 0 ? 2 : 1;
-        for (let c = 0; c < competitors; c++) {
-          const kk = hash(`${k}|${c}`);
-          const base = p.base + step;
-          const price = Math.round((base * (1 + GRADE_ADD[grade]) + (kk % 6) * 10 + c * 15) / 10) * 10 - 1;
-          const min = MIN_BATTERY[grade];
-          const battery = p.kind === "CONSOLE" ? null : Math.min(100, min + (kk % (101 - min)));
-          const age = 3 + (kk % 40);
-          const fresh = kk % 23 === 0;
-          const createdAt = fresh ? daysAgo(0.3) : daysAgo(age);
-          const dropped = !fresh && kk % 13 === 0;
-          offerCount++;
-          await prisma.offer.create({
-            data: {
-              variantId: variant.id, vendorId: vendors[(kk + c) % 3].id, conditionGrade: grade, batteryHealth: battery,
-              warrantyMonths: 12, priceMillimes: price * 1000,
-              previousPriceMillimes: dropped ? (price + 60) * 1000 : null, priceChangedAt: dropped ? daysAgo(1) : null,
-              sellerNote: NOTES[kk % NOTES.length], status: "ACTIVE", imei: p.kind === "PHONE" ? `35${String(kk).padStart(13, "0").slice(0, 13)}` : null,
-              createdAt,
-            },
-          });
-        }
-      }
+    // The demo stock: only these units are for sale
+    for (const [i, [storage, ram, option, color, grade, price, battery, shop]] of (STOCK[p.slug] ?? []).entries()) {
+      const variantId = variantIds[[p.slug, storage, ram, option, color].map(String).join("|")];
+      if (!variantId) throw new Error(`Seed error: ${p.slug} has no variant ${storage}|${ram}|${option}|${color}`);
+      const k = hash(`${p.slug}|${i}`);
+      offerCount++;
+      await prisma.offer.create({
+        data: {
+          variantId, vendorId: vendors[shop].id, conditionGrade: grade, batteryHealth: battery, warrantyMonths: 12,
+          priceMillimes: price * 1000, sellerNote: NOTES[k % NOTES.length], status: "ACTIVE",
+          imei: p.kind === "PHONE" ? `35${String(k).padStart(13, "0").slice(0, 13)}` : null,
+          createdAt: daysAgo(3 + (k % 30)),
+        },
+      });
     }
   }
-  console.log(`✓ ${PRODUCTS.length} products, ${finishCount} finishes, ${variantCount} variants, ${offerCount} offers`);
+  console.log(`✓ ${PRODUCTS.length} products, ${finishCount} finishes, ${variantCount} variants, ${offerCount} units for sale, ${photoCount} catalog photos kept`);
 
-  // A few offers waiting for moderation
-  const anyVariant = Object.values(variantIds)[3];
+  // Demo "real photos": SmartFix's Galaxy S23 unit gets 3 photos. Stand-ins borrowed from the
+  // catalog shots of that color (no real unit photos in a seed); a store would upload its own.
+  const shown = await prisma.offer.findFirst({
+    where: { vendorId: vendors[2].id, conditionGrade: BON, variant: { product: { slug: "samsung-galaxy-s23" }, finish: { slug: slugify("Noir fantôme") } } },
+    include: { variant: { include: { finish: { include: { images: { orderBy: { position: "asc" } } } } } } },
+  });
+  const stand = (shown?.variant.finish.images ?? []).filter((img) => img.angle !== "FRONT").slice(0, 3);
+  if (shown && stand.length) {
+    await prisma.offerPhoto.createMany({ data: stand.map((img, i) => ({ offerId: shown.id, key: img.key, width: img.width, height: img.height, position: i })) });
+  } else console.warn("⚠ No catalog photos for Galaxy S23 Noir fantôme: run npm run images:sync, then reseed for the photo demo");
+
+  // Reason tags on the home page: one fresh arrival, one price drop
+  const fresh = await prisma.offer.findFirst({ where: { variant: { product: { slug: "iphone-15" } }, conditionGrade: TRES_BON } });
+  if (fresh) await prisma.offer.update({ where: { id: fresh.id }, data: { createdAt: daysAgo(0.3) } });
+  const drop = await prisma.offer.findFirst({ where: { variant: { product: { slug: "samsung-galaxy-s24" } }, conditionGrade: BON } });
+  if (drop) await prisma.offer.update({ where: { id: drop.id }, data: { previousPriceMillimes: drop.priceMillimes + 100_000, priceChangedAt: daysAgo(1) } });
+
+  // One offer waiting for moderation (not visible to buyers)
   await prisma.offer.create({
-    data: { variantId: anyVariant, vendorId: vendors[0].id, conditionGrade: G.BON, batteryHealth: 84, priceMillimes: 999_000, status: "PENDING_REVIEW", imei: "356789012345678" },
+    data: { variantId: variantIds["iphone-12|64|null|null|Bleu"], vendorId: vendors[0].id, conditionGrade: BON, batteryHealth: 84, priceMillimes: 999_000, status: "PENDING_REVIEW", imei: "356789012345678" },
   });
 
   // ── Orders (give the client & partner spaces something real to show) ──
   let orderSeq = 20400;
-  async function order(buyerId: string, items: { key: string; grade: ConditionGrade }[], status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED", days: number, address = {
+  async function order(buyerId: string, items: { key: string; grade: ConditionGrade; price: number }[], status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED", days: number, address = {
     fullName: "Client Bonétat", phone: "+21650111222", governorate: "Sfax", delegation: "Sfax Ville" as string | null, line: "Rue de Marseille 14", notes: null as string | null,
   }) {
+    // Each ordered device is its own unit, already sold: the demo stock above stays untouched
     const lines = [];
-    for (const it of items) {
+    for (const [i, it] of items.entries()) {
       if (!variantIds[it.key]) throw new Error(`Seed error: unknown variant key ${it.key}`);
-      const offer = await prisma.offer.findFirst({
-        where: { variantId: variantIds[it.key], conditionGrade: it.grade, status: "ACTIVE" },
-        include: { variant: { include: { product: true, finish: true } } },
-        orderBy: { priceMillimes: "asc" },
-      }) ?? await prisma.offer.findFirst({
-        where: { variantId: variantIds[it.key], status: "ACTIVE" },
-        include: { variant: { include: { product: true, finish: true } } },
-        orderBy: { priceMillimes: "asc" },
-      });
-      if (offer) lines.push(offer);
+      lines.push(
+        await prisma.offer.create({
+          data: {
+            variantId: variantIds[it.key], vendorId: vendors[(orderSeq + i) % 3].id, conditionGrade: it.grade, batteryHealth: 88,
+            warrantyMonths: 12, priceMillimes: it.price * 1000, status: "SOLD", createdAt: daysAgo(days + 5),
+          },
+          include: { variant: { include: { product: true, finish: true } } },
+        })
+      );
     }
     if (lines.length === 0) return null;
     const total = lines.reduce((s, o) => s + o.priceMillimes, 0);
     const created = daysAgo(days);
     const delivered = status === "DELIVERED";
     const shipped = status === "SHIPPED" || delivered;
-    // Ordered units are no longer for sale (one offer = one unit)
-    await prisma.offer.updateMany({ where: { id: { in: lines.map((o) => o.id) } }, data: { status: "SOLD" } });
     return prisma.order.create({
       data: {
         number: `BN-${orderSeq++}`, buyerId, status, totalMillimes: total + 8000, shippingFeeMillimes: 8000,
@@ -519,7 +695,7 @@ async function main() {
             const v = o.variant;
             const parts = [v.ramGb ? `${v.ramGb} Go` : null, v.storageGb ? (v.product.kind === "LAPTOP" ? `SSD ${v.storageGb} Go` : `${v.storageGb} Go`) : null, v.option, v.finish.nameFr].filter(Boolean);
             return {
-              offerId: o.id, vendorId: o.vendorId, priceMillimes: o.priceMillimes, commissionMillimes: Math.round(o.priceMillimes * 0.05),
+              offerId: o.id, vendorId: o.vendorId, priceMillimes: o.priceMillimes, commissionMillimes: calcCommission(o.priceMillimes),
               title: v.product.brand === "Apple" ? v.product.model : `${v.product.brand} ${v.product.model}`,
               configLabel: parts.join(", "), grade: o.conditionGrade, batteryHealth: o.batteryHealth, warrantyMonths: 12,
               fulfillmentStatus: delivered ? "DELIVERED" : shipped ? "SHIPPED" : "PENDING", shippedAt: shipped ? daysAgo(days - 1) : null,
@@ -532,17 +708,21 @@ async function main() {
   }
 
   const yasmineAddr = { fullName: home.fullName, phone: home.phone, governorate: home.governorate, delegation: home.delegation, line: home.line, notes: home.notes };
-  const delivered = await order(buyer.id, [{ key: "iphone-13|128|null|null|Rose", grade: G.TRES_BON }], "DELIVERED", 26, yasmineAddr);
-  await order(buyer.id, [{ key: "iphone-11-pro|256|null|null|Vert nuit", grade: G.TRES_BON }], "SHIPPED", 2, yasmineAddr);
-  await order(buyer.id, [{ key: "apple-watch-series-8|null|null|41 mm, GPS|Minuit", grade: G.COMME_NEUF }], "DELIVERED", 70, yasmineAddr);
+  const delivered = await order(buyer.id, [{ key: "iphone-13|128|null|null|Rose", grade: TRES_BON, price: 1490 }], "DELIVERED", 26, yasmineAddr);
+  await order(buyer.id, [{ key: "iphone-11-pro|256|null|null|Vert nuit", grade: TRES_BON, price: 1290 }], "SHIPPED", 2, yasmineAddr);
+  await order(buyer.id, [{ key: "apple-watch-series-8|null|null|41 mm, GPS|Minuit", grade: COMME_NEUF, price: 690 }], "DELIVERED", 70, yasmineAddr);
 
   // Other buyers: orders partners must ship today, and sales history for the dashboards
-  await order(buyers[1].id, [{ key: "iphone-11-pro|256|null|null|Vert nuit", grade: G.TRES_BON }], "CONFIRMED", 0.2);
-  await order(buyers[2].id, [{ key: "iphone-13|128|null|null|Minuit", grade: G.BON }], "PENDING", 0.1, { fullName: "Rania Mansour", phone: "+21698765432", governorate: "Ariana", delegation: "La Soukra", line: "Résidence Les Jasmins, B12", notes: null });
-  await order(buyers[3].id, [{ key: "iphone-12|64|null|null|Bleu", grade: G.TRES_BON }, { key: "samsung-galaxy-a54|128|null|null|Awesome Graphite", grade: G.BON }], "CONFIRMED", 0.6, { fullName: "Youssef Hamdi", phone: "+21620333444", governorate: "Monastir", delegation: "Monastir", line: "Avenue de l’Environnement 33", notes: null });
+  await order(buyers[1].id, [{ key: "iphone-11-pro|256|null|null|Vert nuit", grade: TRES_BON, price: 1310 }], "CONFIRMED", 0.2);
+  await order(buyers[2].id, [{ key: "iphone-13|128|null|null|Minuit", grade: BON, price: 1290 }], "PENDING", 0.1, { fullName: "Rania Mansour", phone: "+21698765432", governorate: "Ariana", delegation: "La Soukra", line: "Résidence Les Jasmins, B12", notes: null });
+  await order(buyers[3].id, [{ key: "iphone-12|64|null|null|Bleu", grade: TRES_BON, price: 1050 }, { key: "samsung-galaxy-a54|128|null|null|Awesome Graphite", grade: BON, price: 790 }], "CONFIRMED", 0.6, { fullName: "Youssef Hamdi", phone: "+21620333444", governorate: "Monastir", delegation: "Monastir", line: "Avenue de l’Environnement 33", notes: null });
+  const history: [string, ConditionGrade, number][] = [
+    ["iphone-11|64|null|null|Noir", BON, 690], ["iphone-13|128|null|null|Minuit", CORRECT, 1190], ["iphone-11|128|null|null|Violet", TRES_BON, 840],
+    ["samsung-galaxy-a54|128|null|null|Awesome Graphite", BON, 790], ["macbook-air-m1|256|8|null|Gris sidéral", COMME_NEUF, 1990],
+  ];
   for (let i = 0; i < 14; i++) {
-    const keys = ["iphone-11|64|null|null|Noir", "iphone-13|128|null|null|Minuit", "iphone-11|128|null|null|Violet", "samsung-galaxy-a54|128|null|null|Awesome Graphite", "macbook-air-m1|256|8|null|Gris sidéral"];
-    await order(buyers[1 + (i % 3)].id, [{ key: keys[i % keys.length], grade: GRADES[i % 4] }], "DELIVERED", 3 + i * 2);
+    const [key, grade, price] = history[i % history.length];
+    await order(buyers[1 + (i % 3)].id, [{ key, grade, price }], "DELIVERED", 3 + i * 2);
   }
 
   if (delivered) {
@@ -582,12 +762,17 @@ async function main() {
     ],
   });
 
+  // ── The full catalog (curated + Icecat reference + Wikidata), so stores just pick their model ──
+  const built = await buildCatalog();
+  console.log(`✓ Catalogue complet : ${built.total} modèles (${Object.entries(built.added).map(([k, n]) => `${n} ${k}`).join(", ")})`);
+
   console.log("\nSeed complete.\n");
   console.log("Test accounts (the OTP code prints in the server console):");
   console.log("  Admin            +21600000000");
   console.log("  Partner          +21611111111  (TechStore Sousse)");
   console.log("  Partner          +21622222222  (PhoneLand Sfax)");
   console.log("  Partner          +21655555555  (SmartFix Tunis)");
+  console.log("  Partner          +21666666666  (MobiCenter Nabeul)");
   console.log("  Partner pending  +21633333333");
   console.log("  Client           +21644444444  (Yasmine, has orders, devices, alerts)");
 }

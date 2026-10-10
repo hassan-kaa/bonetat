@@ -32,8 +32,11 @@ export function savings(priceMillimes: number, newPriceMillimes?: number | null)
   return newPriceMillimes - priceMillimes;
 }
 
-/** Bonétat commission on partner sales (introductory rate) */
-export const COMMISSION_RATE = 0.05;
+/** Bonétat commission on partner sales, fixed (decided 2026-10-10; 2 % was the alternative) */
+export const COMMISSION_RATE = 0.025;
+
+/** "2,5 %": the rate as stores read it, never rounded */
+export const COMMISSION_LABEL = `${(COMMISSION_RATE * 100).toLocaleString("fr-FR")} %`;
 
 export function calcCommission(priceMillimes: number): number {
   return Math.round(priceMillimes * COMMISSION_RATE);

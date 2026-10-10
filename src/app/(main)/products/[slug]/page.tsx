@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { Star } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -33,7 +33,13 @@ async function load(slug: string) {
       },
       variants: {
         orderBy: { position: "asc" },
-        include: { finish: true, offers: { where: SELLABLE, include: { vendor: { select: { qualityScore: true } } } } },
+        include: {
+          finish: true,
+          offers: {
+            where: SELLABLE,
+            include: { vendor: { select: { qualityScore: true, storeName: true } }, photos: { orderBy: { position: "asc" }, select: { key: true } } },
+          },
+        },
       },
     },
   });
@@ -57,6 +63,11 @@ export default async function ProductPage({ params, searchParams }: Props) {
   const query = await searchParams;
   const product = await load(slug);
   if (!product) notFound();
+  if (product.status === "MERGED" && product.mergedIntoId) {
+    const target = await prisma.product.findUnique({ where: { id: product.mergedIntoId }, select: { slug: true } });
+    if (target) permanentRedirect(`/products/${target.slug}`);
+    notFound();
+  }
 
   const name = displayName(product);
   const offers = toConfigOffers(product);
@@ -92,7 +103,8 @@ export default async function ProductPage({ params, searchParams }: Props) {
   ]);
 
   const currentVariant = initial ? product.variants.find((v) => v.id === initial.variantId) : null;
-  const siblings: Sibling[] = siblingsRaw.map((s) => {
+  // Sibling models with nothing for sale aren't offered in the switcher
+  const siblings: Sibling[] = siblingsRaw.filter((s) => s.id === product.id || s.variants.some((v) => v.offers.length > 0)).map((s) => {
     const prices = s.variants.flatMap((v) => v.offers.map((o) => o.priceMillimes));
     const q = new URLSearchParams();
     if (initial) q.set("g", initial.grade);
@@ -114,13 +126,16 @@ export default async function ProductPage({ params, searchParams }: Props) {
     ? (await prisma.favorite.findMany({ where: { userId: user.id, variant: { productId: product.id } }, select: { variantId: true } })).map((f) => f.variantId)
     : [];
 
-  const finishes: ConfigFinish[] = product.finishes.map((f) => ({
+  // The browser only ever receives what is for sale: configurations and colors without a unit stay server-side
+  const sellable = product.variants.filter((v) => v.offers.length > 0);
+  const sellableFinishIds = new Set(sellable.map((v) => v.finishId));
+  const finishes: ConfigFinish[] = product.finishes.filter((f) => sellableFinishIds.has(f.id)).map((f) => ({
     id: f.id,
     nameFr: f.nameFr,
     hex: f.hex,
     images: [...f.images].sort((a, b) => ANGLE_ORDER[a.angle] - ANGLE_ORDER[b.angle]),
   }));
-  const variants: ConfigVariant[] = product.variants.map((v) => ({
+  const variants: ConfigVariant[] = sellable.map((v) => ({
     id: v.id, storageGb: v.storageGb, ramGb: v.ramGb, option: v.option, finishId: v.finishId, finish: { nameFr: v.finish.nameFr }, newPriceMillimes: v.newPriceMillimes,
   }));
   // Specs are stored as ordered [label, value] pairs (JSONB would reorder object keys)
@@ -163,7 +178,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
       {initial ? (
         <Configurator
-          product={{ slug: product.slug, name, kind: product.kind, cameras: product.cameraCount, newPriceMillimes: product.newPriceMillimes }}
+          product={{ slug: product.slug, name, kind: product.kind, cameras: product.cameraCount, newPriceMillimes: product.newPriceMillimes, coverKey: product.coverKey }}
           variants={variants}
           offers={offers}
           initialOfferId={initial.offerId}
