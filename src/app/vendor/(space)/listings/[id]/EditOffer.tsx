@@ -45,7 +45,7 @@ export default function EditOffer({ offer }: Props) {
 
   if (offer.status === "SOLD") {
     return (
-      <p className="rounded-[26px] border border-line bg-white p-6 text-[15px] text-ink-muted">
+      <p className="rounded-panel border border-line bg-white p-6 text-[15px] text-ink-muted">
         Cet appareil est vendu. Il reviendra en ligne automatiquement si la commande est annulée.
       </p>
     );
@@ -63,7 +63,7 @@ export default function EditOffer({ offer }: Props) {
           );
         } else send(base, "Offre enregistrée");
       }}
-      className="flex flex-col gap-4 rounded-[26px] border border-line bg-white p-6"
+      className="flex flex-col gap-4 rounded-panel border border-line bg-white p-6"
     >
       {correcting && (
         <p className="rounded-2xl bg-pop-tint px-4 py-3 text-sm text-pop-dark">

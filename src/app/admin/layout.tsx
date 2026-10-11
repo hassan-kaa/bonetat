@@ -34,7 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <div className="px-2"><Logo href="/admin" tone="white" suffix="admin" /></div>
           <nav aria-label="Administration" className="flex gap-0.5 overflow-x-auto lg:flex-col">
             {nav.map((i) => (
-              <Link key={i.href} href={i.href} className="flex items-center gap-3 whitespace-nowrap rounded-[14px] px-3.5 py-3 text-[15px] text-white/80 hover:bg-white/[.07]">
+              <Link key={i.href} href={i.href} className="flex items-center gap-3 whitespace-nowrap rounded-control px-3.5 py-3 text-[15px] text-white/80 hover:bg-white/[.07]">
                 <span className="flex-1">{i.label}</span>
                 {i.n > 0 && <span className="grid h-[22px] min-w-[22px] place-items-center rounded-full bg-pop px-1.5 text-xs font-semibold text-white">{i.n}</span>}
               </Link>

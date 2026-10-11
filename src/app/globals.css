@@ -3,6 +3,89 @@
 @tailwind utilities;
 
 @layer base {
+  /* Corner radii of the whole app: barely softened, 3 to 5 px. Decided 2026-10-11, keep it.
+     Pills (badges, filter chips, round buttons) use rounded-full and stay round. */
+  /* The palette, as "R G B" (Tailwind adds the opacity). Neutrals (silver + black) here; the main color
+     and the logo's gradient stops come from the active theme below (src/lib/theme.ts picks it). */
+  :root {
+    --ink: 29 29 31;           /* #1D1D1F near-black */
+    --ink-soft: 66 66 69;
+    --ink-muted: 110 110 115;
+    --line: 229 229 234;
+    --line-strong: 210 210 215;
+    --line-soft: 240 240 243;
+    --chalk: 245 245 247;      /* #F5F5F7 Apple silver-white page */
+    --silver: 236 236 240;     /* soft silver scenes */
+    --silver-deep: 214 214 220;
+    --trust: 22 22 24;         /* #161618 graphite */
+    /* "Compare offers" (several shops sell this configuration): muted slate blue, calm next to turquoise.
+       Sand amber was tried and read like a warning. */
+    --offer: 53 87 122;        /* #35577A */
+    --offer-dark: 37 62 89;    /* #253E59 */
+    --offer-tint: 238 243 248; /* #EEF3F8 */
+    --offer-line: 205 218 232; /* #CDDAE8 */
+  }
+
+  /* Themes: --brand (buttons, prices, selection), --brand-dark (small text, hover), tints (light grounds),
+     --logo-a/b/c (the mark's gradient: top left, middle, bottom right). */
+  :root,
+  [data-theme="orange"] {
+    --brand: 226 85 15;        /* #E2550F: white text on it is under 4.5:1, small text uses brand-dark */
+    --brand-dark: 184 67 10;
+    --brand-tint: 255 242 233;
+    --brand-tint2: 255 225 204;
+    --logo-a: 255 164 77;      /* #FFA44D */
+    --logo-b: 226 85 15;       /* #E2550F */
+    --logo-c: 245 119 46;      /* #F5772E */
+  }
+  [data-theme="turquoise"] {
+    --brand: 10 110 122;       /* #0A6E7A */
+    --brand-dark: 7 88 98;
+    --brand-tint: 232 247 247;
+    --brand-tint2: 204 238 238;
+    --logo-a: 53 214 207;      /* #35D6CF */
+    --logo-b: 10 110 122;      /* #0A6E7A */
+    --logo-c: 18 168 174;      /* #12A8AE */
+  }
+  [data-theme="sidibousaid"] {
+    --brand: 23 71 200;        /* #1747C8 */
+    --brand-dark: 15 47 158;   /* #0F2F9E */
+    --brand-tint: 234 240 255;
+    --brand-tint2: 220 230 255;
+    --logo-a: 61 123 255;      /* #3D7BFF */
+    --logo-b: 15 47 158;       /* #0F2F9E */
+    --logo-c: 23 71 200;       /* #1747C8 */
+    /* Slate blue would merge with a blue main color: compare offers in violet for this theme */
+    --offer: 109 58 232;       /* #6D3AE8 */
+    --offer-dark: 81 38 196;
+    --offer-tint: 241 236 254;
+    --offer-line: 217 204 251;
+  }
+  [data-theme="burgundy"] {
+    --brand: 142 24 56;        /* #8E1838: buttons and prices */
+    --brand-dark: 94 11 38;    /* #5E0B26 */
+    --brand-tint: 251 238 242;
+    --brand-tint2: 245 217 226;
+    --logo-a: 210 73 110;      /* #D2496E */
+    --logo-b: 94 11 38;        /* #5E0B26 */
+    --logo-c: 142 24 56;       /* #8E1838 */
+  }
+  [data-theme="violet"] {
+    --brand: 59 28 201;        /* #3B1CC9 */
+    --brand-dark: 44 19 158;
+    --brand-tint: 239 235 254;
+    --brand-tint2: 226 219 253;
+    --logo-a: 47 108 252;      /* #2F6CFC */
+    --logo-b: 59 28 201;
+    --logo-c: 122 68 245;      /* #7A44F5 */
+  }
+
+  :root {
+    --radius-sm: 3px;
+    --radius-control: 6px;
+    --radius-panel: 8px;
+  }
+
   * {
     @apply border-line;
   }
@@ -15,7 +98,10 @@
     @apply bg-chalk text-ink font-sans antialiased;
   }
 
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     @apply font-semibold;
     letter-spacing: -0.02em;
   }
@@ -32,7 +118,9 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       transition-duration: 0.01ms !important;
       animation-duration: 0.01ms !important;
     }
@@ -45,23 +133,23 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-[14px] bg-brand px-5 h-12 text-[15px] font-semibold text-white transition hover:bg-brand-dark active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-45;
+    @apply inline-flex items-center justify-center gap-2 rounded-control bg-brand px-5 h-12 text-[15px] font-semibold text-white transition hover:bg-brand-dark active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-45;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-[14px] border-[1.5px] border-line-strong bg-white px-5 h-12 text-[15px] font-medium text-ink transition hover:border-[#9DB0D8] disabled:cursor-not-allowed disabled:opacity-45;
+    @apply inline-flex items-center justify-center gap-2 rounded-control border-[1.5px] border-line-strong bg-white px-5 h-12 text-[15px] font-medium text-ink transition hover:border-brand/40 disabled:cursor-not-allowed disabled:opacity-45;
   }
 
   .btn-dark {
-    @apply inline-flex items-center justify-center gap-2 rounded-[14px] bg-ink px-5 h-12 text-[15px] font-semibold text-white transition hover:bg-ink-soft disabled:opacity-45;
+    @apply inline-flex items-center justify-center gap-2 rounded-control bg-ink px-5 h-12 text-[15px] font-semibold text-white transition hover:bg-ink-soft disabled:opacity-45;
   }
 
   .btn-sm {
-    @apply h-10 px-4 text-sm rounded-xl;
+    @apply h-10 px-4 text-sm rounded-control;
   }
 
   .input {
-    @apply w-full rounded-[14px] border-[1.5px] border-line-strong bg-white px-4 h-12 text-[15px] text-ink outline-none transition placeholder:text-ink-muted/70 focus:border-brand focus:ring-4 focus:ring-brand/15 disabled:bg-chalk disabled:text-ink-muted;
+    @apply w-full rounded-control border-[1.5px] border-line-strong bg-white px-4 h-12 text-[15px] text-ink outline-none transition placeholder:text-ink-muted/70 focus:border-brand focus:ring-4 focus:ring-brand/15 disabled:bg-chalk disabled:text-ink-muted;
   }
 
   textarea.input {
@@ -73,11 +161,11 @@
   }
 
   .card {
-    @apply rounded-[28px] border border-line bg-white;
+    @apply rounded-panel border border-line bg-white;
   }
 
   .opt {
-    @apply rounded-2xl border-[1.5px] border-line-strong bg-white text-left transition hover:border-[#9DB0D8];
+    @apply rounded-control border-[1.5px] border-line-strong bg-white text-left transition hover:border-brand/40;
   }
 
   .opt-on {
@@ -90,6 +178,11 @@
 
   .pill {
     @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+
+  /* Every price on a light ground: indigo, extra bold, aligned figures. On dark grounds prices stay white. */
+  .price {
+    @apply font-extrabold tabular-nums tracking-[-0.03em] text-price;
   }
 
   .page-title {
@@ -143,18 +236,53 @@
 }
 
 /* Two-handle price slider: two stacked range inputs, only their thumbs catch the pointer */
-.range-dual { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; background: transparent; pointer-events: none; -webkit-appearance: none; appearance: none; }
-.range-dual:focus { outline: none; }
-.range-dual::-webkit-slider-runnable-track { background: transparent; height: 100%; }
-.range-dual::-moz-range-track { background: transparent; }
+.range-dual {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.range-dual:focus {
+  outline: none;
+}
+.range-dual::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 100%;
+}
+.range-dual::-moz-range-track {
+  background: transparent;
+}
 .range-dual::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none; pointer-events: auto; cursor: grab;
-  width: 22px; height: 22px; margin-top: 1px; border-radius: 9999px;
-  background: #fff; border: 2px solid #1747C8; box-shadow: 0 1px 4px rgba(10, 20, 60, .2);
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: auto;
+  cursor: grab;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid rgb(var(--brand));
+  box-shadow: 0 1px 4px rgba(10, 20, 60, 0.2);
 }
 .range-dual::-moz-range-thumb {
-  pointer-events: auto; cursor: grab; width: 18px; height: 18px; border-radius: 9999px;
-  background: #fff; border: 2px solid #1747C8; box-shadow: 0 1px 4px rgba(10, 20, 60, .2);
+  pointer-events: auto;
+  cursor: grab;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid rgb(var(--brand));
+  box-shadow: 0 1px 4px rgba(10, 20, 60, 0.2);
 }
-.range-dual:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(23, 71, 200, .25); }
-.range-dual:active::-webkit-slider-thumb { cursor: grabbing; }
+.range-dual:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgb(var(--brand) / 0.25);
+}
+.range-dual:active::-webkit-slider-thumb {
+  cursor: grabbing;
+}

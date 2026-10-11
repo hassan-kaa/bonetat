@@ -55,7 +55,7 @@ export default function StoreProfileForm({ initial, partnerCode }: { initial: St
 
   return (
     <form onSubmit={save} className="flex flex-col gap-4">
-      <div className="grid gap-4 rounded-[26px] border border-line bg-white p-6 sm:grid-cols-2">
+      <div className="grid gap-4 rounded-panel border border-line bg-white p-6 sm:grid-cols-2">
         {FIELDS.map((f) => (
           <label key={f.key} className={`field ${f.wide ? "sm:col-span-2" : ""}`}>
             {f.label}

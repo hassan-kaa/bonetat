@@ -60,7 +60,7 @@ export default function NewModelForm({ brands, initial, onCreated, onCancel }: P
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-[20px] border border-line p-5">
+    <div className="flex flex-col gap-4 rounded-panel border border-line p-5">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-[17px] font-semibold">Ajouter un modèle</h2>
         <button type="button" onClick={onCancel} className="text-sm text-ink-muted hover:text-ink">Annuler</button>

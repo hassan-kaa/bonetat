@@ -12,7 +12,7 @@ export default function AuthShell({ children }: { children: React.ReactNode }) {
           <div className="w-full max-w-[400px]">{children}</div>
         </div>
         <p className="text-[13px] text-ink-muted">
-          Besoin d’aide ? <Link href="/contact" className="text-brand hover:underline">Contactez Bonétat</Link>
+          Besoin d’aide ? <Link href="/contact" className="text-brand-dark hover:underline">Contactez Bonétat</Link>
         </p>
       </div>
       <div aria-hidden="true" className="relative hidden flex-[1_1_420px] items-center justify-center overflow-hidden bg-brand lg:flex">

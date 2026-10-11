@@ -102,7 +102,7 @@ export default function SourceStep({ recent, brands, onChosen }: { recent: Catal
 
       {mode === "manual" && !newModel && (
         <>
-          <label className="flex h-12 items-center gap-2.5 rounded-[14px] border-[1.5px] border-line-strong px-4 focus-within:border-brand">
+          <label className="flex h-12 items-center gap-2.5 rounded-control border-[1.5px] border-line-strong px-4 focus-within:border-brand">
             <Search className="h-[18px] w-[18px] text-ink-muted" aria-hidden="true" />
             <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder="iPhone 13 Pro, Redmi Note 13, EliteBook 840 G8, PS5…" aria-label="Rechercher un modèle" className="flex-1 text-[15px] outline-none" />
           </label>

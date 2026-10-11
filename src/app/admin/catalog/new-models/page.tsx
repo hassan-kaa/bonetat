@@ -40,12 +40,12 @@ export default async function NewModels() {
         Rien à valider ici : le catalogue est complet d’avance et ces ajouts sont déjà en ligne. Corrigez un nom ou fusionnez un doublon si besoin (les offres suivent).
       </p>
       {suggestions.length > 0 && (
-        <section className="flex flex-col gap-3 rounded-[26px] border border-line bg-white p-6">
+        <section className="flex flex-col gap-3 rounded-panel border border-line bg-white p-6">
           <h2 className="text-lg font-semibold">Corrections de fiches proposées</h2>
           {suggestions.map((s) => (
             <div key={s.id} className="flex flex-wrap items-start justify-between gap-3 border-t border-line-soft pt-3 first:border-0 first:pt-0">
               <div className="text-sm">
-                <Link href={`/products/${s.product.slug}`} target="_blank" className="font-medium hover:text-brand">{displayName(s.product)}</Link>
+                <Link href={`/products/${s.product.slug}`} target="_blank" className="font-medium hover:text-brand-dark">{displayName(s.product)}</Link>
                 <ul className="mt-1 text-ink-soft">
                   {(s.changes as { label: string; from: string | null; to: string }[]).map((c) => (
                     <li key={c.label}>{c.label} : <span className="text-ink-muted line-through">{c.from ?? "vide"}</span> → <b className="font-medium">{c.to}</b></li>
@@ -58,7 +58,7 @@ export default async function NewModels() {
         </section>
       )}
       {provisional.length === 0 ? (
-        <p className="rounded-[26px] border border-line bg-white p-8 text-center text-[15px] text-ink-muted">Aucun modèle ajouté par les ateliers.</p>
+        <p className="rounded-panel border border-line bg-white p-8 text-center text-[15px] text-ink-muted">Aucun modèle ajouté par les ateliers.</p>
       ) : (
         provisional.map((p) => {
           const offers = p.variants.reduce((n, v) => n + v._count.offers, 0);
@@ -66,7 +66,7 @@ export default async function NewModels() {
           const { close } = nearDuplicates({ brand: p.brand, line: p.line, modelNumber: p.modelNumber }, others);
           const lineApproved = brands.find((b) => b.name === p.brand)?.lines.find((l) => l.name === p.line)?.approved ?? false;
           return (
-            <section key={p.id} className="flex flex-col gap-4 rounded-[26px] border border-line bg-white p-6">
+            <section key={p.id} className="flex flex-col gap-4 rounded-panel border border-line bg-white p-6">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold">{displayName(p)}</h2>
@@ -75,7 +75,7 @@ export default async function NewModels() {
                     proposé par {p.createdByVendorId ? vendors.get(p.createdByVendorId) ?? "un atelier" : "?"} le {formatDateTime(p.createdAt)}
                   </p>
                 </div>
-                <Link href={`/products/${p.slug}`} target="_blank" className="text-sm text-brand hover:underline">Voir la fiche</Link>
+                <Link href={`/products/${p.slug}`} target="_blank" className="text-sm text-brand-dark hover:underline">Voir la fiche</Link>
               </div>
               {close.length > 0 && (
                 <p className="rounded-2xl bg-amber-50 px-4 py-2.5 text-sm text-amber-900">

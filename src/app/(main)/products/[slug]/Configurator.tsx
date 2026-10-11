@@ -184,7 +184,7 @@ export default function Configurator({
         <section aria-label="Visuel" className="flex min-w-0 flex-[1_1_520px] flex-col gap-4 lg:sticky lg:top-28">
           {/* Photos are on pure white, so they get a white stage; the illustration keeps the blue one */}
           <div
-            className={cn("relative grid h-[380px] place-items-center overflow-hidden rounded-[32px] sm:h-[600px]", stageKey ? "border border-line bg-white" : "bg-brand", stageKey && "cursor-zoom-in")}
+            className={cn("relative grid h-[380px] place-items-center overflow-hidden rounded-panel sm:h-[600px]", stageKey ? "border border-line bg-white" : "bg-brand", stageKey && "cursor-zoom-in")}
             onMouseMove={stageKey ? moveZoom : undefined}
             onMouseLeave={() => setZoom(null)}
           >
@@ -373,7 +373,7 @@ export default function Configurator({
                         >
                           <span
                             className="h-9 w-9 rounded-full border border-ink/20"
-                            style={{ background: f?.hex ?? "#999", boxShadow: o.selected ? "0 0 0 3px #fff, 0 0 0 5px #1747C8" : "0 0 0 3px #fff" }}
+                            style={{ background: f?.hex ?? "#999", boxShadow: o.selected ? "0 0 0 3px #fff, 0 0 0 5px rgb(var(--brand))" : "0 0 0 3px #fff" }}
                           />
                           <span className="text-center text-xs text-ink-muted">{o.target ? formatPrice(o.target.priceMillimes) : "Épuisé"}</span>
                         </button>
@@ -407,25 +407,82 @@ export default function Configurator({
             );
           })}
 
+          {/* Several shops sell this exact configuration: the choice comes before the price and the cart */}
+          {shops.length > 1 && (
+            <div id="offres" className="scroll-mt-28 rounded-panel border border-offer-line bg-offer-tint p-5">
+              <h2 className="mb-1 flex items-center gap-2.5 text-[17px] font-semibold text-offer-dark">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-offer text-sm font-bold text-white">{shops.length}</span>
+                ateliers proposent cette configuration
+              </h2>
+              <p className="mb-4 text-[13px] text-ink-soft">{config}, {GRADES[current.grade].label.toLowerCase()}. Même appareil, même garantie Bonétat : comparez le prix, la batterie et les photos.</p>
+              <ul className="flex flex-col gap-2.5">
+                {shownShops.map(({ best: o, count }) => {
+                  const chosen = o.vendorName === current.vendorName;
+                  const extra = o.priceMillimes - lowest;
+                  return (
+                    <li key={o.offerId} className={cn("flex flex-wrap items-center gap-3 rounded-control border bg-white p-3.5", chosen ? "border-offer ring-1 ring-offer" : "border-offer-line")}>
+                      <div className="min-w-0 flex-1 text-sm">
+                        <p>
+                          <b className="price text-[17px]">{formatPrice(o.priceMillimes)}</b>
+                          {extra > 0 && <span className="ml-1.5 text-[13px] text-ink-muted">+{formatPrice(extra)}</span>}
+                          <span className="ml-2 text-ink-muted">par <span className="text-ink">{o.vendorName}</span></span>
+                        </p>
+                        <p className="text-[13px] text-ink-muted">
+                          {o.batteryHealth !== null ? `Batterie ${o.batteryHealth} %` : "Sans batterie"}
+                          {count > 1 && ` · ${count} disponibles`}
+                        </p>
+                        {o.photos && o.photos.length > 0 && (
+                          <span className="mt-1.5 flex items-center gap-1.5">
+                            <span className="pill bg-offer-tint text-[12px] text-offer-dark">Photos réelles</span>
+                            {o.photos.map((key) => (
+                              <button
+                                key={key}
+                                type="button"
+                                onClick={() => { select(o, key); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                                aria-label={`Voir la photo de l’appareil de ${o.vendorName}`}
+                                className="relative h-8 w-8 overflow-hidden rounded-lg bg-chalk ring-offer hover:ring-2"
+                              >
+                                <Image loader={storedImageLoader} src={key} alt="" fill sizes="32px" className="object-cover" />
+                              </button>
+                            ))}
+                          </span>
+                        )}
+                      </div>
+                      {chosen ? (
+                        <span className="pill bg-offer text-white"><Check className="h-3.5 w-3.5" aria-hidden="true" /> Sélectionnée</span>
+                      ) : (
+                        <button type="button" onClick={() => select(o)} className="btn-sm inline-flex items-center rounded-control border-[1.5px] border-offer font-semibold text-offer-dark transition hover:bg-offer hover:text-white">Choisir</button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+              {shops.length > 3 && (
+                <button type="button" onClick={() => setShowAllShops(!showAllShops)} className="mt-3.5 text-sm font-semibold text-offer-dark hover:underline">
+                  {showAllShops ? "Voir moins" : `Voir les ${shops.length} ateliers`}
+                </button>
+              )}
+            </div>
+          )}
           {/* ── Buy box ── */}
-          <div id="acheter" className="flex flex-col gap-[18px] rounded-[28px] border border-line bg-white p-6 shadow-buy">
+          <div id="acheter" className="flex flex-col gap-[18px] rounded-panel border border-line bg-white p-6 shadow-buy">
             <div>
-              <span className="block text-[40px] font-semibold leading-tight tracking-[-0.03em] tabular-nums">{formatPrice(current.priceMillimes)}</span>
+              <span className="price block text-[42px] leading-tight">{formatPrice(current.priceMillimes)}</span>
               {saved && <p className="mt-1 text-sm font-semibold text-gain">{formatPrice(saved)} de moins que le neuf</p>}
               <p className="mt-1.5 text-sm text-ink-muted">Vendu par <b className="font-medium text-ink">{current.vendorName}</b></p>
             </div>
             <div className="grid gap-3 text-sm sm:grid-cols-2">
-              <span className="flex items-center gap-2.5"><ShieldCheck className="h-5 w-5 text-brand" aria-hidden="true" />Garantie Bonétat {current.warrantyMonths} mois</span>
-              <span className="flex items-center gap-2.5"><Banknote className="h-5 w-5 text-brand" aria-hidden="true" />Paiement à la livraison</span>
-              <span className="flex items-center gap-2.5"><Truck className="h-5 w-5 text-brand" aria-hidden="true" />Livré {deliveryWindow}</span>
-              <span className="flex items-center gap-2.5"><RotateCcw className="h-5 w-5 text-brand" aria-hidden="true" />Retour gratuit sous 7 jours</span>
+              <span className="flex items-center gap-2.5"><ShieldCheck className="h-5 w-5 text-brand-dark" aria-hidden="true" />Garantie Bonétat {current.warrantyMonths} mois</span>
+              <span className="flex items-center gap-2.5"><Banknote className="h-5 w-5 text-brand-dark" aria-hidden="true" />Paiement à la livraison</span>
+              <span className="flex items-center gap-2.5"><Truck className="h-5 w-5 text-brand-dark" aria-hidden="true" />Livré {deliveryWindow}</span>
+              <span className="flex items-center gap-2.5"><RotateCcw className="h-5 w-5 text-brand-dark" aria-hidden="true" />Retour gratuit sous 7 jours</span>
             </div>
             <div className="flex gap-2.5">
               <button
                 type="button"
                 onClick={addToCart}
                 className={cn(
-                  "flex h-14 flex-1 items-center justify-center gap-2.5 rounded-[18px] text-[17px] font-semibold transition active:scale-[.98]",
+                  "flex h-14 flex-1 items-center justify-center gap-2.5 rounded-control text-[17px] font-semibold transition active:scale-[.98]",
                   inCart ? "bg-gain-tint text-gain" : "bg-brand text-white hover:bg-brand-dark"
                 )}
               >
@@ -437,7 +494,7 @@ export default function Configurator({
                 onClick={toggleFollow}
                 aria-pressed={isFollowed}
                 aria-label={isFollowed ? "Ne plus suivre le prix" : "Suivre le prix de cette configuration"}
-                className={cn("opt grid h-14 w-14 place-items-center rounded-[18px]", isFollowed && "border-pop bg-pop-tint text-pop hover:border-pop")}
+                className={cn("opt grid h-14 w-14 place-items-center rounded-control", isFollowed && "border-pop bg-pop-tint text-pop hover:border-pop")}
               >
                 <Heart className="h-[22px] w-[22px]" fill={isFollowed ? "currentColor" : "none"} />
               </button>
@@ -447,76 +504,22 @@ export default function Configurator({
               {inCart && (
                 <>
                   {" · "}
-                  <Link href="/cart" className="font-medium text-brand hover:underline">Voir le panier</Link>
+                  <Link href="/cart" className="font-medium text-brand-dark hover:underline">Voir le panier</Link>
                 </>
               )}
             </p>
-            <div className="flex items-start gap-3 border-t border-line pt-4">
-              <span className="grid h-9 w-9 flex-none place-items-center rounded-xl bg-[linear-gradient(135deg,#2F6CFC,#3B1CC9_52%,#7A44F5)]">
+            <div className="flex items-start gap-3 rounded-control bg-trust p-4 text-white">
+              <span className="grid h-9 w-9 flex-none place-items-center rounded-control bg-[linear-gradient(135deg,rgb(var(--logo-a)),rgb(var(--logo-b))_52%,rgb(var(--logo-c)))]">
                 <LogoMark variant="white" className="h-[19px]" />
               </span>
               <p className="text-sm leading-normal">
                 <b className="font-semibold">Contrôlé et garanti par Bonétat</b>
                 <br />
-                <span className="text-ink-muted">Expédié par {current.vendorName}, atelier partenaire certifié. En cas de souci, c’est Bonétat qui vous répond.</span>
+                <span className="text-white/70">Expédié par {current.vendorName}, atelier partenaire certifié. En cas de souci, c’est Bonétat qui vous répond.</span>
               </p>
             </div>
           </div>
 
-          {shops.length > 1 && (
-            <div className="rounded-[24px] border border-line bg-white p-5">
-              <h2 className="mb-3 text-[15px] font-semibold">
-                {shops.length} ateliers proposent cette configuration <span className="font-normal text-ink-muted">({config}, {GRADES[current.grade].label.toLowerCase()})</span>
-              </h2>
-              <ul className="flex flex-col divide-y divide-line-soft">
-                {shownShops.map(({ best: o, count }) => {
-                  const chosen = o.vendorName === current.vendorName;
-                  const extra = o.priceMillimes - lowest;
-                  return (
-                    <li key={o.offerId} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
-                      <div className="min-w-0 flex-1 text-sm">
-                        <p>
-                          <b className="text-base font-semibold">{formatPrice(o.priceMillimes)}</b>
-                          {extra > 0 && <span className="ml-1.5 text-[13px] text-ink-muted">+{formatPrice(extra)}</span>}
-                          <span className="ml-2 text-ink-muted">par <span className="text-ink">{o.vendorName}</span></span>
-                        </p>
-                        <p className="text-[13px] text-ink-muted">
-                          {o.batteryHealth !== null ? `Batterie ${o.batteryHealth} %` : "Sans batterie"}
-                          {count > 1 && ` · ${count} disponibles`}
-                        </p>
-                        {o.photos && o.photos.length > 0 && (
-                          <span className="mt-1.5 flex items-center gap-1.5">
-                            <span className="pill bg-brand-tint text-[12px] text-brand">Photos réelles</span>
-                            {o.photos.map((key) => (
-                              <button
-                                key={key}
-                                type="button"
-                                onClick={() => { select(o, key); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                                aria-label={`Voir la photo de l’appareil de ${o.vendorName}`}
-                                className="relative h-8 w-8 overflow-hidden rounded-lg bg-chalk ring-brand hover:ring-2"
-                              >
-                                <Image loader={storedImageLoader} src={key} alt="" fill sizes="32px" className="object-cover" />
-                              </button>
-                            ))}
-                          </span>
-                        )}
-                      </div>
-                      {chosen ? (
-                        <span className="pill bg-brand-tint text-brand">Sélectionnée</span>
-                      ) : (
-                        <button type="button" onClick={() => select(o)} className="btn-secondary btn-sm">Choisir</button>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-              {shops.length > 3 && (
-                <button type="button" onClick={() => setShowAllShops(!showAllShops)} className="mt-3 text-sm font-medium text-brand hover:underline">
-                  {showAllShops ? "Voir moins" : `Voir les ${shops.length} ateliers`}
-                </button>
-              )}
-            </div>
-          )}
         </section>
         <div className="w-full lg:hidden">
           <Passport current={current} kind={product.kind} />
@@ -527,12 +530,12 @@ export default function Configurator({
       <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t border-line bg-white px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,.06)] lg:hidden">
         <div className="min-w-0">
           <p className="truncate text-xs text-ink-muted">{config}, {GRADES[current.grade].label}</p>
-          <p className="text-lg font-semibold leading-tight">{formatPrice(current.priceMillimes)}</p>
+          <p className="price text-xl leading-tight">{formatPrice(current.priceMillimes)}</p>
         </div>
         <button
           type="button"
           onClick={addToCart}
-          className={cn("flex h-12 flex-none items-center gap-2 rounded-[14px] px-5 text-sm font-semibold", inCart ? "bg-gain-tint text-gain" : "bg-brand text-white")}
+          className={cn("flex h-12 flex-none items-center gap-2 rounded-control px-5 text-sm font-semibold", inCart ? "bg-gain-tint text-gain" : "bg-brand text-white")}
         >
           {inCart ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
           {inCart ? "Dans le panier" : "Ajouter"}
@@ -549,22 +552,22 @@ function Passport({ current, kind }: { current: ConfigOffer; kind: DeviceKind })
       <ul className="grid gap-x-5 gap-y-3.5 text-sm sm:grid-cols-2">
         {current.batteryHealth && (
           <li className="flex items-start gap-2.5">
-            <BatteryCharging className="h-5 w-5 flex-none text-brand" aria-hidden="true" />
+            <BatteryCharging className="h-5 w-5 flex-none text-brand-dark" aria-hidden="true" />
             <span>Batterie mesurée à <b className="font-semibold">{current.batteryHealth} %</b> de sa capacité d’origine</span>
           </li>
         )}
         <li className="flex items-start gap-2.5">
-          <Check className="h-5 w-5 flex-none text-brand" aria-hidden="true" />
+          <Check className="h-5 w-5 flex-none text-brand-dark" aria-hidden="true" />
           <span>32 points de contrôle : écran, boutons, caméras, son, connectivité</span>
         </li>
         {(kind === "PHONE" || kind === "TABLET" || kind === "WATCH") && (
           <li className="flex items-start gap-2.5">
-            <ShieldCheck className="h-5 w-5 flex-none text-brand" aria-hidden="true" />
+            <ShieldCheck className="h-5 w-5 flex-none text-brand-dark" aria-hidden="true" />
             <span>Numéro de série vérifié : ni volé, ni bloqué</span>
           </li>
         )}
         <li className="flex items-start gap-2.5">
-          <Trash2 className="h-5 w-5 flex-none text-brand" aria-hidden="true" />
+          <Trash2 className="h-5 w-5 flex-none text-brand-dark" aria-hidden="true" />
           <span>Données de l’ancien propriétaire effacées</span>
         </li>
       </ul>

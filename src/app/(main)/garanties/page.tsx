@@ -34,14 +34,14 @@ export default function GuaranteesPage() {
     >
       <div className="grid gap-4 md:grid-cols-2">
         {ITEMS.map((i) => (
-          <section key={i.title} className="rounded-[28px] border border-line bg-white p-7">
+          <section key={i.title} className="rounded-panel border border-line bg-white p-7">
             <h2 className="text-xl font-semibold">{i.title}</h2>
             <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{i.body}</p>
           </section>
         ))}
       </div>
       <p className="text-[15px] text-ink-muted">
-        Une question sur un achat ? <Link href="/contact" className="font-medium text-brand hover:underline">Contactez Bonétat</Link>
+        Une question sur un achat ? <Link href="/contact" className="font-medium text-brand-dark hover:underline">Contactez Bonétat</Link>
       </p>
     </InfoPage>
   );

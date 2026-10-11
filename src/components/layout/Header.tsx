@@ -28,7 +28,7 @@ export default function Header({ user, categories }: { user: NavUser; categories
         <Logo />
 
         <form action="/catalog" method="get" role="search" className="order-last w-full md:order-none md:w-auto md:flex-1">
-          <label className="flex h-[46px] items-center gap-2.5 rounded-full bg-[#F0F3F9] px-[18px] text-ink-muted focus-within:ring-[3px] focus-within:ring-pop">
+          <label className="flex h-[46px] items-center gap-2.5 rounded-control bg-line-soft px-[18px] text-ink-muted focus-within:ring-[3px] focus-within:ring-pop">
             <Search className="h-[18px] w-[18px] flex-none" aria-hidden="true" />
             <input
               name="q"
@@ -41,27 +41,27 @@ export default function Header({ user, categories }: { user: NavUser; categories
 
         <nav className="ml-auto flex items-center gap-1 md:ml-0" aria-label="Compte">
           {user?.role === "ADMIN" && (
-            <Link href="/admin" className="hidden rounded-full px-3.5 py-2.5 text-[15px] text-ink-muted hover:bg-chalk sm:block">
+            <Link href="/admin" className="hidden rounded-control px-3.5 py-2.5 text-[15px] text-ink-muted hover:bg-chalk sm:block">
               Admin
             </Link>
           )}
           {user?.role === "VENDOR" && user.vendorApproved ? (
-            <Link href="/vendor/dashboard" className="hidden rounded-full px-3.5 py-2.5 text-[15px] text-ink-muted hover:bg-chalk sm:block">
+            <Link href="/vendor/dashboard" className="hidden rounded-control px-3.5 py-2.5 text-[15px] text-ink-muted hover:bg-chalk sm:block">
               Espace partenaire
             </Link>
           ) : !user || user.role === "BUYER" ? (
-            <Link href="/vendor/apply" className="hidden rounded-full px-3.5 py-2.5 text-[15px] text-ink-muted hover:bg-chalk lg:block">
+            <Link href="/vendor/apply" className="hidden rounded-control px-3.5 py-2.5 text-[15px] text-ink-muted hover:bg-chalk lg:block">
               Devenir partenaire
             </Link>
           ) : null}
           <Link
             href={user ? "/account" : "/auth/login"}
-            className="flex items-center gap-2 rounded-full px-3.5 py-2.5 text-[15px] font-medium hover:bg-chalk"
+            className="flex items-center gap-2 rounded-control px-3.5 py-2.5 text-[15px] font-medium hover:bg-chalk"
           >
             <User className="h-5 w-5" aria-hidden="true" />
             <span className="hidden sm:inline">{user ? "Mon espace" : "Connexion"}</span>
           </Link>
-          <Link href="/cart" className="flex items-center gap-2 rounded-full px-3.5 py-2.5 text-[15px] font-medium hover:bg-chalk" aria-label={`Panier, ${count} article${count > 1 ? "s" : ""}`}>
+          <Link href="/cart" className="flex items-center gap-2 rounded-control px-3.5 py-2.5 text-[15px] font-medium hover:bg-chalk" aria-label={`Panier, ${count} article${count > 1 ? "s" : ""}`}>
             <ShoppingBag className="h-5 w-5" aria-hidden="true" />
             <span className="hidden sm:inline">Panier</span>
             {count > 0 && (
@@ -73,7 +73,7 @@ export default function Header({ user, categories }: { user: NavUser; categories
           <button
             type="button"
             onClick={() => setOpen(!open)}
-            className="grid h-11 w-11 place-items-center rounded-full hover:bg-chalk md:hidden"
+            className="grid h-11 w-11 place-items-center rounded-control hover:bg-chalk md:hidden"
             aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
             aria-expanded={open}
           >

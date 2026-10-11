@@ -39,7 +39,7 @@ export default async function OrderDetailPage({
     <>
       <Link href="/account" className="text-sm text-ink-muted hover:text-ink">Toutes mes commandes</Link>
       {placed && (
-        <div role="status" className="flex items-start gap-3.5 rounded-[24px] bg-gain-tint p-5 text-[#0B5F33]">
+        <div role="status" className="flex items-start gap-3.5 rounded-panel bg-gain-tint p-5 text-[#0B5F33]">
           <CheckCircle2 className="h-6 w-6 flex-none" aria-hidden="true" />
           <div>
             <b className="text-[17px] font-semibold">Commande {order.number} enregistrée</b>
@@ -55,7 +55,7 @@ export default async function OrderDetailPage({
         <span className={cn("pill", ORDER_STATUS_TONE[order.status])}>{ORDER_STATUS_LABELS[order.status]}</span>
       </div>
 
-      <article className="flex flex-col gap-5 rounded-[28px] border border-line bg-white p-6">
+      <article className="flex flex-col gap-5 rounded-panel border border-line bg-white p-6">
         <OrderTimeline status={order.status} />
         {parcels > 1 && order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
           <p className="text-sm text-ink-muted">Votre commande arrive en {parcels} colis, préparés par des ateliers différents.</p>
@@ -76,7 +76,7 @@ export default async function OrderDetailPage({
       </article>
 
       <div className="flex flex-wrap gap-[18px]">
-        <section className="flex-[1_1_300px] rounded-[28px] border border-line bg-white p-6 text-[15px] leading-relaxed">
+        <section className="flex-[1_1_300px] rounded-panel border border-line bg-white p-6 text-[15px] leading-relaxed">
           <h2 className="mb-2 text-base font-semibold">Livraison</h2>
           {address.fullName}, {address.phone}
           <br />
@@ -86,19 +86,19 @@ export default async function OrderDetailPage({
           {address.governorate}
           {address.notes && <p className="mt-2 text-sm text-ink-muted">{address.notes}</p>}
         </section>
-        <section className="flex-[1_1_300px] rounded-[28px] border border-line bg-white p-6">
+        <section className="flex-[1_1_300px] rounded-panel border border-line bg-white p-6">
           <h2 className="mb-3 text-base font-semibold">Paiement à la livraison</h2>
           <dl className="flex flex-col gap-2 text-[15px]">
             <div className="flex justify-between"><dt className="text-ink-muted">Articles</dt><dd>{formatPrice(subtotal)}</dd></div>
             <div className="flex justify-between"><dt className="text-ink-muted">Livraison</dt><dd>{formatPrice(order.shippingFeeMillimes)}</dd></div>
-            <div className="flex justify-between border-t border-line pt-2.5 text-lg font-semibold"><dt>Total</dt><dd>{formatPrice(order.totalMillimes)}</dd></div>
+            <div className="flex justify-between border-t border-line pt-2.5 text-lg font-semibold"><dt>Total</dt><dd className="price text-xl">{formatPrice(order.totalMillimes)}</dd></div>
           </dl>
         </section>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         {(order.status === "PENDING" || order.status === "CONFIRMED") && <CancelOrderButton orderId={order.id} />}
-        <Link href="/contact" className="inline-flex items-center gap-2 text-sm font-medium text-brand hover:underline">
+        <Link href="/contact" className="inline-flex items-center gap-2 text-sm font-medium text-brand-dark hover:underline">
           <Phone className="h-4 w-4" aria-hidden="true" />
           Une question ? Contactez Bonétat
         </Link>

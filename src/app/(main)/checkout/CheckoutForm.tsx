@@ -76,7 +76,7 @@ export default function CheckoutForm({
       <h1 className="page-title mb-6 mt-2">Commander</h1>
       <div className="flex flex-wrap items-start gap-8">
         <div className="flex min-w-0 flex-[1_1_560px] flex-col gap-5">
-          <section className="rounded-[28px] border border-line bg-white p-6">
+          <section className="rounded-panel border border-line bg-white p-6">
             <h2 className="mb-4 text-lg font-semibold">Adresse de livraison</h2>
             <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Adresse de livraison">
               {addresses.map((a) => (
@@ -84,7 +84,7 @@ export default function CheckoutForm({
                   <input type="radio" name="address" className="sr-only" checked={addressId === a.id} onChange={() => setAddressId(a.id)} />
                   <span className="mb-1 flex items-center justify-between">
                     <b className="text-[15px] font-semibold">{a.label}</b>
-                    {a.isDefault && <span className="pill bg-white text-brand">Par défaut</span>}
+                    {a.isDefault && <span className="pill bg-white text-brand-dark">Par défaut</span>}
                   </span>
                   {a.fullName}, {a.phone}
                   <br />
@@ -100,17 +100,17 @@ export default function CheckoutForm({
               <div className="mt-5 flex flex-col gap-4">
                 <AddressFields value={draft} onChange={setDraft} />
                 <label className="flex items-center gap-2.5 text-sm">
-                  <input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} className="h-4 w-4 accent-[#1747C8]" />
+                  <input type="checkbox" checked={saveAddress} onChange={(e) => setSaveAddress(e.target.checked)} className="h-4 w-4 accent-brand" />
                   Enregistrer cette adresse dans mon espace
                 </label>
               </div>
             )}
           </section>
 
-          <section className="rounded-[28px] border border-line bg-white p-6">
+          <section className="rounded-panel border border-line bg-white p-6">
             <h2 className="mb-4 text-lg font-semibold">Paiement</h2>
             <div className="opt opt-on flex items-start gap-3 p-4">
-              <Banknote className="mt-0.5 h-5 w-5 flex-none text-brand" aria-hidden="true" />
+              <Banknote className="mt-0.5 h-5 w-5 flex-none text-brand-dark" aria-hidden="true" />
               <div className="text-sm leading-relaxed">
                 <b className="text-[15px] font-semibold">Paiement à la livraison</b>
                 <br />
@@ -125,7 +125,7 @@ export default function CheckoutForm({
           </section>
         </div>
 
-        <aside className="flex w-full flex-col gap-4 rounded-[28px] border border-line bg-white p-6 shadow-buy lg:sticky lg:top-32 lg:w-[380px]">
+        <aside className="flex w-full flex-col gap-4 rounded-panel border border-line bg-white p-6 shadow-buy lg:sticky lg:top-32 lg:w-[380px]">
           <h2 className="text-lg font-semibold">Votre commande</h2>
           <ul className="flex flex-col gap-3">
             {items.map((i) => (
@@ -146,21 +146,21 @@ export default function CheckoutForm({
                   <b className="block font-medium">{i.name}</b>
                   <span className="text-ink-muted">{i.config}, {GRADES[i.grade].label.toLowerCase()}</span>
                 </span>
-                <b className="font-semibold">{formatPrice(i.priceMillimes)}</b>
+                <b className="price">{formatPrice(i.priceMillimes)}</b>
               </li>
             ))}
           </ul>
           <dl className="flex flex-col gap-2 border-t border-line pt-4 text-[15px]">
             <div className="flex justify-between"><dt className="text-ink-muted">Articles</dt><dd>{formatPrice(subtotal)}</dd></div>
             <div className="flex justify-between"><dt className="text-ink-muted">Livraison</dt><dd>{formatPrice(SHIPPING_FEE_MILLIMES)}</dd></div>
-            <div className="flex justify-between pt-1 text-lg font-semibold"><dt>À payer au livreur</dt><dd>{formatPrice(subtotal + SHIPPING_FEE_MILLIMES)}</dd></div>
+            <div className="flex justify-between pt-1 text-lg font-semibold"><dt>À payer au livreur</dt><dd className="price text-xl">{formatPrice(subtotal + SHIPPING_FEE_MILLIMES)}</dd></div>
           </dl>
           {error && <p role="alert" className="rounded-xl bg-pop-tint px-3 py-2.5 text-sm text-pop-dark">{error}</p>}
-          <button type="submit" disabled={loading} className="btn-primary h-14 rounded-[18px] text-[17px]">
+          <button type="submit" disabled={loading} className="btn-primary h-14 rounded-control text-[17px]">
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Confirmer la commande"}
           </button>
           <p className="flex items-start gap-2.5 text-[13px] text-ink-muted">
-            <ShieldCheck className="h-5 w-5 flex-none text-brand" aria-hidden="true" />
+            <ShieldCheck className="h-5 w-5 flex-none text-brand-dark" aria-hidden="true" />
             Bonétat vous appelle pour confirmer, puis l’atelier partenaire expédie sous 24 h.
           </p>
         </aside>

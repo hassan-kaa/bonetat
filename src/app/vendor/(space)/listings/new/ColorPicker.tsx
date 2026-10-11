@@ -73,7 +73,7 @@ export default function ColorPicker({ finishes, value, onChange }: { finishes: F
           {sibling && (
             <p className="text-sm">
               Ce modèle existe déjà en <b className="font-medium">{sibling.nameFr}</b>.{" "}
-              <button type="button" onClick={() => onChange({ finishId: sibling.id })} className="font-medium text-brand hover:underline">C’est celle-ci</button>
+              <button type="button" onClick={() => onChange({ finishId: sibling.id })} className="font-medium text-brand-dark hover:underline">C’est celle-ci</button>
             </p>
           )}
           {custom.family !== "OTHER" && (

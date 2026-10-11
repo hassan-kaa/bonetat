@@ -203,7 +203,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
       <div className="mt-14 flex flex-wrap items-start gap-10">
         <section className="min-w-0 flex-[1_1_420px]">
           <h2 className="mb-4 text-[22px] font-semibold tracking-[-0.02em]">Caractéristiques</h2>
-          <dl className="overflow-hidden rounded-[22px] border border-line bg-white">
+          <dl className="overflow-hidden rounded-panel border border-line bg-white">
             {specs.map(([k, v]) => (
               <div key={k} className="flex justify-between gap-4 border-b border-line-soft px-5 py-3.5 text-sm last:border-0">
                 <dt className="text-ink-muted">{k}</dt>
@@ -216,13 +216,13 @@ export default async function ProductPage({ params, searchParams }: Props) {
         <section id="avis" className="min-w-0 flex-[1_1_520px]">
           <h2 className="mb-4 text-[22px] font-semibold tracking-[-0.02em]">Ce qu’en disent les acheteurs</h2>
           {reviews.length === 0 ? (
-            <p className="rounded-[22px] border border-dashed border-line-strong p-5 text-[15px] text-ink-muted">
+            <p className="rounded-panel border border-dashed border-line-strong p-5 text-[15px] text-ink-muted">
               Pas encore d’avis sur ce modèle. Chaque acheteur peut noter son appareil après la livraison.
             </p>
           ) : (
             <div className="flex flex-col gap-3">
               {reviews.map((r) => (
-                <article key={r.id} className="rounded-[22px] border border-line bg-white px-5 py-[18px]">
+                <article key={r.id} className="rounded-panel border border-line bg-white px-5 py-[18px]">
                   <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                     <b className="font-semibold">{r.buyer.name?.split(" ")[0] ?? "Client"}</b>
                     <span className="flex items-center gap-0.5 text-[#F2A516]" aria-label={`${r.rating} sur 5`}>

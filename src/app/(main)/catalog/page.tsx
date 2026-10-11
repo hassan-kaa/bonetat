@@ -10,6 +10,7 @@ import { Check, X } from "lucide-react";
 import { CPU_ORDER } from "@/lib/pc-filters";
 import AutoSubmitSelect from "./AutoSubmitSelect";
 import PriceRange from "./PriceRange";
+import { FiltersButton, FiltersPanel } from "./FiltersDrawer";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Catalogue" };
@@ -160,6 +161,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
           {Object.entries(sp).filter(([k, v]) => v && k !== "sort" && k !== "page").map(([k, v]) => (
             <input key={k} type="hidden" name={k} value={v} />
           ))}
+          <FiltersButton count={active.length} />
           <label htmlFor="sort" className="text-sm text-ink-muted">Trier</label>
           <AutoSubmitSelect id="sort" name="sort" defaultValue={sort} options={SORTS.map((s) => ({ value: s.value, label: s.label }))} />
         </form>
@@ -175,10 +177,10 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
       </nav>
 
       <div className="flex flex-wrap items-start gap-8">
-        <aside className="flex w-full flex-col gap-6 rounded-[24px] border border-line bg-white p-5 lg:sticky lg:top-32 lg:max-h-[calc(100vh-9rem)] lg:w-64 lg:overflow-y-auto">
-          <div className="flex items-baseline justify-between">
+        <FiltersPanel results={cards.length}>
+          <div className="flex items-baseline justify-between pr-12 lg:pr-0">
             <h2 className="text-base font-semibold">Filtres</h2>
-            {active.length > 0 && <Link href={cleared} className="text-sm font-medium text-brand hover:underline">Tout effacer</Link>}
+            {active.length > 0 && <Link href={cleared} className="text-sm font-medium text-brand-dark hover:underline">Tout effacer</Link>}
           </div>
 
           <fieldset>
@@ -187,7 +189,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
               {[...GRADE_ORDER].map((g) => {
                 const on = grades.includes(g);
                 return (
-                  <Link key={g} href={toggle("grade", g)} role="checkbox" aria-checked={on} className={cn("flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm", on ? "bg-brand-tint font-medium text-brand" : "hover:bg-chalk")}>
+                  <Link key={g} href={toggle("grade", g)} role="checkbox" aria-checked={on} className={cn("flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm", on ? "bg-brand-tint font-medium text-brand-dark" : "hover:bg-chalk")}>
                     <span aria-hidden="true" className={cn("grid h-4 w-4 flex-none place-items-center rounded border-[1.5px]", on ? "border-brand bg-brand text-white" : "border-line-strong")}>
                       {on && <Check className="h-3 w-3" strokeWidth={3} />}
                     </span>
@@ -265,13 +267,13 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
               )}
             </>
           )}
-        </aside>
+        </FiltersPanel>
 
         <section className="min-w-0 flex-1">
           {active.length > 0 && (
             <div className="mb-4 flex flex-wrap items-center gap-2">
               {active.map((a) => (
-                <Link key={a.label} href={a.href} aria-label={`Retirer le filtre ${a.label}`} className="flex items-center gap-1.5 rounded-full bg-brand-tint py-1.5 pl-3 pr-2 text-sm text-brand hover:bg-brand hover:text-white">
+                <Link key={a.label} href={a.href} aria-label={`Retirer le filtre ${a.label}`} className="flex items-center gap-1.5 rounded-full bg-brand-tint py-1.5 pl-3 pr-2 text-sm text-brand-dark hover:bg-brand hover:text-white">
                   {a.label} <X className="h-3.5 w-3.5" aria-hidden="true" />
                 </Link>
               ))}
@@ -279,7 +281,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
             </div>
           )}
           {shown.length === 0 ? (
-            <div className="rounded-[28px] border border-dashed border-line-strong bg-white p-10 text-center">
+            <div className="rounded-panel border border-dashed border-line-strong bg-white p-10 text-center">
               <p className="text-lg font-medium">Aucun appareil ne correspond à ces filtres.</p>
               <p className="mt-2 text-ink-muted">Retirez un filtre ou cherchez un autre modèle.</p>
               <Link href={active.length ? cleared : "/catalog"} className="btn-primary btn-sm mt-5">{active.length ? "Effacer les filtres" : "Voir tout le catalogue"}</Link>

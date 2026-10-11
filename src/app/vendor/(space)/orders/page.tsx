@@ -37,7 +37,7 @@ export default async function VendorOrdersPage() {
         Emballez avec le bon Bonétat : le client ne doit voir aucune marque d’atelier. Expédiez sous 24 h après la confirmation.
       </p>
 
-      <div className="overflow-x-auto rounded-[26px] border border-line bg-white">
+      <div className="overflow-x-auto rounded-panel border border-line bg-white">
         {open.length === 0 ? (
           <p className="p-8 text-center text-[15px] text-ink-muted">Rien à expédier. Les nouvelles commandes apparaissent ici dès que Bonétat les confirme.</p>
         ) : (
@@ -96,7 +96,7 @@ export default async function VendorOrdersPage() {
       {history.length > 0 && (
         <>
           <h2 className="mt-4 text-lg font-semibold">Dernières expéditions</h2>
-          <div className="overflow-x-auto rounded-[26px] border border-line bg-white">
+          <div className="overflow-x-auto rounded-panel border border-line bg-white">
             <table className="tbl min-w-[640px]">
               <thead><tr><th>Commande</th><th>Appareil</th><th>Montant</th><th>Statut</th></tr></thead>
               <tbody>
@@ -106,7 +106,7 @@ export default async function VendorOrdersPage() {
                     <td>{item.title}<br /><span className="text-[13px] text-ink-muted">{item.configLabel}</span></td>
                     <td>{formatPrice(item.priceMillimes)}</td>
                     <td>
-                      <span className={cn("pill", item.fulfillmentStatus === "DELIVERED" ? "bg-gain-tint text-gain" : item.fulfillmentStatus === "CANCELLED" ? "bg-slate-100 text-slate-600" : "bg-brand-tint text-brand")}>
+                      <span className={cn("pill", item.fulfillmentStatus === "DELIVERED" ? "bg-gain-tint text-gain" : item.fulfillmentStatus === "CANCELLED" ? "bg-slate-100 text-slate-600" : "bg-brand-tint text-brand-dark")}>
                         {FULFILLMENT_LABELS[item.fulfillmentStatus]}
                       </span>
                     </td>

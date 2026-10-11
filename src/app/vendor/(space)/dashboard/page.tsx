@@ -74,22 +74,22 @@ export default async function VendorDashboard() {
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3.5">
-        <div className="rounded-[24px] border border-line bg-white p-5">
+        <div className="rounded-panel border border-line bg-white p-5">
           <span className="text-[13px] text-ink-muted">Ventes livrées ce mois</span>
           <b className="mt-1.5 block text-[30px] font-semibold tracking-[-0.03em]">{formatPrice(monthSales)}</b>
           <span className="text-[13px] text-ink-muted">{monthUnits} appareil{monthUnits > 1 ? "s" : ""}</span>
         </div>
-        <Link href="/vendor/orders" className="rounded-[24px] border border-line bg-white p-5 transition hover:border-line-strong">
+        <Link href="/vendor/orders" className="rounded-panel border border-line bg-white p-5 transition hover:border-line-strong">
           <span className="text-[13px] text-ink-muted">À expédier aujourd’hui</span>
           <b className="mt-1.5 block text-[30px] font-semibold tracking-[-0.03em]">{toShip}</b>
           <span className={toShip ? "text-[13px] text-pop-dark" : "text-[13px] text-ink-muted"}>{toShip ? "Avant 18 h" : "À jour"}</span>
         </Link>
-        <div className="rounded-[24px] bg-brand p-5 text-white">
+        <div className="rounded-panel bg-brand p-5 text-white">
           <span className="text-[13px] opacity-85">Score qualité</span>
           <b className="mt-1.5 block text-[30px] font-semibold tracking-[-0.03em]">{vendor.qualityScore} / 100</b>
           <span className="text-[13px] opacity-85">Départage les prix égaux</span>
         </div>
-        <Link href="/vendor/payouts" className="rounded-[24px] border border-line bg-white p-5 transition hover:border-line-strong">
+        <Link href="/vendor/payouts" className="rounded-panel border border-line bg-white p-5 transition hover:border-line-strong">
           <span className="text-[13px] text-ink-muted">Prochain virement</span>
           <b className="mt-1.5 block text-[30px] font-semibold tracking-[-0.03em]">{formatPrice(nextPayout)}</b>
           <span className="text-[13px] text-ink-muted">Le {period.payDate}</span>
@@ -97,7 +97,7 @@ export default async function VendorDashboard() {
       </div>
 
       <div className="flex flex-wrap gap-3.5">
-        <div className="flex-[1_1_360px] rounded-[26px] border border-line bg-white p-6">
+        <div className="flex-[1_1_360px] rounded-panel border border-line bg-white p-6">
           <h2 className="mb-4 text-lg font-semibold">Ce qui compose votre score</h2>
           {[
             ["Expédié en moins de 24 h", fastPct],
@@ -110,7 +110,7 @@ export default async function VendorDashboard() {
             </div>
           ))}
         </div>
-        <div className="flex flex-[1_1_300px] flex-col gap-3 rounded-[26px] bg-brand-tint p-6">
+        <div className="flex flex-[1_1_300px] flex-col gap-3 rounded-panel bg-brand-tint p-6">
           <h2 className="text-lg font-semibold">Comment vous gagnez une vente</h2>
           <p className="text-sm leading-relaxed text-ink-soft">
             Les acheteurs voient Bonétat, jamais le nom de votre atelier. Pour chaque configuration et chaque état, la vente va au meilleur prix. À prix égal, elle va à l’atelier qui a le meilleur score qualité.

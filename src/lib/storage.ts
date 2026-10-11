@@ -30,14 +30,18 @@ async function putLocal(files: StoredFile[]) {
 
 let r2: AwsClient | null = null;
 
-async function putR2(files: StoredFile[]) {
+function r2Url(filePath: string) {
   const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET } = process.env;
   if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET) {
     throw new Error("STORAGE_DRIVER=r2 needs R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY and R2_BUCKET");
   }
   r2 ??= new AwsClient({ accessKeyId: R2_ACCESS_KEY_ID, secretAccessKey: R2_SECRET_ACCESS_KEY, service: "s3", region: "auto" });
+  return { client: r2, url: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET}/${filePath.split("/").map(encodeURIComponent).join("/")}` };
+}
+
+async function putR2(files: StoredFile[]) {
   for (const f of files) {
-    const url = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET}/${f.path.split("/").map(encodeURIComponent).join("/")}`;
+    const { client: r2, url } = r2Url(f.path);
     const res = await r2.fetch(url, {
       method: "PUT",
       body: new Uint8Array(f.body),

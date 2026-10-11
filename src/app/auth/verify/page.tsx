@@ -98,7 +98,7 @@ function VerifyForm() {
     <AuthShell>
       <h1 className="text-[34px] font-semibold leading-tight tracking-[-0.035em]">Entrez le code</h1>
       <p className="mt-2 text-[15px] text-ink-muted">
-        Envoyé par SMS au {formatPhone(phone)}. <Link href="/auth/login" className="text-brand hover:underline">Changer de numéro</Link>
+        Envoyé par SMS au {formatPhone(phone)}. <Link href="/auth/login" className="text-brand-dark hover:underline">Changer de numéro</Link>
       </p>
       <form
         onSubmit={(e) => {
@@ -120,7 +120,7 @@ function VerifyForm() {
                 inputMode="numeric"
                 autoComplete={i === 0 ? "one-time-code" : "off"}
                 aria-label={`Chiffre ${i + 1}`}
-                className="h-16 w-full min-w-0 rounded-[14px] border-[1.5px] border-line-strong bg-white text-center text-2xl font-semibold text-ink outline-none focus:border-brand focus:ring-4 focus:ring-brand/15"
+                className="h-16 w-full min-w-0 rounded-control border-[1.5px] border-line-strong bg-white text-center text-2xl font-semibold text-ink outline-none focus:border-brand focus:ring-4 focus:ring-brand/15"
               />
             ))}
           </div>
@@ -130,10 +130,10 @@ function VerifyForm() {
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Facultatif si vous avez déjà un compte" />
         </label>
         {error && <p role="alert" className="rounded-xl bg-pop-tint px-3 py-2.5 text-sm text-pop-dark">{error}</p>}
-        <button type="submit" disabled={loading || !code.every(Boolean)} className="btn-primary h-14 rounded-[18px] text-[17px]">
+        <button type="submit" disabled={loading || !code.every(Boolean)} className="btn-primary h-14 rounded-control text-[17px]">
           {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Se connecter"}
         </button>
-        <button type="button" onClick={resend} className="text-sm text-brand hover:underline">
+        <button type="button" onClick={resend} className="text-sm text-brand-dark hover:underline">
           {resent ? "Nouveau code envoyé" : "Renvoyer le code"}
         </button>
       </form>

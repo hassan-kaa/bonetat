@@ -4,7 +4,7 @@ import { cachedIcecatProduct } from "./icecat-index";
 import { downloadIcecatImage } from "./icecat";
 import { normalizeCatalogImage } from "./images";
 import { putFiles } from "./storage";
-import { matchColor } from "./icecat-match";
+import { isRefurbished, matchColor } from "./icecat-match";
 import { referenceEntriesForModel } from "./reference-catalog";
 import { importIcecatForFinish } from "./catalog-import";
 import type { IcecatProduct } from "./icecat";
@@ -34,6 +34,8 @@ export async function ensureFinishPhotos(finishId: string): Promise<PhotoOutcome
       continue; // restricted or removed entry
     }
     if (!entry.images.length) continue;
+    // A refurbisher's listing ("Teqcycle … Reconditionné"): its photos carry the refurbisher's branding
+    if (isRefurbished(entry.title)) continue;
     const m = matchColor([finish], entry);
     if (!m) continue;
     // An exact color name beats a family match; then the bigger picture
@@ -63,7 +65,7 @@ export async function ensureProductCover(productId: string): Promise<PhotoOutcom
       continue;
     }
     const main = entry.images[0];
-    if (!main) continue;
+    if (!main || isRefurbished(entry.title)) continue;
     try {
       const normalized = await normalizeCatalogImage(await downloadIcecatImage(main.url), `catalog/${product.slug}/cover`);
       await putFiles(normalized.files);

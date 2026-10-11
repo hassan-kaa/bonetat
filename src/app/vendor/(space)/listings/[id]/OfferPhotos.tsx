@@ -40,7 +40,7 @@ export default function OfferPhotos({ offerId, photos, editable }: { offerId: st
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-[26px] border border-line bg-white p-6">
+    <div className="flex flex-col gap-3 rounded-panel border border-line bg-white p-6">
       <div>
         <h2 className="text-[17px] font-semibold">Photos de l’appareil</h2>
         <p className="text-[13px] text-ink-muted">Jusqu’à 3 photos réelles de cet appareil. Les acheteurs les voient avec votre offre.</p>

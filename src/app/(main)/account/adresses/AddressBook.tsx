@@ -73,10 +73,10 @@ export default function AddressBook({ user, addresses }: { user: { name: string;
 
       <div className="grid gap-3.5 sm:grid-cols-2">
         {addresses.map((a) => (
-          <article key={a.id} className={cn("flex flex-col gap-3 rounded-[24px] bg-white p-[22px] text-sm leading-relaxed", a.isDefault ? "border-[1.5px] border-brand" : "border border-line")}>
+          <article key={a.id} className={cn("flex flex-col gap-3 rounded-panel bg-white p-[22px] text-sm leading-relaxed", a.isDefault ? "border-[1.5px] border-brand" : "border border-line")}>
             <div className="flex items-center justify-between gap-2">
               <b className="text-base font-semibold">{a.label}</b>
-              {a.isDefault && <span className="pill bg-brand-tint text-brand">Par défaut</span>}
+              {a.isDefault && <span className="pill bg-brand-tint text-brand-dark">Par défaut</span>}
             </div>
             <p>
               {a.fullName}, {a.phone}
@@ -87,8 +87,8 @@ export default function AddressBook({ user, addresses }: { user: { name: string;
               {a.notes && <span className="block text-ink-muted">{a.notes}</span>}
             </p>
             <div className="mt-auto flex flex-wrap gap-x-4 gap-y-1 text-[13px] font-medium">
-              <button type="button" onClick={() => startEdit(a)} className="text-brand hover:underline">Modifier</button>
-              {!a.isDefault && <button type="button" onClick={() => makeDefault(a.id)} className="text-brand hover:underline">Utiliser par défaut</button>}
+              <button type="button" onClick={() => startEdit(a)} className="text-brand-dark hover:underline">Modifier</button>
+              {!a.isDefault && <button type="button" onClick={() => makeDefault(a.id)} className="text-brand-dark hover:underline">Utiliser par défaut</button>}
               <button type="button" onClick={() => remove(a.id)} className="text-ink-muted hover:text-pop-dark">Supprimer</button>
             </div>
           </article>
@@ -96,7 +96,7 @@ export default function AddressBook({ user, addresses }: { user: { name: string;
       </div>
 
       {editing !== null && (
-        <form onSubmit={save} className="flex flex-col gap-4 rounded-[28px] border border-line bg-white p-6">
+        <form onSubmit={save} className="flex flex-col gap-4 rounded-panel border border-line bg-white p-6">
           <h2 className="text-lg font-semibold">{editing === "new" ? "Nouvelle adresse" : "Modifier l’adresse"}</h2>
           <AddressFields value={draft} onChange={setDraft} />
           {error && <p role="alert" className="text-sm text-pop-dark">{error}</p>}

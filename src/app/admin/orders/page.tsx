@@ -36,11 +36,11 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
         ))}
       </nav>
       <div className="flex flex-col gap-3">
-        {orders.length === 0 && <p className="rounded-[24px] border border-line bg-white p-6 text-ink-muted">Aucune commande.</p>}
+        {orders.length === 0 && <p className="rounded-panel border border-line bg-white p-6 text-ink-muted">Aucune commande.</p>}
         {orders.map((o) => {
           const a = o.shippingAddress as ShippingAddress;
           return (
-            <article key={o.id} className="flex flex-col gap-3 rounded-[24px] border border-line bg-white p-5">
+            <article key={o.id} className="flex flex-col gap-3 rounded-panel border border-line bg-white p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2.5">

@@ -18,7 +18,7 @@ export default async function AdminVendors() {
       <h1 className="page-title">Ateliers partenaires</h1>
       <div className="flex flex-col gap-3">
         {vendors.map((v) => (
-          <article key={v.id} className="flex flex-wrap items-start gap-5 rounded-[24px] border border-line bg-white p-5">
+          <article key={v.id} className="flex flex-wrap items-start gap-5 rounded-panel border border-line bg-white p-5">
             <div className="min-w-0 flex-[1_1_320px]">
               <div className="flex flex-wrap items-center gap-2.5">
                 <b className="text-lg font-semibold">{v.storeName}</b>

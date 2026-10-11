@@ -15,9 +15,9 @@ export default function GradingPage() {
       intro="Sur les réseaux sociaux, « très bon état » veut dire tout et son contraire. Chez Bonétat, chaque appareil est noté avec la même grille, quel que soit l’atelier qui l’a préparé. Ce que vous voyez sur la fiche est ce que vous recevez."
     >
       <GradingContent />
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-[32px] bg-brand p-8 text-white">
+      <section className="flex flex-wrap items-center justify-between gap-4 rounded-panel bg-brand p-8 text-white">
         <p className="max-w-[30em] text-xl font-medium leading-snug">Un état ne correspond pas à la fiche ? Retour gratuit sous 7 jours, et l’atelier perd des points de qualité.</p>
-        <Link href="/catalog" className="inline-flex h-12 items-center rounded-[14px] bg-white px-5 text-[15px] font-semibold text-brand">Voir le catalogue</Link>
+        <Link href="/catalog" className="inline-flex h-12 items-center rounded-control bg-white px-5 text-[15px] font-semibold text-brand-dark">Voir le catalogue</Link>
       </section>
     </InfoPage>
   );

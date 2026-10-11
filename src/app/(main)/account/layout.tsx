@@ -18,8 +18,8 @@ export default async function AccountLayout({ children }: { children: React.Reac
   return (
     <div className="container-page flex flex-wrap items-start gap-7 pb-6 pt-8">
       <aside className="flex w-full flex-col gap-3.5 lg:sticky lg:top-32 lg:w-[270px]">
-        <div className="flex items-center gap-3.5 rounded-[26px] border border-line bg-white p-5">
-          <span className="grid h-14 w-14 flex-none place-items-center rounded-[18px] bg-brand text-[22px] font-semibold text-white">{initials(user.name)}</span>
+        <div className="flex items-center gap-3.5 rounded-panel border border-line bg-white p-5">
+          <span className="grid h-14 w-14 flex-none place-items-center rounded-panel bg-brand text-[22px] font-semibold text-white">{initials(user.name)}</span>
           <div className="min-w-0">
             <b className="block truncate text-[17px] font-semibold">{user.name ?? "Mon compte"}</b>
             <span className="text-sm text-ink-muted">{formatPhone(user.phone)}</span>

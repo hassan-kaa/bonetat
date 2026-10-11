@@ -32,3 +32,6 @@ public/media/
 
 # Icecat index and API response cache (sync script)
 .cache/
+
+# macOS folder metadata
+.DS_Store

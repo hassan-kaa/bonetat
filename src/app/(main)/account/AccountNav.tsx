@@ -22,15 +22,15 @@ export default function AccountNav({
   const pathname = usePathname();
   const isActive = (href: string) => (href === "/account" ? pathname === "/account" || pathname.startsWith("/account/orders") : pathname.startsWith(href));
   return (
-    <nav aria-label="Mon espace" className="flex gap-0.5 overflow-x-auto rounded-[26px] border border-line bg-white p-2.5 lg:flex-col">
+    <nav aria-label="Mon espace" className="flex gap-0.5 overflow-x-auto rounded-panel border border-line bg-white p-2.5 lg:flex-col">
       {ITEMS.map((item) => (
         <Link
           key={item.href}
           href={item.href}
           aria-current={isActive(item.href) ? "page" : undefined}
           className={cn(
-            "flex items-center gap-3 whitespace-nowrap rounded-[14px] px-3.5 py-3 text-[15px] transition hover:bg-chalk",
-            isActive(item.href) && "bg-brand-tint font-medium text-brand hover:bg-brand-tint"
+            "flex items-center gap-3 whitespace-nowrap rounded-control px-3.5 py-3 text-[15px] transition hover:bg-chalk",
+            isActive(item.href) && "bg-brand-tint font-medium text-brand-dark hover:bg-brand-tint"
           )}
         >
           <span className="flex-1">{item.label}</span>
@@ -38,7 +38,7 @@ export default function AccountNav({
         </Link>
       ))}
       {extra && (
-        <Link href={extra.href} className="mt-1 whitespace-nowrap rounded-[14px] border-t border-line px-3.5 py-3 text-[15px] text-ink-muted hover:bg-chalk lg:mt-2 lg:rounded-none lg:rounded-b-[14px] lg:pt-4">
+        <Link href={extra.href} className="mt-1 whitespace-nowrap rounded-control border-t border-line px-3.5 py-3 text-[15px] text-ink-muted hover:bg-chalk lg:mt-2 lg:rounded-none lg:rounded-b-control lg:pt-4">
           {extra.label}
         </Link>
       )}

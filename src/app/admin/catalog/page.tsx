@@ -54,11 +54,11 @@ export default async function CatalogCoverage() {
         Une couleur sans photo validée s’affiche en illustration. Commencez par celles qui ont des appareils en vente.
       </p>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3.5">
-        <div className="rounded-[24px] border border-line bg-white p-5"><span className="text-[13px] text-ink-muted">Couleurs avec photo</span><b className="mt-1.5 block text-[28px] font-semibold tracking-[-0.03em]">{totals.done} / {totals.colors}</b></div>
-        <div className="rounded-[24px] border border-line bg-white p-5"><span className="text-[13px] text-ink-muted">Suggestions Icecat à confirmer</span><b className={cn("mt-1.5 block text-[28px] font-semibold tracking-[-0.03em]", totals.toConfirm > 0 && "text-amber-700")}>{totals.toConfirm}</b></div>
-        <div className="rounded-[24px] border border-line bg-white p-5"><span className="text-[13px] text-ink-muted">En vente sans photo</span><b className={cn("mt-1.5 block text-[28px] font-semibold tracking-[-0.03em]", totals.urgent > 0 && "text-pop-dark")}>{totals.urgent}</b></div>
+        <div className="rounded-panel border border-line bg-white p-5"><span className="text-[13px] text-ink-muted">Couleurs avec photo</span><b className="mt-1.5 block text-[28px] font-semibold tracking-[-0.03em]">{totals.done} / {totals.colors}</b></div>
+        <div className="rounded-panel border border-line bg-white p-5"><span className="text-[13px] text-ink-muted">Suggestions Icecat à confirmer</span><b className={cn("mt-1.5 block text-[28px] font-semibold tracking-[-0.03em]", totals.toConfirm > 0 && "text-amber-700")}>{totals.toConfirm}</b></div>
+        <div className="rounded-panel border border-line bg-white p-5"><span className="text-[13px] text-ink-muted">En vente sans photo</span><b className={cn("mt-1.5 block text-[28px] font-semibold tracking-[-0.03em]", totals.urgent > 0 && "text-pop-dark")}>{totals.urgent}</b></div>
       </div>
-      <div className="overflow-x-auto rounded-[26px] border border-line bg-white">
+      <div className="overflow-x-auto rounded-panel border border-line bg-white">
         <table className="tbl min-w-[760px]">
           <thead><tr><th>Produit</th><th>Couleurs</th><th>En vente sans photo</th><th>À confirmer</th><th className="text-right" /></tr></thead>
           <tbody>

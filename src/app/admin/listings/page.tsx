@@ -28,7 +28,7 @@ export default async function AdminListings() {
     <>
       <h1 className="page-title">Offres à contrôler</h1>
       <p className="-mt-2 text-[15px] text-ink-muted">Vérifiez l’état annoncé, la batterie mesurée et l’IMEI. Validez, ou demandez une correction à l’atelier : il corrige et renvoie l’offre.</p>
-      <div className="overflow-x-auto rounded-[26px] border border-line bg-white">
+      <div className="overflow-x-auto rounded-panel border border-line bg-white">
         {pending.length === 0 ? (
           <p className="p-8 text-center text-[15px] text-ink-muted">Rien à contrôler.</p>
         ) : (

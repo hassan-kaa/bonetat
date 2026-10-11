@@ -72,8 +72,8 @@ export default function FollowRow({ follow }: { follow: Follow }) {
   }
 
   return (
-    <article className="flex flex-wrap items-center gap-[18px] rounded-[24px] border border-line bg-white px-[22px] py-[18px]">
-      <Link href={follow.href} className="grid h-16 w-16 flex-none place-items-center overflow-hidden rounded-[18px] bg-brand-tint">
+    <article className="flex flex-wrap items-center gap-[18px] rounded-panel border border-line bg-white px-[22px] py-[18px]">
+      <Link href={follow.href} className="grid h-16 w-16 flex-none place-items-center overflow-hidden rounded-panel bg-brand-tint">
         <DeviceVisual
           imageKey={follow.imageKey}
           kind={follow.kind}
@@ -86,11 +86,11 @@ export default function FollowRow({ follow }: { follow: Follow }) {
         />
       </Link>
       <div className="min-w-0 flex-[1_1_220px]">
-        <Link href={follow.href} className="text-base font-medium hover:text-brand">{follow.name}</Link>
+        <Link href={follow.href} className="text-base font-medium hover:text-brand-dark">{follow.name}</Link>
         <p className="mt-0.5 text-sm text-ink-muted">{follow.config}</p>
       </div>
       <div className="text-right">
-        <b className="text-lg font-semibold">{follow.currentPriceMillimes ? formatPrice(follow.currentPriceMillimes) : "—"}</b>
+        <b className="price text-lg">{follow.currentPriceMillimes ? formatPrice(follow.currentPriceMillimes) : "—"}</b>
         <p className={`text-[13px] ${trend.cls}`}>{trend.text}</p>
       </div>
       <div className="flex flex-[1_1_100%] flex-wrap items-center gap-3 border-t border-line-soft pt-3.5 text-sm">

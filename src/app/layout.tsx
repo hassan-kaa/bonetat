@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from "next";
-// Self-hosted variable font (Latin + Arabic), no request to Google
+// Self-hosted variable fonts, no request to Google.
+// Plus Jakarta Sans: the interface. Readex Pro: the "Bonétat" wordmark only (the logo was drawn with it),
+// and the Arabic fallback until the Arabic version gets its own face.
+import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/readex-pro";
 import "./globals.css";
+import { THEME, THEMES } from "@/lib/theme";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
@@ -16,12 +20,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1747C8",
+  themeColor: THEMES[THEME].browserBar,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
+    <html lang="fr" data-theme={THEME}>
       <body>{children}</body>
     </html>
   );

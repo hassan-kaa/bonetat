@@ -26,7 +26,7 @@ type Color = ColorChoice;
 
 /** Small marker next to a field filled from the store's post */
 function Read({ on }: { on: boolean }) {
-  return on ? <span className="ml-1.5 rounded-full bg-brand-tint px-2 py-0.5 text-[11px] font-medium text-brand">lu dans votre annonce</span> : null;
+  return on ? <span className="ml-1.5 rounded-full bg-brand-tint px-2 py-0.5 text-[11px] font-medium text-brand-dark">lu dans votre annonce</span> : null;
 }
 
 export default function PublishFlow({
@@ -199,7 +199,7 @@ export default function PublishFlow({
 
   if (done && product) {
     return (
-      <div className="flex flex-col gap-3 rounded-[26px] border border-line bg-white p-7">
+      <div className="flex flex-col gap-3 rounded-panel border border-line bg-white p-7">
         <b className="text-xl font-semibold">Offre envoyée en contrôle</b>
         <p className="text-[15px] leading-relaxed text-ink-muted">
           {product.name}, {configText}, {grade ? GRADES[grade].label.toLowerCase() : ""} à {formatPrice(priceMillimes)}. L’équipe Bonétat la valide sous 24 h, puis elle apparaît dans le configurateur.
@@ -218,7 +218,7 @@ export default function PublishFlow({
       <ol className="flex flex-wrap gap-x-[26px] gap-y-2.5" aria-label="Étapes">
         {STEPS.map((s, i) => (
           <li key={s} className={cn("flex items-center gap-2.5 text-sm", i === step ? "font-medium text-ink" : "text-ink-muted")} aria-current={i === step ? "step" : undefined}>
-            <span className={cn("grid h-[30px] w-[30px] place-items-center rounded-full border-[1.5px] text-[13px] font-semibold", i === step ? "border-brand bg-brand text-white" : i < step ? "border-brand-tint bg-brand-tint text-brand" : "border-line-strong")}>
+            <span className={cn("grid h-[30px] w-[30px] place-items-center rounded-full border-[1.5px] text-[13px] font-semibold", i === step ? "border-brand bg-brand text-white" : i < step ? "border-brand-tint bg-brand-tint text-brand-dark" : "border-line-strong")}>
               {i + 1}
             </span>
             {s}
@@ -226,7 +226,7 @@ export default function PublishFlow({
         ))}
       </ol>
 
-      <div className="flex flex-col gap-[22px] rounded-[26px] border border-line bg-white p-6">
+      <div className="flex flex-col gap-[22px] rounded-panel border border-line bg-white p-6">
         {step === 0 && <SourceStep recent={recent} brands={brands} onChosen={(c) => { setError(""); setChosen(c); }} />}
 
         {step === 1 && product && (
@@ -374,7 +374,7 @@ export default function PublishFlow({
               <p className="text-sm text-ink-muted">{product.name}, {configText}, {grade ? GRADES[grade].label.toLowerCase() : ""}</p>
               <label className="field"><span>Votre prix (DT)<Read on={!!pre?.priceMillimes && priceMillimes === pre.priceMillimes} /></span><input className="input" type="number" min={1} inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} autoFocus /></label>
             </div>
-            <div className="flex flex-[1_1_280px] flex-col gap-2.5 rounded-[20px] bg-chalk p-[18px] text-sm">
+            <div className="flex flex-[1_1_280px] flex-col gap-2.5 rounded-panel bg-chalk p-[18px] text-sm">
               <div className="flex justify-between"><span className="text-ink-muted">Meilleur prix actuel</span><b className="font-semibold">{best ? formatPrice(best) : "Aucune offre"}</b></div>
               <div className="flex justify-between"><span className="text-ink-muted">Commission Bonétat, {COMMISSION_LABEL}</span><span>{priceNum > 0 ? formatPrice(commission) : "—"}</span></div>
               <div className="flex justify-between border-t border-line pt-2.5"><span>Vous recevez</span><b className="font-semibold">{priceNum > 0 ? formatPrice(priceMillimes - commission) : "—"}</b></div>

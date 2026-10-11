@@ -4,6 +4,7 @@ import { getSessionUser } from "@/lib/auth";
 import { SELLABLE, categoryFloors, finishWithFront, getVariantCards, productHref } from "@/lib/queries";
 import { GRADES, GRADE_ORDER } from "@/lib/catalog";
 import { formatPrice } from "@/lib/money";
+import { ArrowRight } from "lucide-react";
 import DeviceArt from "@/components/products/DeviceArt";
 import DeviceVisual from "@/components/products/DeviceVisual";
 import VariantCard from "@/components/products/VariantCard";
@@ -11,12 +12,33 @@ import HomeHero, { type HeroSide } from "@/components/home/HomeHero";
 
 export const dynamic = "force-dynamic";
 
-/** One hero side per priority category: real floor price, real best saving, a real photo */
+/** One hero side per priority category: real floor price, real best saving, a real cut-out photo */
+// Static home photos: final transparent PNG/WebP files dropped in public/brand/home/, shown as they are.
+// A category without an entry here shows the drawing.
+const HOME = "/brand/home";
+const CATEGORY_PHOTOS: Record<string, string> = {
+  iphone: `${HOME}/cat-iphone.webp`,
+  android: `${HOME}/cat-android.webp`,
+  ipad: `${HOME}/cat-ipad.webp`,
+  "tablettes-android": `${HOME}/cat-tablet.webp`,
+  montres: `${HOME}/cat-watch.webp`,
+  consoles: `${HOME}/cat-console.webp`,
+};
+const LAPTOP_PHOTOS = [`${HOME}/cat-laptops.webp`];
+/** Photos kept on their white background (no outline to cut along): blended into the card, no drop shadow */
+const ON_WHITE = new Set(["consoles"]);
+/** Small category cards: a soft scene, light top-left to deeper bottom-right */
+const SCENES: Record<string, string> = {
+  // Soft blue and grey, alternating like a checkerboard. Fixed on purpose: they don't follow the theme.
+  ipad: "bg-[linear-gradient(135deg,#F2F6FF,#D3E1FF)]",
+  "tablettes-android": "bg-[linear-gradient(135deg,#F3F5F9,#D8DEEA)]",
+  montres: "bg-[linear-gradient(135deg,#F3F5F9,#D8DEEA)]",
+  consoles: "bg-[linear-gradient(135deg,#F2F6FF,#D3E1FF)]",
+};
+
 async function heroSide(kind: "PHONE" | "LAPTOP"): Promise<HeroSide> {
   const cards = await getVariantCards({ where: { kind }, sort: "deal" });
   const saving = (c: (typeof cards)[number]) => (c.newPriceMillimes ? Math.round((1 - c.priceMillimes / c.newPriceMillimes) * 100) : 0);
-  // The showcase: an own-color photo first, a model cover otherwise, best deal first
-  const showcase = cards.find((c) => c.imageKey && !c.imageIsCover) ?? cards.find((c) => c.imageKey);
   return {
     kind,
     title: kind === "PHONE" ? "Téléphones" : "Ordinateurs",
@@ -26,8 +48,9 @@ async function heroSide(kind: "PHONE" | "LAPTOP"): Promise<HeroSide> {
     floorMillimes: cards.length ? Math.min(...cards.map((c) => c.priceMillimes)) : null,
     maxDiscount: Math.max(0, ...cards.map(saving)),
     count: cards.length,
-    imageKey: showcase?.imageKey ?? null,
-    imageAlt: showcase?.name ?? "",
+    // Phones: a whole scene on our navy (text goes on its empty left side). Laptops: a transparent photo.
+    imageSrc: kind === "PHONE" ? `${HOME}/hero-phones.jpeg` : `${HOME}/hero-laptops.webp`,
+    imageAlt: kind === "PHONE" ? "iPhone et Samsung Galaxy reconditionnés" : "MacBook reconditionné",
   };
 }
 
@@ -77,11 +100,16 @@ export default async function HomePage() {
   const laptopFloor = Math.min(...categories.filter((c) => c.kind === "LAPTOP").map((c) => floors.get(c.id) ?? Infinity));
   const hasLaptops = categories.some((c) => c.kind === "LAPTOP");
   const others = categories.filter((c) => c.kind !== "PHONE" && c.kind !== "LAPTOP");
-  const phoneArt: Record<string, [string, string]> = { iphone: ["#43544A", "#F2D4D7"], android: ["#BFD3E6", "#22252C"] };
+  // Phone tiles are dark: their photos are cut out. Light tiles blend the photo's white away.
+
 
   return (
-    <div className="container-page flex flex-col gap-16 pb-6 pt-6">
+    <>
+    {/* The hero runs wider than the page column (1600 vs 1240): the phones scene needs the room */}
+    <div className="mx-auto w-full max-w-[1600px] px-4 pt-6 sm:px-6">
       <HomeHero phones={phonesSide} laptops={laptopsSide} />
+    </div>
+    <div className="container-page flex flex-col gap-16 pb-6 pt-16">
 
       {/* Categories */}
       <section aria-labelledby="categories" className="flex flex-col items-center gap-7">
@@ -92,76 +120,98 @@ export default async function HomePage() {
         <div className="grid w-full grid-cols-2 gap-4 lg:grid-cols-6">
           {phones.map((c, i) => {
             const floor = floors.get(c.id);
-            const [hexA, hexB] = phoneArt[c.slug] ?? ["#43544A", "#22252C"];
+            const cut = CATEGORY_PHOTOS[c.slug];
             return (
               <Link
                 key={c.id}
                 href={`/catalog?category=${c.slug}`}
-                className={`relative col-span-2 flex h-[260px] flex-col justify-between overflow-hidden rounded-[32px] px-8 py-[30px] text-white transition hover:-translate-y-1 hover:shadow-lift lg:col-span-3 ${i === 0 ? "bg-brand" : "bg-ink"}`}
+                className={`group relative col-span-2 flex h-[260px] flex-col justify-between overflow-hidden rounded-panel px-8 py-[30px] text-white transition hover:-translate-y-1 hover:shadow-lift lg:col-span-3 ${i === 0 ? "bg-brand" : "bg-trust"}`}
               >
-                <span className="relative z-[1] max-w-[62%] sm:max-w-none">
-                  <span className="block text-[30px] sm:text-[34px] font-semibold leading-[1.05] tracking-[-0.035em]">{c.nameFr}</span>
+                <span className="relative z-[1] max-w-[50%] sm:max-w-[58%]">
+                  <span className="block text-[30px] font-bold leading-[1.05] tracking-[-0.035em] sm:text-[34px]">{c.nameFr}</span>
                   {c.tagline && <span className="mt-2 block text-[15px] text-white/80">{c.tagline}</span>}
                 </span>
                 {floor && floor !== Infinity && (
                   <span className="relative z-[1] flex items-baseline gap-2 text-[15px]">
-                    dès <b className="text-[26px] font-semibold tracking-[-0.03em]">{formatPrice(floor)}</b>
+                    dès <b className="text-[26px] font-bold tracking-[-0.03em]">{formatPrice(floor)}</b>
                   </span>
                 )}
-                <span aria-hidden="true" className="absolute -bottom-[70px] right-[38px] h-[260px] w-[260px] rounded-full bg-white/10" />
-                <span aria-hidden="true" className="absolute right-[176px] top-[78px] hidden rotate-[8deg] sm:block">
-                  <DeviceArt kind="PHONE" color={hexB} cameras={3} width={104} />
-                </span>
-                <span aria-hidden="true" className="absolute -right-6 top-[34px] -rotate-[10deg] sm:right-[70px]">
-                  <DeviceArt kind="PHONE" color={hexA} cameras={3} width={132} />
-                </span>
+                <span aria-hidden="true" className="absolute -bottom-20 right-4 h-[280px] w-[280px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,.22),rgba(255,255,255,0)_65%)]" />
+                {cut ? (
+                  /* eslint-disable-next-line @next/next/no-img-element -- pre-sized stored file */
+                  <img src={cut} alt="" aria-hidden="true" className="absolute right-4 top-1/2 h-[64%] w-[46%] -translate-y-1/2 object-contain object-center drop-shadow-[0_20px_26px_rgba(0,0,0,.4)] transition-transform duration-500 sm:bottom-4 sm:right-8 sm:top-auto sm:h-[210px] sm:w-[56%] sm:translate-y-0 sm:object-bottom sm:group-hover:-translate-y-1.5" />
+                ) : (
+                  <span aria-hidden="true" className="absolute -right-6 top-[34px] -rotate-[10deg] sm:right-[70px]">
+                    <DeviceArt kind="PHONE" color="#C9D3F5" cameras={3} width={132} />
+                  </span>
+                )}
               </Link>
             );
           })}
           {hasLaptops && (
             <Link
               href="/catalog?type=laptop"
-              className="relative col-span-2 flex h-[240px] flex-col justify-between overflow-hidden rounded-[32px] bg-brand-tint px-8 py-[30px] transition hover:-translate-y-1 hover:shadow-lift lg:col-span-6"
+              className="group relative col-span-2 flex flex-col justify-between overflow-hidden rounded-panel bg-brand-tint px-6 py-6 sm:h-[240px] sm:px-8 sm:py-[30px] transition hover:-translate-y-1 hover:shadow-lift lg:col-span-6"
             >
-              <span className="relative z-[1] max-w-[60%]">
-                <span className="block text-[30px] font-semibold leading-[1.05] tracking-[-0.035em] sm:text-[34px]">Ordinateurs portables</span>
+              <span className="relative z-[1] max-w-full sm:max-w-[48%]">
+                <span className="block text-[30px] font-bold leading-[1.05] tracking-[-0.035em] sm:text-[34px]">Ordinateurs portables</span>
                 <span className="mt-2 block text-[15px] text-ink-soft">MacBook, ThinkPad, EliteBook, PC gamer. Filtrez par processeur, RAM et carte graphique.</span>
               </span>
               {laptopFloor !== Infinity && (
                 <span className="relative z-[1] flex items-baseline gap-2 text-[15px]">
-                  dès <b className="text-[26px] font-semibold tracking-[-0.03em]">{formatPrice(laptopFloor)}</b>
+                  dès <b className="price text-[26px]">{formatPrice(laptopFloor)}</b>
                 </span>
               )}
-              <span aria-hidden="true" className="absolute -bottom-10 right-[200px] hidden -rotate-[4deg] sm:block">
-                <DeviceArt kind="LAPTOP" color="#B9C7E6" width={230} />
-              </span>
-              <span aria-hidden="true" className="absolute -bottom-6 -right-10 rotate-[3deg] sm:right-6">
-                <DeviceArt kind="LAPTOP" color="#5A606C" width={260} />
-              </span>
+              {LAPTOP_PHOTOS.length > 0 ? (
+                <span aria-hidden="true" className="relative order-last mt-4 flex h-[150px] w-full items-end justify-center transition-transform duration-500 sm:absolute sm:bottom-3 sm:right-10 sm:mt-0 sm:h-[215px] sm:w-[48%] sm:justify-end sm:gap-4 sm:group-hover:-translate-y-1.5">
+                  {LAPTOP_PHOTOS.map((src) => (
+                    /* eslint-disable-next-line @next/next/no-img-element -- pre-sized static file */
+                    <img key={src} src={src} alt="" className="h-full min-w-0 flex-1 object-contain object-bottom" />
+                  ))}
+                </span>
+              ) : (
+                <span aria-hidden="true" className="absolute -bottom-6 right-6"><DeviceArt kind="LAPTOP" color="#5A606C" width={260} /></span>
+              )}
             </Link>
           )}
           {others.map((c) => {
             const floor = floors.get(c.id);
-            const art: Record<string, string> = {
-              ipad: "#8DB0EC", "tablettes-android": "#A7D8BD", macbook: "#B9C7E6", ordinateurs: "#F2C6A8", montres: "#E8C9B0", consoles: "#3F4044",
-            };
+            const show = CATEGORY_PHOTOS[c.slug];
+            const onWhite = ON_WHITE.has(c.slug);
             const width = c.kind === "LAPTOP" ? 112 : c.kind === "TABLET" ? 74 : c.kind === "WATCH" ? 58 : 100;
             return (
               <Link
                 key={c.id}
                 href={`/catalog?category=${c.slug}`}
-                className="col-span-1 flex flex-col items-center gap-4 overflow-hidden rounded-[28px] border-[1.5px] border-line bg-white px-3.5 py-5 text-center transition hover:-translate-y-1 hover:border-brand hover:shadow-lift lg:col-span-3 lg:h-[220px] lg:flex-row lg:gap-5 lg:px-[26px] lg:text-left"
+                className={`group relative col-span-1 flex flex-col overflow-hidden rounded-panel p-5 transition hover:-translate-y-1 hover:shadow-lift sm:p-7 lg:col-span-3 lg:h-[230px] ${SCENES[c.slug] ?? "bg-brand-tint"}`}
               >
-                <span aria-hidden="true" className="grid h-[132px] w-[132px] flex-none place-items-center rounded-full bg-brand-tint">
-                  <DeviceArt kind={c.kind} color={art[c.slug] ?? "#B9C7E6"} width={width} />
+                {/* The device: a fixed frame it can never overflow, on a white glow like a pedestal */}
+                <span aria-hidden="true" className="relative h-[130px] w-full lg:absolute lg:inset-y-6 lg:right-6 lg:h-auto lg:w-[44%]">
+                  <span className="absolute inset-x-[8%] bottom-0 h-[38%] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,.9),rgba(255,255,255,0)_70%)]" />
+                  {show ? (
+                    /* eslint-disable-next-line @next/next/no-img-element -- pre-sized static file */
+                    <img
+                      src={show}
+                      alt=""
+                      className={`absolute inset-0 h-full w-full object-contain object-bottom transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-[1.03] ${
+                        onWhite ? "mix-blend-multiply" : "drop-shadow-[0_14px_16px_rgba(13,27,62,.22)]"
+                      }`}
+                    />
+                  ) : (
+                    <span className="absolute inset-0 grid place-items-center"><DeviceArt kind={c.kind} color="#B9C7E6" width={width} /></span>
+                  )}
                 </span>
-                <span className="min-w-0">
-                  <span className="block text-[22px] font-semibold leading-tight tracking-[-0.025em]">{c.nameFr}</span>
+                <span className="relative z-[1] mt-4 flex flex-1 flex-col lg:mt-0 lg:max-w-[50%]">
+                  <span className="text-[19px] font-bold leading-tight tracking-[-0.025em] sm:text-[24px]">{c.nameFr}</span>
                   {floor && floor !== Infinity && (
-                    <span className="mt-2.5 block text-sm text-ink-muted">
-                      dès <b className="text-lg font-semibold text-ink">{formatPrice(floor)}</b>
+                    <span className="mt-2 text-sm text-ink-soft">
+                      dès <b className="price text-xl">{formatPrice(floor)}</b>
                     </span>
                   )}
+                  <span className="mt-auto hidden items-center gap-1.5 pt-4 text-sm font-semibold text-brand-dark sm:flex">
+                    Voir
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                  </span>
                 </span>
               </Link>
             );
@@ -174,7 +224,7 @@ export default async function HomePage() {
         <section aria-labelledby="arrivages">
           <div className="mb-[18px] flex items-baseline justify-between gap-4">
             <h2 id="arrivages" className="section-title">Arrivés cette semaine</h2>
-            <Link href="/catalog?sort=new" className="text-[15px] text-brand hover:underline">Tout voir</Link>
+            <Link href="/catalog?sort=new" className="text-[15px] text-brand-dark hover:underline">Tout voir</Link>
           </div>
           <div className="flex gap-[22px] overflow-x-auto px-0.5 pb-2 pt-1">
             {arrivals.map((a) => (
@@ -207,24 +257,27 @@ export default async function HomePage() {
       <section aria-labelledby="affaires">
         <div className="mb-[18px] flex items-baseline justify-between gap-4">
           <h2 id="affaires" className="section-title">Les plus grosses économies du moment</h2>
-          <Link href="/catalog" className="text-[15px] text-brand hover:underline">Voir le catalogue</Link>
+          <Link href="/catalog" className="text-[15px] text-brand-dark hover:underline">Voir le catalogue</Link>
         </div>
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-[18px]">
+        {/* Phones: one row to swipe, cards a bit narrower than the screen so the next one peeks in */}
+        <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] sm:gap-[18px] sm:overflow-visible sm:px-0 sm:pb-0">
           {deals.map((d) => (
-            <VariantCard key={d.offerId} card={d} followed={followed.has(d.variantId)} />
+            <div key={d.offerId} className="w-[76%] flex-none snap-start sm:w-auto">
+              <VariantCard card={d} followed={followed.has(d.variantId)} />
+            </div>
           ))}
         </div>
       </section>
 
       {/* Grading */}
-      <section id="etat" aria-labelledby="etats" className="rounded-[36px] border border-line bg-white p-7 sm:p-11">
+      <section id="etat" aria-labelledby="etats" className="rounded-panel border border-line bg-white p-7 sm:p-11">
         <h2 id="etats" className="text-[30px] font-semibold tracking-[-0.03em]">Quatre états, une seule règle : on vous dit tout.</h2>
         <p className="mb-[30px] mt-2.5 max-w-[40em] text-base leading-normal text-ink-muted">
           Chaque appareil est noté par Bonétat selon la même grille, quel que soit l’atelier qui l’a préparé. La batterie est mesurée, pas estimée, et affichée pour chaque appareil.
         </p>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
           {[...GRADE_ORDER].reverse().map((g) => (
-            <div key={g} className="rounded-[22px] bg-chalk p-[22px]">
+            <div key={g} className="rounded-panel bg-chalk p-[22px]">
               <span className="meter w-[72px]">{[1, 2, 3, 4].map((i) => <span key={i} data-on={i <= GRADES[g].level} />)}</span>
               <h3 className="mb-1.5 mt-4 text-[19px] font-semibold">{GRADES[g].label}</h3>
               <p className="text-sm leading-normal text-ink-soft">{GRADES[g].description}</p>
@@ -244,7 +297,7 @@ export default async function HomePage() {
             ["Garanti 12 mois par Bonétat", "Une panne ? Vous parlez à Bonétat, on s’occupe du reste."],
           ].map(([t, d], i) => (
             <li key={t} className="border-t-[3px] border-brand pt-[18px]">
-              <span className="text-[15px] font-semibold text-brand">{i + 1}</span>
+              <span className="text-[15px] font-semibold text-brand-dark">{i + 1}</span>
               <h3 className="my-1.5 text-lg font-semibold">{t}</h3>
               <p className="text-sm leading-normal text-ink-muted">{d}</p>
             </li>
@@ -252,5 +305,6 @@ export default async function HomePage() {
         </ol>
       </section>
     </div>
+    </>
   );
 }

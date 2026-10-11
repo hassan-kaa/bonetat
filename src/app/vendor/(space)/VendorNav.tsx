@@ -25,7 +25,7 @@ export default function VendorNav({ toShip }: { toShip: number }) {
           href={i.href}
           aria-current={active(i.href) ? "page" : undefined}
           className={cn(
-            "flex items-center gap-3 whitespace-nowrap rounded-[14px] px-3.5 py-3 text-[15px] text-white/80 transition hover:bg-white/[.07]",
+            "flex items-center gap-3 whitespace-nowrap rounded-control px-3.5 py-3 text-[15px] text-white/80 transition hover:bg-white/[.07]",
             active(i.href) && "bg-white font-medium text-ink hover:bg-white"
           )}
         >

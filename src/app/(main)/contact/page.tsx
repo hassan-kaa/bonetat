@@ -27,18 +27,18 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
       }
     >
       <div className="grid gap-4 md:grid-cols-3">
-        <a href={wa} target="_blank" rel="noopener noreferrer" className="flex flex-col gap-3 rounded-[28px] bg-brand p-7 text-white transition hover:-translate-y-1 hover:shadow-lift">
+        <a href={wa} target="_blank" rel="noopener noreferrer" className="flex flex-col gap-3 rounded-panel bg-brand p-7 text-white transition hover:-translate-y-1 hover:shadow-lift">
           <MessageCircle className="h-8 w-8" aria-hidden="true" />
           <b className="text-xl font-semibold">WhatsApp</b>
           <span className="text-white/85">Le plus rapide. Message prérempli{commande ? " avec votre commande" : ""}.</span>
         </a>
-        <a href={`tel:${PHONE.replace(/\s/g, "")}`} className="flex flex-col gap-3 rounded-[28px] border border-line bg-white p-7 transition hover:border-line-strong">
-          <Phone className="h-8 w-8 text-brand" aria-hidden="true" />
+        <a href={`tel:${PHONE.replace(/\s/g, "")}`} className="flex flex-col gap-3 rounded-panel border border-line bg-white p-7 transition hover:border-line-strong">
+          <Phone className="h-8 w-8 text-brand-dark" aria-hidden="true" />
           <b className="text-xl font-semibold">{PHONE}</b>
           <span className="text-ink-muted">Lundi au samedi, 9 h à 19 h</span>
         </a>
-        <a href={`mailto:${EMAIL}?subject=${encodeURIComponent(warranty ? `Panne sous garantie ${commande ?? ""}` : "Question")}`} className="flex flex-col gap-3 rounded-[28px] border border-line bg-white p-7 transition hover:border-line-strong">
-          <Mail className="h-8 w-8 text-brand" aria-hidden="true" />
+        <a href={`mailto:${EMAIL}?subject=${encodeURIComponent(warranty ? `Panne sous garantie ${commande ?? ""}` : "Question")}`} className="flex flex-col gap-3 rounded-panel border border-line bg-white p-7 transition hover:border-line-strong">
+          <Mail className="h-8 w-8 text-brand-dark" aria-hidden="true" />
           <b className="text-xl font-semibold">{EMAIL}</b>
           <span className="text-ink-muted">Réponse sous 24 h</span>
         </a>

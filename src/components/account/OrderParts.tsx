@@ -40,7 +40,7 @@ export type ItemView = {
 export function OrderItemRow({ item }: { item: ItemView }) {
   return (
     <div className="flex flex-wrap items-center gap-[18px]">
-      <span className="grid h-[76px] w-[76px] flex-none place-items-center overflow-hidden rounded-[20px] bg-brand-tint">
+      <span className="grid h-[76px] w-[76px] flex-none place-items-center overflow-hidden rounded-panel bg-brand-tint">
         <DeviceVisual
           imageKey={item.imageKey}
           kind={item.kind}
@@ -59,7 +59,7 @@ export function OrderItemRow({ item }: { item: ItemView }) {
           {item.batteryHealth ? `, batterie ${item.batteryHealth} %` : ""}, garantie 12 mois
         </p>
       </div>
-      <b className="text-lg font-semibold">{formatPrice(item.priceMillimes)}</b>
+      <b className="price text-lg">{formatPrice(item.priceMillimes)}</b>
     </div>
   );
 }

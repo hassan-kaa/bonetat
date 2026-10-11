@@ -43,7 +43,7 @@ export default async function ProductPhotos({ params }: { params: Promise<{ slug
       {product.finishes.map((f) => {
         const images = [...f.images].sort((a, b) => a.status.localeCompare(b.status) || ANGLE_ORDER[a.angle] - ANGLE_ORDER[b.angle] || a.position - b.position);
         return (
-          <section key={f.id} className="flex flex-col gap-4 rounded-[26px] border border-line bg-white p-6">
+          <section key={f.id} className="flex flex-col gap-4 rounded-panel border border-line bg-white p-6">
             <div className="flex flex-wrap items-center gap-3">
               <span className="h-8 w-8 rounded-full border border-ink/20" style={{ background: f.hex }} aria-hidden="true" />
               <div className="min-w-0 flex-1">

@@ -56,13 +56,13 @@ export default function ProfileForm({ initial }: { initial: Profile }) {
   return (
     <form onSubmit={save} className="flex flex-col gap-[18px]">
       <h1 className="page-title">Mon profil</h1>
-      <div className="grid gap-4 rounded-[28px] border border-line bg-white p-6 sm:grid-cols-2">
+      <div className="grid gap-4 rounded-panel border border-line bg-white p-6 sm:grid-cols-2">
         <label className="field">Prénom et nom<input className="input" value={p.name} onChange={(e) => setP({ ...p, name: e.target.value })} autoComplete="name" required minLength={2} /></label>
         <label className="field">Téléphone, vérifié par SMS<input className="input" value={p.phone} disabled /></label>
         <label className="field">E-mail, pour les factures (facultatif)<input className="input" type="email" value={p.email} onChange={(e) => setP({ ...p, email: e.target.value })} placeholder="vous@exemple.tn" autoComplete="email" /></label>
         <div className="field">
           Langue du site
-          <div className="flex h-12 gap-1.5 rounded-[14px] bg-[#F0F3F9] p-1" role="group" aria-label="Langue du site">
+          <div className="flex h-12 gap-1.5 rounded-control bg-line-soft p-1" role="group" aria-label="Langue du site">
             {(["FR", "AR"] as const).map((l) => (
               <button
                 key={l}
@@ -70,7 +70,7 @@ export default function ProfileForm({ initial }: { initial: Profile }) {
                 aria-pressed={p.locale === l}
                 onClick={() => setP({ ...p, locale: l })}
                 lang={l === "AR" ? "ar" : "fr"}
-                className={cn("flex-1 rounded-[11px] text-[15px] text-ink", p.locale === l && "bg-white shadow-sm")}
+                className={cn("flex-1 rounded-control text-[15px] text-ink", p.locale === l && "bg-white shadow-sm")}
               >
                 {l === "FR" ? "Français" : "العربية"}
               </button>
@@ -80,7 +80,7 @@ export default function ProfileForm({ initial }: { initial: Profile }) {
         </div>
       </div>
 
-      <div className="rounded-[28px] border border-line bg-white px-6 py-2.5">
+      <div className="rounded-panel border border-line bg-white px-6 py-2.5">
         {NOTIFS.map((n) => (
           <div key={n.key} className="flex items-center gap-4 border-b border-line-soft py-4 last:border-0">
             <div className="flex-1">

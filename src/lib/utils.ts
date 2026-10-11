@@ -60,8 +60,8 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
 /** Tailwind classes for status pills */
 export const ORDER_STATUS_TONE: Record<string, string> = {
   PENDING: "bg-amber-50 text-amber-800",
-  CONFIRMED: "bg-brand-tint text-brand",
-  SHIPPED: "bg-brand-tint text-brand",
+  CONFIRMED: "bg-brand-tint text-brand-dark",
+  SHIPPED: "bg-brand-tint text-brand-dark",
   DELIVERED: "bg-gain-tint text-gain",
   CANCELLED: "bg-slate-100 text-slate-600",
   DISPUTED: "bg-pop-tint text-pop-dark",

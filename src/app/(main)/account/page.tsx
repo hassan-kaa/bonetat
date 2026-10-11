@@ -26,7 +26,7 @@ export default async function OrdersPage() {
     <>
       <h1 className="page-title">Mes commandes</h1>
       {orders.length === 0 && (
-        <div className="rounded-[28px] border border-dashed border-line-strong bg-white p-8 text-center">
+        <div className="rounded-panel border border-dashed border-line-strong bg-white p-8 text-center">
           <p className="text-lg font-medium">Pas encore de commande.</p>
           <p className="mt-1.5 text-ink-muted">Vos achats apparaîtront ici, avec leur suivi et leur garantie.</p>
           <Link href="/catalog" className="btn-primary btn-sm mt-5">Trouver un appareil</Link>
@@ -36,7 +36,7 @@ export default async function OrdersPage() {
         const address = order.shippingAddress as ShippingAddress;
         const open = order.status === "PENDING" || order.status === "CONFIRMED" || order.status === "SHIPPED";
         return (
-          <article key={order.id} className="flex flex-col gap-5 rounded-[28px] border border-line bg-white p-6">
+          <article key={order.id} className="flex flex-col gap-5 rounded-panel border border-line bg-white p-6">
             <div className="flex flex-wrap justify-between gap-2">
               <div>
                 <b className="text-[17px] font-semibold">{orderHeadline(order.status, address, order.deliveredAt)}</b>
@@ -58,13 +58,13 @@ export default async function OrdersPage() {
               ))}
             </div>
             {open && (
-              <div className="flex flex-wrap justify-between gap-2.5 rounded-[18px] bg-chalk px-[18px] py-4 text-sm">
+              <div className="flex flex-wrap justify-between gap-2.5 rounded-panel bg-chalk px-[18px] py-4 text-sm">
                 <span>
                   À payer au livreur, livraison comprise
                   <br />
                   <span className="text-ink-muted">Allumez l’appareil devant lui avant de payer.</span>
                 </span>
-                <b className="text-[22px] font-semibold">{formatPrice(order.totalMillimes)}</b>
+                <b className="price text-[22px]">{formatPrice(order.totalMillimes)}</b>
               </div>
             )}
             <div className="flex flex-wrap gap-2.5">

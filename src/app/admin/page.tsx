@@ -30,18 +30,18 @@ export default async function AdminHome() {
     <>
       <h1 className="page-title">Vue d’ensemble</h1>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3.5">
-        <div className="rounded-[24px] border border-line bg-white p-5"><span className="text-[13px] text-ink-muted">Ventes livrées ce mois</span><b className="mt-1.5 block text-[28px] font-semibold tracking-[-0.03em]">{formatPrice(gmv)}</b><span className="text-[13px] text-ink-muted">{delivered.length} commandes</span></div>
-        <div className="rounded-[24px] border border-line bg-white p-5"><span className="text-[13px] text-ink-muted">Commission ce mois</span><b className="mt-1.5 block text-[28px] font-semibold tracking-[-0.03em]">{formatPrice(commission)}</b></div>
-        <div className="rounded-[24px] border border-line bg-white p-5"><span className="text-[13px] text-ink-muted">Offres en ligne</span><b className="mt-1.5 block text-[28px] font-semibold tracking-[-0.03em]">{live}</b></div>
+        <div className="rounded-panel border border-line bg-white p-5"><span className="text-[13px] text-ink-muted">Ventes livrées ce mois</span><b className="mt-1.5 block text-[28px] font-semibold tracking-[-0.03em]">{formatPrice(gmv)}</b><span className="text-[13px] text-ink-muted">{delivered.length} commandes</span></div>
+        <div className="rounded-panel border border-line bg-white p-5"><span className="text-[13px] text-ink-muted">Commission ce mois</span><b className="mt-1.5 block text-[28px] font-semibold tracking-[-0.03em]">{formatPrice(commission)}</b></div>
+        <div className="rounded-panel border border-line bg-white p-5"><span className="text-[13px] text-ink-muted">Offres en ligne</span><b className="mt-1.5 block text-[28px] font-semibold tracking-[-0.03em]">{live}</b></div>
       </div>
-      <section className="rounded-[26px] border border-line bg-white p-6">
+      <section className="rounded-panel border border-line bg-white p-6">
         <h2 className="mb-3 text-lg font-semibold">À faire</h2>
         <ul className="flex flex-col divide-y divide-line-soft">
           {todo.map((t) => (
             <li key={t.href}>
-              <Link href={t.href} className="flex items-center justify-between gap-3 py-3 text-[15px] hover:text-brand">
+              <Link href={t.href} className="flex items-center justify-between gap-3 py-3 text-[15px] hover:text-brand-dark">
                 <span><b className="font-semibold">{t.n}</b> {t.label}</span>
-                <span className="text-sm text-brand">Ouvrir</span>
+                <span className="text-sm text-brand-dark">Ouvrir</span>
               </Link>
             </li>
           ))}

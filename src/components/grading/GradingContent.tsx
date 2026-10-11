@@ -22,12 +22,12 @@ export default function GradingContent({ compact = false, current }: { compact?:
           <section
             key={g}
             aria-current={g === current ? "true" : undefined}
-            className={cn("flex flex-col gap-3 rounded-[28px] border bg-white", compact ? "p-5" : "p-6", g === current ? "border-brand ring-2 ring-brand/20" : "border-line")}
+            className={cn("flex flex-col gap-3 rounded-panel border bg-white", compact ? "p-5" : "p-6", g === current ? "border-brand ring-2 ring-brand/20" : "border-line")}
           >
             <span className="meter w-[72px]">{[1, 2, 3, 4].map((i) => <span key={i} data-on={i <= GRADES[g].level} />)}</span>
             <h2 className={cn("font-semibold", compact ? "text-lg" : "text-[22px]")}>
               {GRADES[g].label}
-              {g === current && <span className="ml-2 text-[13px] font-medium text-brand">Votre sélection</span>}
+              {g === current && <span className="ml-2 text-[13px] font-medium text-brand-dark">Votre sélection</span>}
             </h2>
             <p className="text-sm leading-relaxed text-ink-soft">{GRADES[g].description}</p>
             <ul className="mt-auto flex flex-col gap-1.5 border-t border-line-soft pt-3 text-sm">
@@ -40,8 +40,8 @@ export default function GradingContent({ compact = false, current }: { compact?:
         <h2 className={cn(compact ? "mb-3 text-lg font-semibold" : "section-title mb-5")}>Ce qu’on vérifie sur chaque appareil</h2>
         <div className={cn("grid gap-4", compact ? "sm:grid-cols-2" : "grid-cols-[repeat(auto-fit,minmax(240px,1fr))]")}>
           {CHECKS.map(({ Icon, title, desc }) => (
-            <div key={title} className={cn("rounded-[24px] bg-white ring-1 ring-line", compact ? "p-5" : "p-6")}>
-              <Icon className="h-7 w-7 text-brand" aria-hidden="true" />
+            <div key={title} className={cn("rounded-panel bg-white ring-1 ring-line", compact ? "p-5" : "p-6")}>
+              <Icon className="h-7 w-7 text-brand-dark" aria-hidden="true" />
               <h3 className="mb-1.5 mt-4 text-lg font-semibold">{title}</h3>
               <p className="text-sm leading-relaxed text-ink-muted">{desc}</p>
             </div>

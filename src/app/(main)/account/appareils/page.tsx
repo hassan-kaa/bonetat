@@ -50,8 +50,8 @@ export default async function DevicesPage() {
         const kind = item.offer.variant.product.kind;
         const imei = item.offer.imei;
         return (
-          <article key={item.id} className="flex flex-wrap items-center gap-[26px] rounded-[28px] border border-line bg-white p-6">
-            <span className="grid h-[190px] w-[150px] flex-none place-items-center overflow-hidden rounded-[24px] bg-brand">
+          <article key={item.id} className="flex flex-wrap items-center gap-[26px] rounded-panel border border-line bg-white p-6">
+            <span className="grid h-[190px] w-[150px] flex-none place-items-center overflow-hidden rounded-panel bg-brand">
               <DeviceVisual
                 imageKey={item.offer.variant.finish.images[0]?.key ?? item.offer.variant.product.coverKey}
                 kind={kind}
@@ -92,12 +92,12 @@ export default async function DevicesPage() {
         );
       })}
       {items.length === 0 && (
-        <div className="rounded-[28px] border border-dashed border-line-strong bg-white p-8 text-[15px] text-ink-muted">
+        <div className="rounded-panel border border-dashed border-line-strong bg-white p-8 text-[15px] text-ink-muted">
           Vos appareils apparaîtront ici dès leur livraison, avec leur garantie de 12 mois.
         </div>
       )}
       {inTransit > 0 && items.length > 0 && (
-        <p className="rounded-[28px] border border-dashed border-line-strong bg-white px-6 py-5 text-[15px] text-ink-muted">
+        <p className="rounded-panel border border-dashed border-line-strong bg-white px-6 py-5 text-[15px] text-ink-muted">
           {inTransit === 1 ? "L’appareil en cours de livraison apparaîtra" : `Les ${inTransit} appareils en cours de livraison apparaîtront`} ici dès réception, avec sa garantie de 12 mois.
         </p>
       )}

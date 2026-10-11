@@ -34,7 +34,7 @@ export default async function FollowsPage() {
         Suivez une configuration avec le cœur sur sa fiche. On vous prévient dès qu’elle passe sous votre prix.
       </p>
       {favorites.length === 0 ? (
-        <div className="rounded-[28px] border border-dashed border-line-strong bg-white p-8 text-center">
+        <div className="rounded-panel border border-dashed border-line-strong bg-white p-8 text-center">
           <p className="text-[15px] text-ink-muted">Vous ne suivez encore aucun appareil.</p>
           <Link href="/catalog" className="btn-primary btn-sm mt-4">Parcourir le catalogue</Link>
         </div>

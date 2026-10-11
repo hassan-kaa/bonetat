@@ -34,7 +34,7 @@ export default async function PayoutsPage() {
         {rib ? ` sur le RIB ${rib}` : ". Ajoutez votre RIB dans le profil de l’atelier"}.
       </p>
 
-      <section className="flex flex-col gap-4 rounded-[26px] border border-line bg-white p-6">
+      <section className="flex flex-col gap-4 rounded-panel border border-line bg-white p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold">Période en cours, du {period.label}</h2>
@@ -67,7 +67,7 @@ export default async function PayoutsPage() {
       </section>
 
       <h2 className="mt-2 text-lg font-semibold">Virements précédents</h2>
-      <div className="overflow-x-auto rounded-[26px] border border-line bg-white">
+      <div className="overflow-x-auto rounded-panel border border-line bg-white">
         {payouts.length === 0 ? (
           <p className="p-6 text-[15px] text-ink-muted">Votre premier virement apparaîtra ici.</p>
         ) : (

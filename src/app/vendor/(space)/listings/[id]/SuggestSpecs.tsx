@@ -29,13 +29,13 @@ export default function SuggestSpecs({ productId, specs }: { productId: string; 
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="self-start text-sm font-medium text-brand hover:underline">
+      <button type="button" onClick={() => setOpen(true)} className="self-start text-sm font-medium text-brand-dark hover:underline">
         La fiche du modèle contient une erreur ?
       </button>
     );
   }
   return (
-    <div className="flex flex-col gap-3 rounded-[26px] border border-line bg-white p-6">
+    <div className="flex flex-col gap-3 rounded-panel border border-line bg-white p-6">
       <h2 className="text-[17px] font-semibold">Proposer une correction de la fiche</h2>
       <p className="-mt-1.5 text-[13px] text-ink-muted">La fiche est commune à tous les vendeurs de ce modèle : l’équipe Bonétat valide la correction.</p>
       {specs.length > 0 && (
@@ -44,7 +44,7 @@ export default function SuggestSpecs({ productId, specs }: { productId: string; 
             <div key={k} className="contents">
               <dt className="text-ink-muted">{k}</dt>
               <dd>{v}</dd>
-              <button type="button" onClick={() => setRows([...rows, { label: k, to: v }])} className="text-left text-[13px] text-brand hover:underline">Corriger</button>
+              <button type="button" onClick={() => setRows([...rows, { label: k, to: v }])} className="text-left text-[13px] text-brand-dark hover:underline">Corriger</button>
             </div>
           ))}
         </dl>

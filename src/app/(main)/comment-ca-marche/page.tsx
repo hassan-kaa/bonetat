@@ -23,7 +23,7 @@ export default function HowItWorksPage() {
     >
       <ol className="flex flex-col gap-4">
         {STEPS.map(([t, d], i) => (
-          <li key={t} className="flex gap-5 rounded-[28px] border border-line bg-white p-6">
+          <li key={t} className="flex gap-5 rounded-panel border border-line bg-white p-6">
             <span className="grid h-11 w-11 flex-none place-items-center rounded-full bg-brand text-lg font-semibold text-white">{i + 1}</span>
             <div>
               <h2 className="text-lg font-semibold">{t}</h2>

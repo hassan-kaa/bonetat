@@ -47,7 +47,7 @@ function LoginForm() {
       <form onSubmit={submit} className="mt-8 flex flex-col gap-4">
         <label className="field">
           Numéro de téléphone
-          <span className="flex h-14 items-center overflow-hidden rounded-[14px] border-[1.5px] border-line-strong bg-white focus-within:border-brand focus-within:ring-4 focus-within:ring-brand/15">
+          <span className="flex h-14 items-center overflow-hidden rounded-control border-[1.5px] border-line-strong bg-white focus-within:border-brand focus-within:ring-4 focus-within:ring-brand/15">
             <span className="flex h-full items-center border-r border-line px-4 text-[17px] font-medium text-ink">+216</span>
             <input
               type="tel"
@@ -63,7 +63,7 @@ function LoginForm() {
           </span>
         </label>
         {error && <p role="alert" className="rounded-xl bg-pop-tint px-3 py-2.5 text-sm text-pop-dark">{error}</p>}
-        <button type="submit" disabled={loading || digits.length !== 8} className="btn-primary h-14 rounded-[18px] text-[17px]">
+        <button type="submit" disabled={loading || digits.length !== 8} className="btn-primary h-14 rounded-control text-[17px]">
           {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Recevoir le code"}
         </button>
       </form>

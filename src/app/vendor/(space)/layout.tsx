@@ -26,7 +26,7 @@ export default async function VendorLayout({ children }: { children: React.React
           <div className="px-2">
             <Logo href="/vendor/dashboard" tone="white" suffix="partenaires" />
           </div>
-          <div className="rounded-[18px] bg-white/[.07] p-3.5 text-sm">
+          <div className="rounded-panel bg-white/[.07] p-3.5 text-sm">
             <b className="font-semibold">{user.vendor.storeName}</b>
             <br />
             <span className="text-white/65">Atelier partenaire {user.vendor.partnerCode ? `n° ${user.vendor.partnerCode}` : ""}</span>

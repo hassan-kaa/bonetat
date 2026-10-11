@@ -28,7 +28,7 @@ const STATUS: Record<OfferStatus, { label: string; cls: string }> = {
   PENDING_REVIEW: { label: "En contrôle", cls: "bg-amber-50 text-amber-800" },
   REJECTED: { label: "À corriger", cls: "bg-pop-tint text-pop-dark" },
   DRAFT: { label: "Brouillon", cls: "bg-slate-100 text-slate-600" },
-  SOLD: { label: "Vendue", cls: "bg-brand-tint text-brand" },
+  SOLD: { label: "Vendue", cls: "bg-brand-tint text-brand-dark" },
 };
 
 export default function OffersTable({ rows }: { rows: OfferRow[] }) {
@@ -53,7 +53,7 @@ export default function OffersTable({ rows }: { rows: OfferRow[] }) {
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-[26px] border border-dashed border-line-strong bg-white p-10 text-center">
+      <div className="rounded-panel border border-dashed border-line-strong bg-white p-10 text-center">
         <p className="text-lg font-medium">Aucune offre pour l’instant.</p>
         <p className="mt-1.5 text-ink-muted">Choisissez un appareil dans le catalogue Bonétat : photos et fiche sont déjà prêtes.</p>
         <Link href="/vendor/listings/new" className="btn-primary btn-sm mt-5">Publier ma première offre</Link>
@@ -62,7 +62,7 @@ export default function OffersTable({ rows }: { rows: OfferRow[] }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-[26px] border border-line bg-white">
+    <div className="overflow-x-auto rounded-panel border border-line bg-white">
       <table className="tbl min-w-[980px]">
         <thead>
           <tr><th>Appareil</th><th>État</th><th>Votre prix</th><th>Position</th><th>Statut</th><th className="text-right">Actions</th></tr>
@@ -78,7 +78,7 @@ export default function OffersTable({ rows }: { rows: OfferRow[] }) {
             return (
               <tr key={r.id} className={cn(busy === r.id && "opacity-60")}>
                 <td>
-                  <Link href={r.href} target="_blank" className="font-medium hover:text-brand">{r.name}</Link>
+                  <Link href={r.href} target="_blank" className="font-medium hover:text-brand-dark">{r.name}</Link>
                   <br />
                   <span className="text-[13px] text-ink-muted">{r.config}</span>
                 </td>
