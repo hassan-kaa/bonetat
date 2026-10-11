@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server";
 import { z } from "zod";
 import { getVendorUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { WARRANTY_MONTHS, batteryProblem } from "@/lib/catalog";
+import { MIN_WARRANTY_MONTHS, batteryProblem } from "@/lib/catalog";
 import { PublishError, ensureVariant } from "@/lib/listing-publish";
 import { sanitizeSellerText } from "@/lib/seller-text";
 import { specsFromExtraction } from "@/lib/listing-resolve";
@@ -31,6 +31,8 @@ const schema = z
     batteryHealth: z.number().int().min(0).max(100).nullable(),
     imei: z.string().regex(/^\d{15}$/, "L’IMEI fait 15 chiffres (composez *#06#)").nullable().optional(),
     priceMillimes: z.number().int().positive().max(50_000_000),
+    /** The shop's own warranty on this unit */
+    warrantyMonths: z.number().int().min(MIN_WARRANTY_MONTHS, `Garantie de ${MIN_WARRANTY_MONTHS} mois minimum`).max(36),
     sellerNote: z.string().trim().max(200).nullable().optional(),
     /** The smart-listing draft this offer comes from, for tracking */
     draftId: z.string().optional(),
@@ -68,7 +70,7 @@ export async function POST(req: NextRequest) {
           conditionGrade: data.conditionGrade,
           batteryHealth: product.kind === "CONSOLE" ? null : data.batteryHealth,
           imei: data.imei ?? null,
-          warrantyMonths: WARRANTY_MONTHS,
+          warrantyMonths: data.warrantyMonths,
           priceMillimes: data.priceMillimes,
           // Stores are hidden from buyers: no phone number or link ever reaches the note
           sellerNote: data.sellerNote ? sanitizeSellerText(data.sellerNote) || null : null,

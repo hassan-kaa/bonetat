@@ -156,6 +156,7 @@ export async function getVariantCards(opts: {
         offerCount: v.offers.length,
         grade: best.grade,
         batteryHealth: best.batteryHealth,
+        warrantyMonths: best.warrantyMonths,
         priceMillimes: best.priceMillimes,
         newPriceMillimes: newPrice,
         tag,

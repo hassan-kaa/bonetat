@@ -70,12 +70,12 @@ export default function HomeHero({ phones, laptops }: { phones: HeroSide; laptop
           {/* Navy behind the text, fading out before the phones: readable at any width */}
           <span aria-hidden="true" className="absolute inset-y-0 left-0 hidden w-[60%] bg-[linear-gradient(90deg,#0B1233_45%,rgba(11,18,51,0))] sm:block" />
           <div className="relative z-[1] order-first flex max-w-full flex-1 flex-col sm:max-w-[44%]">
-            <span className="w-fit rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-medium text-white/90 ring-1 ring-white/15">Reconditionné en Tunisie, contrôlé par Bonétat</span>
+            <span className="w-fit rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-medium text-white/90 ring-1 ring-white/15">Ateliers tunisiens vérifiés par Bonétat</span>
             <h1 id="hero-title" className="mt-5 text-[38px] font-bold leading-[1.02] tracking-[-0.04em] sm:text-[52px]">
               Le bon état, vérifié pour vous.
             </h1>
             <p className="mt-4 text-[16px] leading-relaxed text-white/75">
-              {phones.title} {phones.brands}, garantis 12 mois et payés à la livraison.
+              {phones.title} {phones.brands}, garantis par l’atelier qui les vend et payés à la livraison.
             </p>
             <div className="mt-auto flex flex-col gap-4 pt-8">
               <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -108,8 +108,8 @@ export default function HomeHero({ phones, laptops }: { phones: HeroSide; laptop
       </div>
 
       <ul className="flex flex-wrap justify-center gap-x-8 gap-y-3 text-[15px] text-ink-soft">
-        <li className="flex items-center gap-2"><ClipboardCheck className="h-5 w-5 text-brand-dark" aria-hidden="true" /> Contrôlé avant la mise en vente</li>
-        <li className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-brand-dark" aria-hidden="true" /> Garantie 12 mois</li>
+        <li className="flex items-center gap-2"><ClipboardCheck className="h-5 w-5 text-brand-dark" aria-hidden="true" /> Annonces vérifiées avant publication</li>
+        <li className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-brand-dark" aria-hidden="true" /> Garantie de 4 mois minimum</li>
         <li className="flex items-center gap-2"><Banknote className="h-5 w-5 text-brand-dark" aria-hidden="true" /> Paiement à la livraison</li>
       </ul>
     </section>

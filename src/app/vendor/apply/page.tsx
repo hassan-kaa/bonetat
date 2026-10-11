@@ -30,7 +30,7 @@ export default async function ApplyPage() {
           <ul className="flex flex-col gap-4 text-[15px]">
             <li className="flex gap-3"><Truck className="h-6 w-6 flex-none text-brand-dark" aria-hidden="true" /><span><b className="font-semibold">On s’occupe du client.</b> Confirmation par téléphone, livraison, réclamations.</span></li>
             <li className="flex gap-3"><Banknote className="h-6 w-6 flex-none text-brand-dark" aria-hidden="true" /><span><b className="font-semibold">Paiement tous les 15 jours.</b> Le livreur encaisse, on vous vire le net. Commission de {COMMISSION_LABEL} par vente.</span></li>
-            <li className="flex gap-3"><ShieldCheck className="h-6 w-6 flex-none text-brand-dark" aria-hidden="true" /><span><b className="font-semibold">Une seule règle :</b> respecter la grille d’état Bonétat et la garantie de 12 mois.</span></li>
+            <li className="flex gap-3"><ShieldCheck className="h-6 w-6 flex-none text-brand-dark" aria-hidden="true" /><span><b className="font-semibold">Vos engagements :</b> noter vos appareils avec la grille d’état Bonétat, garantir chaque appareil au moins 4 mois, et gérer vos retours.</span></li>
           </ul>
         </section>
         <section className="w-full flex-[1_1_440px] rounded-panel border border-line bg-white p-6 sm:p-8">

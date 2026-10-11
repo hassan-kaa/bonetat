@@ -11,6 +11,8 @@ export type CartItem = {
   config: string;
   grade: ConditionGrade;
   batteryHealth: number | null;
+  /** The selling shop's warranty on this unit (absent in carts saved before it existed) */
+  warrantyMonths?: number;
   priceMillimes: number;
   newPriceMillimes: number | null;
   kind: DeviceKind;
@@ -59,6 +61,8 @@ export type VariantCardData = {
   offerCount: number;
   grade: ConditionGrade;
   batteryHealth: number | null;
+  /** The selling shop's warranty on this unit */
+  warrantyMonths: number;
   priceMillimes: number;
   newPriceMillimes: number | null;
   tag: ReasonTag | null;

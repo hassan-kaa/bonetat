@@ -22,8 +22,8 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
       title={warranty ? "Déclarer une panne" : "Parlez à Bonétat"}
       intro={
         warranty
-          ? `Décrivez ce qui ne marche pas${commande ? ` (commande ${commande})` : ""}. On vous répond dans la journée et on organise l’enlèvement de l’appareil, sans frais.`
-          : "Une question avant d’acheter, un suivi de commande, une garantie : c’est toujours Bonétat qui vous répond, du lundi au samedi de 9 h à 19 h."
+          ? `Décrivez ce qui ne marche pas${commande ? ` (commande ${commande})` : ""}. On vous répond dans la journée, on transmet à l’atelier qui a vendu l’appareil et on suit sa réponse.`
+          : "Une question avant d’acheter, un suivi de commande, une garantie : écrivez-nous, du lundi au samedi de 9 h à 19 h. Pour la garantie et les retours, on transmet à l’atelier et on suit sa réponse."
       }
     >
       <div className="grid gap-4 md:grid-cols-3">

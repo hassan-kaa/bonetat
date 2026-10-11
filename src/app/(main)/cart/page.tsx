@@ -97,7 +97,7 @@ export default function CartPage() {
                 <p className="text-sm text-ink-soft">{item.config}</p>
                 <p className="text-sm text-ink-muted">
                   {GRADES[item.grade].line}
-                  {item.batteryHealth ? `, batterie ${item.batteryHealth} %` : ""}, garantie 12 mois
+                  {item.batteryHealth ? `, batterie ${item.batteryHealth} %` : ""}, garantie {item.warrantyMonths ? `${item.warrantyMonths} mois` : "de l’atelier"}
                 </p>
                 {item.vendorName && <p className="text-[13px] text-ink-muted">Vendu par {item.vendorName}</p>}
               </div>
@@ -123,7 +123,7 @@ export default function CartPage() {
           <Link href="/checkout" className="btn-primary h-14 rounded-control text-[17px]">Commander</Link>
           <ul className="flex flex-col gap-2.5 text-sm text-ink-soft">
             <li className="flex items-center gap-2.5"><Banknote className="h-5 w-5 text-brand-dark" aria-hidden="true" />Vous payez au livreur, après vérification</li>
-            <li className="flex items-center gap-2.5"><ShieldCheck className="h-5 w-5 text-brand-dark" aria-hidden="true" />Garantie Bonétat 12 mois sur chaque appareil</li>
+            <li className="flex items-center gap-2.5"><ShieldCheck className="h-5 w-5 text-brand-dark" aria-hidden="true" />Chaque appareil garanti par son atelier, 4 mois minimum</li>
           </ul>
         </aside>
       </div>

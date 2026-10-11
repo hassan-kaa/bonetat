@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="flex-[1_1_260px]">
           <Logo tone="white" tagline />
           <p className="mt-2.5 max-w-[24em] leading-relaxed">
-            La tech reconditionnée, contrôlée et garantie en Tunisie. Payée à la livraison.
+            La tech reconditionnée par des ateliers tunisiens vérifiés. Garantie par l’atelier, payée à la livraison.
           </p>
         </div>
         <div className="flex flex-col gap-2">
@@ -22,7 +22,7 @@ export default function Footer() {
         <div className="flex flex-col gap-2">
           <b className="font-semibold text-white">Aide</b>
           <Link href="/grading" className="hover:text-white">Les états</Link>
-          <Link href="/garanties" className="hover:text-white">Garantie 12 mois et retours</Link>
+          <Link href="/garanties" className="hover:text-white">Garanties et retours</Link>
           <Link href="/comment-ca-marche" className="hover:text-white">Comment ça marche</Link>
           <Link href="/contact" className="hover:text-white">Nous contacter</Link>
         </div>

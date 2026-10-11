@@ -28,7 +28,7 @@ export default async function NewOfferPage({ searchParams }: { searchParams: Pro
     from
       ? prisma.offer.findFirst({
           where: { id: from, vendorId: auth.vendor.id },
-          select: { variantId: true, conditionGrade: true, priceMillimes: true, sellerNote: true, variant: { select: { productId: true } } },
+          select: { variantId: true, conditionGrade: true, priceMillimes: true, sellerNote: true, warrantyMonths: true, variant: { select: { productId: true } } },
         })
       : Promise.resolve(null),
   ]);
@@ -43,7 +43,7 @@ export default async function NewOfferPage({ searchParams }: { searchParams: Pro
   }));
   const brandOptions: BrandOption[] = brands.map((b) => ({ name: b.name, lines: b.lines.map((l) => l.name) }));
   const prefill = source
-    ? { productId: source.variant.productId, variantId: source.variantId, grade: source.conditionGrade, priceMillimes: source.priceMillimes, sellerNote: source.sellerNote }
+    ? { productId: source.variant.productId, variantId: source.variantId, grade: source.conditionGrade, priceMillimes: source.priceMillimes, sellerNote: source.sellerNote, warrantyMonths: source.warrantyMonths }
     : null;
 
   return (

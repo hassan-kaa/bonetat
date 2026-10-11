@@ -131,6 +131,7 @@ export default function Configurator({
       config,
       grade: current.grade,
       batteryHealth: current.batteryHealth,
+      warrantyMonths: current.warrantyMonths,
       priceMillimes: current.priceMillimes,
       newPriceMillimes: newPrice,
       kind: product.kind,
@@ -294,7 +295,7 @@ export default function Configurator({
         {/* ── Configuration ── */}
         <section aria-label="Configuration" className="flex min-w-0 flex-[1_1_440px] flex-col gap-[26px]">
           <div>
-            <p className="mb-1.5 text-sm text-ink-muted">Reconditionné, contrôlé par Bonétat</p>
+            <p className="mb-1.5 text-sm text-ink-muted">Reconditionné par un atelier vérifié</p>
             <h1 className="text-[40px] font-semibold leading-[1.08] tracking-[-0.03em]">{product.name}</h1>
           </div>
 
@@ -414,7 +415,7 @@ export default function Configurator({
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-offer text-sm font-bold text-white">{shops.length}</span>
                 ateliers proposent cette configuration
               </h2>
-              <p className="mb-4 text-[13px] text-ink-soft">{config}, {GRADES[current.grade].label.toLowerCase()}. Même appareil, même garantie Bonétat : comparez le prix, la batterie et les photos.</p>
+              <p className="mb-4 text-[13px] text-ink-soft">{config}, {GRADES[current.grade].label.toLowerCase()}. Même configuration et même état : comparez le prix, la batterie, la garantie et les photos.</p>
               <ul className="flex flex-col gap-2.5">
                 {shownShops.map(({ best: o, count }) => {
                   const chosen = o.vendorName === current.vendorName;
@@ -429,6 +430,7 @@ export default function Configurator({
                         </p>
                         <p className="text-[13px] text-ink-muted">
                           {o.batteryHealth !== null ? `Batterie ${o.batteryHealth} %` : "Sans batterie"}
+                          {` · garantie ${o.warrantyMonths} mois`}
                           {count > 1 && ` · ${count} disponibles`}
                         </p>
                         {o.photos && o.photos.length > 0 && (
@@ -472,10 +474,10 @@ export default function Configurator({
               <p className="mt-1.5 text-sm text-ink-muted">Vendu par <b className="font-medium text-ink">{current.vendorName}</b></p>
             </div>
             <div className="grid gap-3 text-sm sm:grid-cols-2">
-              <span className="flex items-center gap-2.5"><ShieldCheck className="h-5 w-5 text-brand-dark" aria-hidden="true" />Garantie Bonétat {current.warrantyMonths} mois</span>
+              <span className="flex items-center gap-2.5"><ShieldCheck className="h-5 w-5 text-brand-dark" aria-hidden="true" />Garantie {current.warrantyMonths} mois par {current.vendorName}</span>
               <span className="flex items-center gap-2.5"><Banknote className="h-5 w-5 text-brand-dark" aria-hidden="true" />Paiement à la livraison</span>
               <span className="flex items-center gap-2.5"><Truck className="h-5 w-5 text-brand-dark" aria-hidden="true" />Livré {deliveryWindow}</span>
-              <span className="flex items-center gap-2.5"><RotateCcw className="h-5 w-5 text-brand-dark" aria-hidden="true" />Retour gratuit sous 7 jours</span>
+              <span className="flex items-center gap-2.5"><RotateCcw className="h-5 w-5 text-brand-dark" aria-hidden="true" />Retours gérés par l’atelier</span>
             </div>
             <div className="flex gap-2.5">
               <button
@@ -513,9 +515,9 @@ export default function Configurator({
                 <LogoMark variant="white" className="h-[19px]" />
               </span>
               <p className="text-sm leading-normal">
-                <b className="font-semibold">Contrôlé et garanti par Bonétat</b>
+                <b className="font-semibold">Atelier vérifié, annonce contrôlée par Bonétat</b>
                 <br />
-                <span className="text-white/70">Expédié par {current.vendorName}, atelier partenaire certifié. En cas de souci, c’est Bonétat qui vous répond.</span>
+                <span className="text-white/70">{current.vendorName} vend et garantit cet appareil. Un souci ? Écrivez à Bonétat : on transmet à l’atelier et on suit sa réponse. Vous pouvez aussi le contacter directement.</span>
               </p>
             </div>
           </div>
@@ -548,7 +550,7 @@ export default function Configurator({
 function Passport({ current, kind }: { current: ConfigOffer; kind: DeviceKind }) {
   return (
     <div className="rounded-3xl border border-line bg-white px-6 py-[22px]">
-      <h2 className="mb-3.5 text-[17px] font-semibold">Ce que Bonétat a vérifié avant la mise en vente</h2>
+      <h2 className="mb-3.5 text-[17px] font-semibold">Ce que l’atelier déclare sur cet appareil</h2>
       <ul className="grid gap-x-5 gap-y-3.5 text-sm sm:grid-cols-2">
         {current.batteryHealth && (
           <li className="flex items-start gap-2.5">
@@ -558,12 +560,12 @@ function Passport({ current, kind }: { current: ConfigOffer; kind: DeviceKind })
         )}
         <li className="flex items-start gap-2.5">
           <Check className="h-5 w-5 flex-none text-brand-dark" aria-hidden="true" />
-          <span>32 points de contrôle : écran, boutons, caméras, son, connectivité</span>
+          <span>État noté avec la grille Bonétat : écran, boutons, caméras, son, connectivité</span>
         </li>
         {(kind === "PHONE" || kind === "TABLET" || kind === "WATCH") && (
           <li className="flex items-start gap-2.5">
             <ShieldCheck className="h-5 w-5 flex-none text-brand-dark" aria-hidden="true" />
-            <span>Numéro de série vérifié : ni volé, ni bloqué</span>
+            <span>Numéro de série fourni : appareil ni volé, ni bloqué</span>
           </li>
         )}
         <li className="flex items-start gap-2.5">

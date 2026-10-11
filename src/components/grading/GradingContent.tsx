@@ -4,10 +4,10 @@ import { GRADES, GRADE_ORDER } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
 
 const CHECKS = [
-  { Icon: Smartphone, title: "Aspect", desc: "Écran, contour, dos et caméras examinés à 20 cm, sous la même lumière, avec les mêmes critères pour tous les ateliers." },
-  { Icon: BatteryCharging, title: "Batterie mesurée", desc: "La capacité réelle est relevée et affichée sur la fiche de chaque appareil, indépendamment de l’état. Jamais sous 75 % : en dessous, la batterie est remplacée avant la mise en vente." },
-  { Icon: ScanSearch, title: "32 points testés", desc: "Appels, Wi-Fi, Bluetooth, capteurs, boutons, haut-parleurs, micros, Face ID ou Touch ID, caméras." },
-  { Icon: ShieldCheck, title: "IMEI et données", desc: "Numéro vérifié ni volé ni bloqué. Données de l’ancien propriétaire effacées." },
+  { Icon: Smartphone, title: "Aspect", desc: "Écran, contour, dos et caméras examinés à 20 cm, sous la même lumière : chaque atelier applique les mêmes critères." },
+  { Icon: BatteryCharging, title: "Batterie mesurée", desc: "L’atelier relève la capacité réelle et l’indique sur la fiche, indépendamment de l’état. Jamais sous 75 % : Bonétat refuse les annonces en dessous." },
+  { Icon: ScanSearch, title: "Fonctions testées", desc: "L’atelier s’engage à tester appels, Wi-Fi, Bluetooth, capteurs, boutons, haut-parleurs, micros, Face ID ou Touch ID, caméras." },
+  { Icon: ShieldCheck, title: "IMEI et données", desc: "L’atelier fournit le numéro de série et s’engage : appareil ni volé ni bloqué, données de l’ancien propriétaire effacées." },
 ];
 
 /**
@@ -37,7 +37,7 @@ export default function GradingContent({ compact = false, current }: { compact?:
         ))}
       </div>
       <section>
-        <h2 className={cn(compact ? "mb-3 text-lg font-semibold" : "section-title mb-5")}>Ce qu’on vérifie sur chaque appareil</h2>
+        <h2 className={cn(compact ? "mb-3 text-lg font-semibold" : "section-title mb-5")}>Ce que chaque atelier s’engage à vérifier</h2>
         <div className={cn("grid gap-4", compact ? "sm:grid-cols-2" : "grid-cols-[repeat(auto-fit,minmax(240px,1fr))]")}>
           {CHECKS.map(({ Icon, title, desc }) => (
             <div key={title} className={cn("rounded-panel bg-white ring-1 ring-line", compact ? "p-5" : "p-6")}>

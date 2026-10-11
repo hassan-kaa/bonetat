@@ -40,7 +40,7 @@ export default async function DevicesPage() {
     <>
       <h1 className="page-title">Mes appareils</h1>
       <p className="-mt-1.5 text-[15px] text-ink-muted">
-        La garantie Bonétat suit chaque appareil acheté ici. Une panne ? Déclarez-la, on organise l’enlèvement.
+        Chaque appareil acheté ici est garanti par l’atelier qui l’a vendu. Une panne ? Déclarez-la à Bonétat : on transmet à l’atelier et on suit sa réponse.
       </p>
       {items.map((item) => {
         const start = item.order.deliveredAt ?? item.order.createdAt;
@@ -73,7 +73,7 @@ export default async function DevicesPage() {
               </div>
               <div>
                 <div className="mb-2 flex justify-between text-sm">
-                  <span>Garantie Bonétat</span>
+                  <span>Garantie de l’atelier</span>
                   <b className="font-semibold">{left > 0 ? `${left} mois restant${left > 1 ? "s" : ""}` : end > now ? "Moins d’un mois" : "Terminée"}</b>
                 </div>
                 <div className="h-2.5 overflow-hidden rounded-full bg-brand-tint">
@@ -93,12 +93,12 @@ export default async function DevicesPage() {
       })}
       {items.length === 0 && (
         <div className="rounded-panel border border-dashed border-line-strong bg-white p-8 text-[15px] text-ink-muted">
-          Vos appareils apparaîtront ici dès leur livraison, avec leur garantie de 12 mois.
+          Vos appareils apparaîtront ici dès leur livraison, avec leur garantie.
         </div>
       )}
       {inTransit > 0 && items.length > 0 && (
         <p className="rounded-panel border border-dashed border-line-strong bg-white px-6 py-5 text-[15px] text-ink-muted">
-          {inTransit === 1 ? "L’appareil en cours de livraison apparaîtra" : `Les ${inTransit} appareils en cours de livraison apparaîtront`} ici dès réception, avec sa garantie de 12 mois.
+          {inTransit === 1 ? "L’appareil en cours de livraison apparaîtra" : `Les ${inTransit} appareils en cours de livraison apparaîtront`} ici dès réception, avec sa garantiemois.
         </p>
       )}
     </>

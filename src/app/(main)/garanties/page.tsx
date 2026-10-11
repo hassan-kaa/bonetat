@@ -3,34 +3,34 @@ import type { Metadata } from "next";
 import InfoPage from "@/components/layout/InfoPage";
 
 export const metadata: Metadata = {
-  title: "Garantie 12 mois et retours",
-  description: "Chaque appareil Bonétat est garanti 12 mois, retour gratuit sous 7 jours, paiement à la livraison après vérification.",
+  title: "Garanties et retours",
+  description: "Chaque appareil est garanti par l’atelier qui le vend, 4 mois minimum. Paiement à la livraison après vérification, et Bonétat suit chaque demande.",
 };
 
 const ITEMS = [
   {
-    title: "Garantie Bonétat 12 mois",
-    body: "Toute panne qui n’est pas due à une chute, un choc ou l’eau est couverte pendant 12 mois : réparation, remplacement par un appareil équivalent, ou remboursement. Vous déclarez la panne depuis « Mes appareils », Bonétat organise l’enlèvement.",
+    title: "Garanti par l’atelier, 4 mois minimum",
+    body: "Chaque appareil est garanti par l’atelier qui le vend. La durée est affichée sur l’offre avant l’achat : 4 mois au minimum, souvent plus. Elle apparaît ensuite dans « Mes appareils », avec sa date de fin.",
   },
   {
-    title: "Retour gratuit sous 7 jours",
-    body: "L’appareil ne vous convient pas, ou son état ne correspond pas à la fiche ? Renvoyez-le dans les 7 jours suivant la livraison, dans l’état où vous l’avez reçu. Vous êtes remboursé à réception.",
+    title: "Retours selon l’atelier",
+    body: "Chaque atelier gère ses retours. Un état qui ne correspond pas à la fiche, un problème à la réception : signalez-le, l’atelier vous propose une solution.",
   },
   {
     title: "Vous vérifiez avant de payer",
     body: "Le paiement se fait au livreur. Allumez l’appareil, regardez l’écran, la batterie, les caméras. S’il y a un problème visible, refusez le colis : vous ne payez rien.",
   },
   {
-    title: "Un seul interlocuteur",
-    body: "L’appareil est préparé par un atelier partenaire, mais c’est Bonétat qui vous répond, qui gère la garantie et qui rembourse. Vous n’avez jamais à négocier avec un vendeur.",
+    title: "Bonétat suit votre demande",
+    body: "Écrivez d’abord à Bonétat : on transmet votre demande à l’atelier et on suit sa réponse jusqu’au bout. Vous pouvez aussi contacter l’atelier directement. Un atelier qui ne tient pas ses engagements perd sa place sur Bonétat.",
   },
 ];
 
 export default function GuaranteesPage() {
   return (
     <InfoPage
-      title="Garanti 12 mois. Payé après vérification."
-      intro="Acheter un appareil reconditionné ne devrait pas être un pari. Voici exactement ce qui vous protège, en clair."
+      title="Garanti par l’atelier. Payé après vérification."
+      intro="Bonétat n’accepte que des ateliers vérifiés et contrôle chaque annonce avant sa mise en ligne. Voici exactement ce qui vous protège, en clair."
     >
       <div className="grid gap-4 md:grid-cols-2">
         {ITEMS.map((i) => (

@@ -425,6 +425,9 @@ const STOCK: Record<string, Unit[]> = {
   "nintendo-switch-oled": [[null, null, null, "Blanc", BON, 790, null, 1]],
 };
 
+/** Each shop sets its own warranty (4 months minimum): TechStore 12, PhoneLand 6, SmartFix 12, MobiCenter 4 */
+const SHOP_WARRANTY = [12, 6, 12, 4] as const;
+
 const NOTES = ["Boîte d’origine incluse", "Coque et verre trempé offerts", "Chargeur d’origine", null, null];
 
 /** Every variant the product really exists in: the axes, minus the declared holes */
@@ -630,7 +633,7 @@ async function main() {
       offerCount++;
       await prisma.offer.create({
         data: {
-          variantId, vendorId: vendors[shop].id, conditionGrade: grade, batteryHealth: battery, warrantyMonths: 12,
+          variantId, vendorId: vendors[shop].id, conditionGrade: grade, batteryHealth: battery, warrantyMonths: SHOP_WARRANTY[shop],
           priceMillimes: price * 1000, sellerNote: NOTES[k % NOTES.length], status: "ACTIVE",
           imei: p.kind === "PHONE" ? `35${String(k).padStart(13, "0").slice(0, 13)}` : null,
           createdAt: daysAgo(3 + (k % 30)),

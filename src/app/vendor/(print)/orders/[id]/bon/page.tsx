@@ -35,7 +35,7 @@ export default async function PackingSlip({ params }: { params: Promise<{ id: st
             <LogoMark variant="black" className="h-12" />
             <div>
               <Wordmark tone="black" className="text-[28px]" />
-              <p className="text-sm text-ink-muted">Contrôlé et garanti par Bonétat</p>
+              <p className="text-sm text-ink-muted">Vendu par un atelier vérifié par Bonétat</p>
             </div>
           </div>
           <div className="text-right text-sm">
@@ -76,7 +76,7 @@ export default async function PackingSlip({ params }: { params: Promise<{ id: st
         </table>
 
         <div className="rounded-2xl bg-chalk p-5 text-sm leading-relaxed">
-          <b>Garantie Bonétat 12 mois.</b> Une panne, une question : contactez Bonétat, jamais l’atelier. Retour gratuit sous 7 jours.
+          <b>Garantie assurée par l’atelier vendeur</b> (durée indiquée sur votre commande). Une panne, une question, un retour : contactez Bonétat, qui transmet à l’atelier, ou l’atelier directement.
         </div>
         <p className="text-xs text-ink-muted">Réf. atelier {auth.vendor.partnerCode ?? "—"}</p>
         <PrintButton />

@@ -78,6 +78,7 @@ export default function VariantCard({
       config: card.config,
       grade: card.grade,
       batteryHealth: card.batteryHealth,
+      warrantyMonths: card.warrantyMonths,
       priceMillimes: card.priceMillimes,
       newPriceMillimes: card.newPriceMillimes,
       kind: card.kind,
@@ -189,7 +190,7 @@ export default function VariantCard({
             {GRADES[card.grade].line}
             {card.batteryHealth ? `, batterie ${card.batteryHealth} %` : ""}
           </span>
-          <span className="text-ink-muted">Garantie 12 mois</span>
+          <span className="text-ink-muted">Garantie {card.warrantyMonths} mois par l’atelier</span>
           <span className="text-[13px] text-ink-muted">
             Par {card.vendorName}
           </span>

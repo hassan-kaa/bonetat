@@ -64,7 +64,9 @@ export function batteryProblem(kind: DeviceKind, battery: number | null): string
 }
 
 /** Bonétat's standard warranty — every offer gets at least this */
-export const WARRANTY_MONTHS = 12;
+/** Each shop sets its own warranty per offer; Bonétat requires at least this */
+export const MIN_WARRANTY_MONTHS = 4;
+export const WARRANTY_CHOICES = [4, 6, 12, 24] as const;
 export const RETURN_DAYS = 7;
 export const SHIPPING_FEE_MILLIMES = 8_000;
 

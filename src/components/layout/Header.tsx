@@ -95,7 +95,7 @@ export default function Header({ user, categories }: { user: NavUser; categories
             </Link>
           ))}
           <Link href="/grading" onClick={() => setOpen(false)} className="py-1.5 text-ink-muted hover:text-ink md:py-0">
-            Comment on contrôle
+            Les états des appareils
           </Link>
         </nav>
       </div>

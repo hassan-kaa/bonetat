@@ -10,11 +10,11 @@ import { THEME, THEMES } from "@/lib/theme";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: {
-    default: "Bonétat · La tech reconditionnée, contrôlée et garantie en Tunisie",
+    default: "Bonétat · La tech reconditionnée par des ateliers tunisiens vérifiés",
     template: "%s | Bonétat",
   },
   description:
-    "Téléphones, tablettes, ordinateurs et montres reconditionnés par des ateliers tunisiens vérifiés, contrôlés par Bonétat, garantis 12 mois et payés à la livraison.",
+    "Téléphones, ordinateurs, tablettes et montres reconditionnés par des ateliers tunisiens vérifiés par Bonétat. Chaque appareil est garanti par son atelier, 4 mois minimum. Paiement à la livraison.",
   keywords: ["téléphone reconditionné", "Tunisie", "iPhone occasion", "Samsung reconditionné", "MacBook reconditionné"],
   openGraph: { siteName: "Bonétat", locale: "fr_TN", type: "website", images: [{ url: "/brand/app-icon-512.png", width: 512, height: 512 }] },
 };

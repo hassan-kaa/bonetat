@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ConditionGrade } from "@prisma/client";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { shrinkImage, type ShrunkImage } from "@/lib/client/shrink-image";
-import { GRADES, GRADE_ORDER, MIN_BATTERY_HEALTH, batteryProblem, formatStorage, variantLabel } from "@/lib/catalog";
+import { GRADES, GRADE_ORDER, MIN_BATTERY_HEALTH, MIN_WARRANTY_MONTHS, WARRANTY_CHOICES, batteryProblem, formatStorage, variantLabel } from "@/lib/catalog";
 import { familyOf } from "@/lib/icecat-match";
 import { COMMISSION_LABEL, COMMISSION_RATE, formatPrice } from "@/lib/money";
 import { cn } from "@/lib/utils";
@@ -20,7 +20,7 @@ const STEPS = ["Appareil", "Configuration", "État et contrôle", "Prix"];
 const NEEDS_STORAGE = ["PHONE", "TABLET", "LAPTOP"];
 
 /** "Dupliquer": same device, config, grade, price and note. Battery and IMEI are per unit and asked again. */
-export type Prefill = { productId: string; variantId: string; grade: ConditionGrade; priceMillimes: number; sellerNote: string | null };
+export type Prefill = { productId: string; variantId: string; grade: ConditionGrade; priceMillimes: number; sellerNote: string | null; warrantyMonths: number };
 
 type Color = ColorChoice;
 
@@ -47,6 +47,8 @@ export default function PublishFlow({
   const [battery, setBattery] = useState("");
   const [imei, setImei] = useState("");
   const [note, setNote] = useState(prefill?.sellerNote ?? "");
+  /** The shop's own warranty on this unit, 4 months minimum */
+  const [warranty, setWarranty] = useState<number>(prefill?.warrantyMonths ?? 12);
   const [price, setPrice] = useState(prefill ? String(prefill.priceMillimes / 1000) : "");
   /** Real photos of this unit, optional */
   const [unitPhotos, setUnitPhotos] = useState<ShrunkImage[]>([]);
@@ -155,6 +157,7 @@ export default function PublishFlow({
         batteryHealth: needsBattery ? batteryNum : null,
         imei: kind === "PHONE" ? imei : imei || null,
         priceMillimes,
+        warrantyMonths: warranty,
         sellerNote: noteWithCpu() || null,
         draftId: chosen?.draftId,
         photos: unitPhotos.map(({ mediaType, data }) => ({ mediaType, data })),
@@ -373,6 +376,15 @@ export default function PublishFlow({
             <div className="flex flex-[1_1_260px] flex-col gap-3.5">
               <p className="text-sm text-ink-muted">{product.name}, {configText}, {grade ? GRADES[grade].label.toLowerCase() : ""}</p>
               <label className="field"><span>Votre prix (DT)<Read on={!!pre?.priceMillimes && priceMillimes === pre.priceMillimes} /></span><input className="input" type="number" min={1} inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} autoFocus /></label>
+              <div>
+                <p className="mb-2 text-[13px] text-ink-muted">Votre garantie sur cet appareil ({MIN_WARRANTY_MONTHS} mois minimum)</p>
+                <div className="flex flex-wrap gap-2">
+                  {WARRANTY_CHOICES.map((m) => (
+                    <button key={m} type="button" aria-pressed={warranty === m} onClick={() => setWarranty(m)} className={cn("opt px-4 py-2 text-sm", warranty === m && "opt-on")}>{m} mois</button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[12px] text-ink-muted">Affichée sur l’offre. C’est vous qui l’assurez auprès du client.</p>
+              </div>
             </div>
             <div className="flex flex-[1_1_280px] flex-col gap-2.5 rounded-panel bg-chalk p-[18px] text-sm">
               <div className="flex justify-between"><span className="text-ink-muted">Meilleur prix actuel</span><b className="font-semibold">{best ? formatPrice(best) : "Aucune offre"}</b></div>

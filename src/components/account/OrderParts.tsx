@@ -30,6 +30,8 @@ export type ItemView = {
   configLabel: string;
   grade: ConditionGrade;
   batteryHealth: number | null;
+  /** The selling shop's warranty, as sold */
+  warrantyMonths: number;
   priceMillimes: number;
   kind: DeviceKind;
   colorHex: string;
@@ -56,7 +58,7 @@ export function OrderItemRow({ item }: { item: ItemView }) {
         <b className="text-base font-medium">{item.title}, {item.configLabel}</b>
         <p className="mt-1 text-sm text-ink-muted">
           {GRADES[item.grade].line}
-          {item.batteryHealth ? `, batterie ${item.batteryHealth} %` : ""}, garantie 12 mois
+          {item.batteryHealth ? `, batterie ${item.batteryHealth} %` : ""}, garantie {item.warrantyMonths} mois
         </p>
       </div>
       <b className="price text-lg">{formatPrice(item.priceMillimes)}</b>
@@ -79,11 +81,11 @@ export const orderItemInclude = {
 } as const;
 
 export function toItemView(i: {
-  id: string; title: string; configLabel: string; grade: ConditionGrade; batteryHealth: number | null; priceMillimes: number;
+  id: string; title: string; configLabel: string; grade: ConditionGrade; batteryHealth: number | null; warrantyMonths: number; priceMillimes: number;
   offer: { variant: { finish: { hex: string; images: { key: string }[] }; product: { kind: DeviceKind; cameraCount: number | null; coverKey: string | null } } };
 }): ItemView {
   return {
-    id: i.id, title: i.title, configLabel: i.configLabel, grade: i.grade, batteryHealth: i.batteryHealth,
+    id: i.id, title: i.title, configLabel: i.configLabel, grade: i.grade, batteryHealth: i.batteryHealth, warrantyMonths: i.warrantyMonths,
     priceMillimes: i.priceMillimes, kind: i.offer.variant.product.kind, colorHex: i.offer.variant.finish.hex,
     imageKey: i.offer.variant.finish.images[0]?.key ?? i.offer.variant.product.coverKey, cameras: i.offer.variant.product.cameraCount,
   };

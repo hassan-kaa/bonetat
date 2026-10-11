@@ -115,7 +115,7 @@ export default async function HomePage() {
       <section aria-labelledby="categories" className="flex flex-col items-center gap-7">
         <div className="text-center">
           <h2 id="categories" className="text-[32px] font-semibold tracking-[-0.035em] sm:text-[40px]">Que cherchez-vous ?</h2>
-          <p className="mt-2 text-base text-ink-muted">Chaque catégorie suit la même grille d’état et la même garantie de 12 mois.</p>
+          <p className="mt-2 text-base text-ink-muted">Chaque catégorie suit la même grille d’état. Chaque appareil est garanti au moins 4 mois par son atelier.</p>
         </div>
         <div className="grid w-full grid-cols-2 gap-4 lg:grid-cols-6">
           {phones.map((c, i) => {
@@ -273,7 +273,7 @@ export default async function HomePage() {
       <section id="etat" aria-labelledby="etats" className="rounded-panel border border-line bg-white p-7 sm:p-11">
         <h2 id="etats" className="text-[30px] font-semibold tracking-[-0.03em]">Quatre états, une seule règle : on vous dit tout.</h2>
         <p className="mb-[30px] mt-2.5 max-w-[40em] text-base leading-normal text-ink-muted">
-          Chaque appareil est noté par Bonétat selon la même grille, quel que soit l’atelier qui l’a préparé. La batterie est mesurée, pas estimée, et affichée pour chaque appareil.
+          Chaque atelier note ses appareils avec la même grille Bonétat, et indique la batterie mesurée. Bonétat vérifie chaque annonce avant de la mettre en ligne.
         </p>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
           {[...GRADE_ORDER].reverse().map((g) => (
@@ -291,10 +291,10 @@ export default async function HomePage() {
         <h2 id="parcours" className="section-title mb-[22px]">De l’atelier à votre porte</h2>
         <ol className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
           {[
-            ["Un atelier partenaire le prépare", "Seuls des ateliers vérifiés par Bonétat peuvent proposer un appareil."],
-            ["Bonétat note son état", "Même grille pour tout le monde, batterie mesurée, IMEI vérifié."],
+            ["Un atelier vérifié le met en vente", "Seuls les ateliers acceptés par Bonétat peuvent publier. Ils notent l’état avec la grille Bonétat."],
+            ["Bonétat vérifie l’annonce", "Informations complètes, prix cohérent, atelier en règle : l’annonce est validée avant d’être visible."],
             ["Vous payez à la livraison", "Vous allumez l’appareil devant le livreur, puis vous payez."],
-            ["Garanti 12 mois par Bonétat", "Une panne ? Vous parlez à Bonétat, on s’occupe du reste."],
+            ["L’atelier le garantit", "4 mois minimum. Une panne ? Écrivez à Bonétat, on transmet à l’atelier et on suit sa réponse."],
           ].map(([t, d], i) => (
             <li key={t} className="border-t-[3px] border-brand pt-[18px]">
               <span className="text-[15px] font-semibold text-brand-dark">{i + 1}</span>
