@@ -11,6 +11,7 @@
     "db:push": "prisma db push",
     "db:seed": "NODE_OPTIONS='--conditions=react-server' ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
     "db:studio": "prisma studio",
+    "prod:setup": "NODE_OPTIONS='--conditions=react-server' npx tsx scripts/prod-setup.ts",
     "db:generate": "prisma generate",
     "test": "vitest run",
     "test:watch": "vitest",
