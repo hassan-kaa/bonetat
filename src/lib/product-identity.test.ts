@@ -97,3 +97,10 @@ describe("modelName", () => {
     }
   });
 });
+
+describe("canonicalKey and the plus sign", () => {
+  it("keeps a Pro+ apart from its Pro", () => {
+    expect(canonicalKey({ brand: "Xiaomi", line: "Redmi Note", modelNumber: "14 Pro+" })).not.toBe(canonicalKey({ brand: "Xiaomi", line: "Redmi Note", modelNumber: "14 Pro" }));
+    expect(canonicalKey({ brand: "Samsung", line: "Galaxy Tab A", modelNumber: "A11+" })).not.toBe(canonicalKey({ brand: "Samsung", line: "Galaxy Tab A", modelNumber: "A11" }));
+  });
+});

@@ -16,7 +16,17 @@
     "images:sync": "NODE_OPTIONS='--conditions=react-server' ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/photos-sync.ts",
     "catalog:reference": "NODE_OPTIONS='--conditions=react-server' ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/reference-sync.ts",
     "listing:eval": "NODE_OPTIONS='--conditions=react-server' ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/listing-eval.ts",
-    "catalog:build": "NODE_OPTIONS='--conditions=react-server' ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/catalog-build.ts"
+    "catalog:build": "NODE_OPTIONS='--conditions=react-server' ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/catalog-build.ts",
+    "media:upload": "NODE_OPTIONS='--conditions=react-server' npx tsx scripts/media-upload.ts",
+    "media:cleanup": "NODE_OPTIONS='--conditions=react-server' npx tsx scripts/media-cleanup.ts",
+    "icecat:audit": "NODE_OPTIONS='--conditions=react-server' npx tsx scripts/icecat-audit.ts",
+    "sync:apple": "NODE_OPTIONS='--conditions=react-server' npx tsx scripts/apple-sync.ts",
+    "sync:macbook": "NODE_OPTIONS='--conditions=react-server' npx tsx scripts/macbook-sync.ts",
+    "sync:ipad": "NODE_OPTIONS='--conditions=react-server' npx tsx scripts/ipad-sync.ts",
+    "sync:tunisianet": "NODE_OPTIONS='--conditions=react-server' npx tsx scripts/tunisianet-sync.ts",
+    "sync:huawei": "NODE_OPTIONS='--conditions=react-server' npx tsx scripts/huawei-sync.ts",
+    "sync:picks": "NODE_OPTIONS='--conditions=react-server' npx tsx scripts/brand-picks.ts",
+    "sync:colors": "NODE_OPTIONS='--conditions=react-server' npx tsx scripts/colors-sync.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

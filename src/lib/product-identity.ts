@@ -25,7 +25,10 @@ function numberWithoutLine(line: string, modelNumber: string): string {
  * "dell|vostro|15 3520". Products created before lines existed (no line / model number)
  * fall back to brand + model name, minus a repeated brand word.
  */
-export function canonicalKey(id: Identity): string {
+export function canonicalKey(input: Identity): string {
+  // "+" is part of the model ("Note 14 Pro+" ≠ "Note 14 Pro"): spelled out before punctuation is stripped
+  const plus = (v?: string | null) => v?.replace(/\+/g, " plus ");
+  const id = { ...input, line: plus(input.line), modelNumber: plus(input.modelNumber), model: plus(input.model) };
   const brand = squash(id.brand);
   if (id.line && id.modelNumber) return `${brand}|${squash(id.line)}|${numberWithoutLine(id.line, id.modelNumber)}`;
   const model = normalize(id.model ?? id.modelNumber ?? "")

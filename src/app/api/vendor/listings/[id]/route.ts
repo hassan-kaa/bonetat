@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { batteryProblem } from "@/lib/catalog";
 import { sanitizeSellerText } from "@/lib/seller-text";
 import { adminIds, notify } from "@/lib/notify";
+import { dropOfferPhotos } from "@/lib/offer-photos";
 
 const schema = z.object({
   priceMillimes: z.number().int().positive().max(50_000_000).optional(),
@@ -77,5 +78,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const res = await prisma.offer.updateMany({ where: { id, vendorId: auth.vendor.id, status: { not: "SOLD" } }, data: { status: "INACTIVE" } });
   if (res.count === 0) return NextResponse.json({ error: "Offre introuvable" }, { status: 404 });
+  await dropOfferPhotos(id, "offer withdrawn");
   return NextResponse.json({ success: true });
 }

@@ -60,8 +60,14 @@ const DISTINGUISHERS = ["ultra", "plus", "pro", "max", "mini", "lite", "slim", "
  * may be real shots on any background: ranked last, and never put online without review.
  * (On the free tier they are often the only Apple entries.)
  */
+/**
+ * A refurbisher's listing, not the brand's: its photos carry the refurbisher's branding (screen splash,
+ * stickers). Caught by wording and by name; add a name here when a new one slips through.
+ */
+const REFURBISHERS = ["teqcycle", "back market", "backmarket", "recommerce", "swappie", "renewd", "certideal", "smaaart", "rebuy", "refurbed", "largo", "ecoresponsable"];
 export function isRefurbished(text: string): boolean {
-  return /\b(refurbished|reconditionne|renewed|grade [abc])\b/.test(normalize(text));
+  const t = normalize(text);
+  return /\b(refurbished|reconditionnes?|renewed|remis a neuf|seconde vie|grade [abc])\b/.test(t) || REFURBISHERS.some((r) => t.includes(r));
 }
 
 /**
@@ -129,8 +135,8 @@ export function titleConflicts(product: { model: string }, title: string): boole
 
 /** Color words per family, French and English, as Icecat writes them in "Couleur du produit" */
 const FAMILY_WORDS: Record<ColorFamily, string[]> = {
-  BLACK: ["noir", "black"],
-  WHITE: ["blanc", "white", "creme", "cream", "beige"],
+  BLACK: ["noir", "black", "midnight", "minuit", "jais", "onyx"],
+  WHITE: ["blanc", "white", "creme", "cream", "beige", "starlight", "stellaire"],
   GREY: ["gris", "grey", "gray", "graphite"],
   SILVER: ["argent", "silver"],
   GOLD: ["or", "gold", "dore"],

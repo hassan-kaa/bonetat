@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import sharp from "sharp";
-import { CANVAS, normalizeCatalogImage, normalizeUnitPhoto } from "./images";
+import { CANVAS, catalogKey, dhash, normalizeCatalogImage, normalizeUnitPhoto, sameShot } from "./images";
 
 /** A dark "device" off-center on a white photo, like an Icecat image with uneven margins */
 async function fakePhoto(width: number, height: number, device: { left: number; top: number; w: number; h: number }) {
@@ -19,10 +19,10 @@ async function pixel(buf: Buffer, x: number, y: number) {
 
 describe("normalizeCatalogImage", () => {
   it("centers the device on a white 1600 square, about 80 % of the frame, in three sizes", async () => {
-    const out = await normalizeCatalogImage(await fakePhoto(623, 739, { left: 40, top: 300, w: 200, h: 400 }), "catalog/p/f");
+    const out = await normalizeCatalogImage(await fakePhoto(623, 739, { left: 40, top: 300, w: 200, h: 400 }));
     expect(out.width).toBe(CANVAS);
     expect(out.files.map((f) => f.path)).toEqual([`${out.key}-400.webp`, `${out.key}-800.webp`, `${out.key}-1600.webp`]);
-    expect(out.key).toMatch(/^catalog\/p\/f\/[0-9a-f]{16}$/);
+    expect(out.key).toMatch(/^catalog\/[0-9a-f]{2}\/[0-9a-f]{16}$/);
     expect(out).toMatchObject({ sourceWidth: 623, sourceHeight: 739 });
 
     const big = out.files[2].body;
@@ -38,15 +38,15 @@ describe("normalizeCatalogImage", () => {
 
   it("gives the same key to the same file, and a new key to a different one (re-imports are no-ops)", async () => {
     const photo = await fakePhoto(600, 700, { left: 50, top: 100, w: 200, h: 400 });
-    const a = await normalizeCatalogImage(photo, "k");
-    const again = await normalizeCatalogImage(photo, "k");
-    const other = await normalizeCatalogImage(await fakePhoto(600, 700, { left: 50, top: 100, w: 400, h: 200 }), "k");
+    const a = await normalizeCatalogImage(photo);
+    const again = await normalizeCatalogImage(photo);
+    const other = await normalizeCatalogImage(await fakePhoto(600, 700, { left: 50, top: 100, w: 400, h: 200 }));
     expect(again.key).toBe(a.key);
     expect(other.key).not.toBe(a.key);
   });
 
   it("produces a tiny blur placeholder", async () => {
-    const out = await normalizeCatalogImage(await fakePhoto(300, 300, { left: 100, top: 100, w: 50, h: 100 }), "k");
+    const out = await normalizeCatalogImage(await fakePhoto(300, 300, { left: 100, top: 100, w: 50, h: 100 }));
     expect(out.blurDataUrl).toMatch(/^data:image\/webp;base64,/);
     expect(out.blurDataUrl.length).toBeLessThan(1000);
   });
@@ -59,13 +59,27 @@ describe("normalizeUnitPhoto", () => {
       .jpeg()
       .toBuffer();
     expect((await sharp(withExif).metadata()).exif).toBeDefined();
-    const out = await normalizeUnitPhoto(withExif, "offers/o1");
+    const out = await normalizeUnitPhoto(withExif, "units/o1");
     for (const f of out.files) {
       const meta = await sharp(f.body).metadata();
       expect(meta.exif).toBeUndefined();
       expect(meta.format).toBe("webp");
     }
     expect([out.width, out.height]).toEqual([1200, 900]); // no square canvas, no enlargement
-    expect(out.key).toMatch(/^offers\/o1\/[0-9a-f]{16}$/);
+    expect(out.key).toMatch(/^units\/o1\/[0-9a-f]{16}$/);
+  });
+});
+
+describe("storage keys and fingerprints", () => {
+  it("names official photos by content, spread over 256 folders", () => {
+    expect(catalogKey("ab3f9c0011223344")).toBe("catalog/ab/ab3f9c0011223344");
+  });
+
+  it("recognizes the same shot resized and re-encoded, not a different shot", async () => {
+    const photo = await fakePhoto(800, 900, { left: 100, top: 150, w: 400, h: 600 });
+    const smaller = await sharp(photo).resize(300).jpeg({ quality: 60 }).toBuffer();
+    const other = await fakePhoto(800, 900, { left: 450, top: 50, w: 300, h: 200 });
+    expect(sameShot(await dhash(photo), await dhash(smaller))).toBe(true);
+    expect(sameShot(await dhash(photo), await dhash(other))).toBe(false);
   });
 });

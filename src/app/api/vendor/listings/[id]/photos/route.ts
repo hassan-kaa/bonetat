@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getVendorUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { MAX_UNIT_PHOTOS, addOfferPhotos } from "@/lib/offer-photos";
+import { MAX_UNIT_PHOTOS, addOfferPhotos, dropOfferPhoto } from "@/lib/offer-photos";
 
 const photo = z.object({ mediaType: z.enum(["image/jpeg", "image/png", "image/webp"]), data: z.string().max(3_000_000, "Photo trop lourde") });
 const schema = z.object({ photos: z.array(photo).min(1).max(MAX_UNIT_PHOTOS) });
@@ -36,6 +36,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const offer = await ownOffer(id);
   if (!offer) return NextResponse.json({ error: "Offre introuvable" }, { status: 404 });
   const photoId = req.nextUrl.searchParams.get("photo") ?? "";
-  const res = await prisma.offerPhoto.deleteMany({ where: { id: photoId, offerId: id } });
-  return res.count ? NextResponse.json({ success: true }) : NextResponse.json({ error: "Photo introuvable" }, { status: 404 });
+  return (await dropOfferPhoto(photoId, "deleted by the shop", id))
+    ? NextResponse.json({ success: true })
+    : NextResponse.json({ error: "Photo introuvable" }, { status: 404 });
 }

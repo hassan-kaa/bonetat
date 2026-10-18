@@ -2,12 +2,12 @@ import "server-only";
 import { prisma } from "./prisma";
 import { cachedIcecatProduct } from "./icecat-index";
 import { downloadIcecatImage } from "./icecat";
-import { normalizeCatalogImage } from "./images";
-import { putFiles } from "./storage";
+import { recordSource, storeOfficialPhoto } from "./catalog-photos";
 import { isRefurbished, matchColor } from "./icecat-match";
 import { referenceEntriesForModel } from "./reference-catalog";
 import { importIcecatForFinish } from "./catalog-import";
 import type { IcecatProduct } from "./icecat";
+import type { ColorFamily } from "@prisma/client";
 
 // Photos without admin work: when a color gets its first unit for sale, its official photos
 // are fetched from Icecat and put online directly. Only official (non-refurbished) entries whose
@@ -56,7 +56,7 @@ export async function ensureFinishPhotos(finishId: string): Promise<PhotoOutcome
 export async function ensureProductCover(productId: string): Promise<PhotoOutcome> {
   const product = await prisma.product.findUnique({ where: { id: productId } });
   if (!product) return "no-match";
-  if (product.coverKey) return "already";
+  if (await prisma.catalogImage.count({ where: { productId, finishId: null, status: "APPROVED" } })) return "already";
   for (const ref of await referenceEntriesForModel(product.brand, product.model, 8)) {
     let entry: IcecatProduct;
     try {
@@ -65,12 +65,24 @@ export async function ensureProductCover(productId: string): Promise<PhotoOutcom
       continue;
     }
     const main = entry.images[0];
-    if (!main || isRefurbished(entry.title)) continue;
+    if (!main) continue;
+    if (isRefurbished(entry.title)) {
+      await recordSource("icecat", String(entry.icecatId), { productId, outcome: "skipped:refurbished", detail: entry.title });
+      continue;
+    }
     try {
-      const normalized = await normalizeCatalogImage(await downloadIcecatImage(main.url), `catalog/${product.slug}/cover`);
-      await putFiles(normalized.files);
-      await prisma.product.update({ where: { id: productId }, data: { coverKey: normalized.key } });
-      return "imported";
+      const r = await storeOfficialPhoto({
+        productId,
+        finishId: null,
+        angle: "FRONT",
+        source: "ICECAT",
+        sourceRef: `icecat:${entry.icecatId}`,
+        sourceUrl: main.url,
+        download: () => downloadIcecatImage(main.url),
+        approve: true,
+      });
+      await recordSource("icecat", String(entry.icecatId), { productId, outcome: r === "imported" ? "imported" : `skipped:${r}` });
+      if (r === "imported") return "imported";
     } catch {
       continue;
     }
@@ -104,7 +116,10 @@ export async function syncAllPhotos(log: (m: string) => void = () => {}) {
   });
   log(`Couleurs en vente : ${colors.imported} avec photo officielle, ${colors["no-match"]} sans photo de cette couleur`);
 
-  const products = await prisma.product.findMany({ where: { coverKey: null, status: { not: "MERGED" } }, select: { id: true } });
+  const products = await prisma.product.findMany({
+    where: { status: { not: "MERGED" }, images: { none: { finishId: null, status: "APPROVED" } } },
+    select: { id: true },
+  });
   const covers = { imported: 0, "no-match": 0, already: 0 };
   let done = 0;
   await pool(products, 4, async (p) => {
@@ -113,4 +128,89 @@ export async function syncAllPhotos(log: (m: string) => void = () => {}) {
   });
   log(`Modèles : ${covers.imported} couvertures ajoutées, ${covers["no-match"]} sans photo officielle disponible`);
   return { colors, covers };
+}
+
+/**
+ * A model's colors, created from Icecat when the catalog has none (one Icecat listing = the model in one
+ * color), each with its official photo. One color per color family; refurbisher listings skipped.
+ * Returns how many colors got a photo.
+ */
+const FAMILY_FR: Record<ColorFamily, string> = {
+  BLACK: "Noir", WHITE: "Blanc", GREY: "Gris", SILVER: "Argent", GOLD: "Or", BLUE: "Bleu", GREEN: "Vert",
+  PURPLE: "Violet", PINK: "Rose", RED: "Rouge", YELLOW: "Jaune", ORANGE: "Orange", OTHER: "Autre",
+};
+
+export async function ensureColorsFromIcecat(productId: string, log: (m: string) => void = () => {}): Promise<number> {
+  const product = await prisma.product.findUnique({ where: { id: productId } });
+  if (!product) return 0;
+  const { FAMILY_HEX } = await import("./listing-publish");
+  const { familyOf } = await import("./icecat-match");
+  const { slugify } = await import("./utils");
+  let added = 0;
+  const done = new Set<string>();
+  for (const ref of await referenceEntriesForModel(product.brand, product.model, 25)) {
+    let entry: IcecatProduct;
+    try {
+      entry = await cachedIcecatProduct(ref.icecatId);
+    } catch {
+      continue;
+    }
+    if (!entry.images[0]) continue;
+    if (isRefurbished(entry.title)) {
+      await recordSource("icecat", String(entry.icecatId), { productId, outcome: "skipped:refurbished", detail: entry.title });
+      continue;
+    }
+    // Watches have no "product color" field on Icecat: their title carries it ("… 4G Vert Wifi GPS")
+    const fromTitle = entry.color || entry.colorName ? null : colorInTitle(entry.title);
+    const family = familyOf(entry.colorName) ?? familyOf(entry.color) ?? familyOf(fromTitle);
+    if (!family || done.has(family)) continue;
+    done.add(family);
+
+    const finishes = await prisma.finish.findMany({ where: { productId } });
+    const names = [entry.color, entry.colorName, fromTitle].filter((x): x is string => !!x);
+    let finish =
+      finishes.find((f) => names.some((n) => f.nameFr.toLowerCase() === n.toLowerCase() || f.aliases.some((a) => a.toLowerCase() === n.toLowerCase()))) ??
+      finishes.find((f) => f.family === family);
+    if (!finish) {
+      // French coarse color as the name ("Noir"), the brand's marketing name kept as an alias ("Phantom Black")
+      // A two-tone listed as "Noir, Gris" is named by its family ("Gris"), the list kept as an alias
+      const raw = (entry.color ?? entry.colorName ?? fromTitle)!;
+      const name = raw.includes(",") ? FAMILY_FR[family] : raw.replace(/^\w/, (c) => c.toUpperCase());
+      let slug = slugify(name);
+      if (finishes.some((f) => f.slug === slug)) slug = `${slug}-${finishes.length + 1}`;
+      finish = await prisma.finish.create({
+        data: { productId, slug, nameFr: name, hex: FAMILY_HEX[family], family, aliases: names.filter((n) => n !== name), position: finishes.length },
+      });
+    }
+    if (await prisma.catalogImage.count({ where: { finishId: finish.id, status: "APPROVED" } })) continue;
+    const main = entry.images[0];
+    const r = await storeOfficialPhoto({
+      productId,
+      finishId: finish.id,
+      angle: "FRONT",
+      source: "ICECAT",
+      sourceRef: `icecat:${entry.icecatId}`,
+      sourceUrl: main.url,
+      download: () => downloadIcecatImage(main.url),
+      approve: true,
+    }).catch(() => "error" as const);
+    await recordSource("icecat", String(entry.icecatId), { productId, finishId: finish.id, outcome: r === "imported" ? "imported" : `skipped:${r}` });
+    if (r === "imported") {
+      added++;
+      log(`  ${product.model} ${finish.nameFr}: imported`);
+    }
+  }
+  return added;
+}
+
+/** The first French color word of an Icecat title, as written ("Vert", "Argent", "Or rose") */
+const TITLE_COLORS = ["or rose", "gris sidéral", "noir", "blanc", "gris", "graphite", "argent", "or", "rose", "bleu", "vert", "violet", "lavande", "rouge", "jaune", "orange", "crème", "beige", "marron", "bronze"];
+function colorInTitle(title: string): string | null {
+  const t = ` ${title.toLowerCase()} `;
+  let best: { word: string; at: number } | null = null;
+  for (const w of TITLE_COLORS) {
+    const at = t.search(new RegExp(`[\\s,(]${w}[\\s,)]`));
+    if (at >= 0 && (!best || at < best.at || (at === best.at && w.length > best.word.length))) best = { word: w, at };
+  }
+  return best ? best.word.replace(/(^|\s)\S/g, (c) => c.toUpperCase()) : null;
 }

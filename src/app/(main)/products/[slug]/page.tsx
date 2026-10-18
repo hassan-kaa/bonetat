@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Star } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
-import { SELLABLE, toConfigOffers, productHref } from "@/lib/queries";
+import { SELLABLE, toConfigOffers, productHref, coverOf, modelPhoto } from "@/lib/queries";
 import { initialSelection } from "@/lib/configurator";
 import { displayName, GRADES } from "@/lib/catalog";
 import { matchFinish } from "@/lib/variants";
@@ -27,6 +27,7 @@ async function load(slug: string) {
     where: { slug },
     include: {
       category: true,
+      images: modelPhoto,
       finishes: {
         orderBy: { position: "asc" },
         include: { images: { where: { status: "APPROVED" }, orderBy: { position: "asc" }, select: { angle: true, key: true } } },
@@ -178,7 +179,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
       {initial ? (
         <Configurator
-          product={{ slug: product.slug, name, kind: product.kind, cameras: product.cameraCount, newPriceMillimes: product.newPriceMillimes, coverKey: product.coverKey }}
+          product={{ slug: product.slug, name, kind: product.kind, cameras: product.cameraCount, newPriceMillimes: product.newPriceMillimes, coverKey: coverOf(product) }}
           variants={variants}
           offers={offers}
           initialOfferId={initial.offerId}

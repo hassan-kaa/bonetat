@@ -101,6 +101,10 @@ enum ImageAngle {
 
 enum ImageSource {
   ICECAT
+  /// The brand's own website or store (apple.com…): official renders, one per color
+  BRAND_SITE
+  /// A Tunisian retailer's listing (tunisianet.com.tn): kept apart so it can be withdrawn in one go
+  RETAILER
   PRESS_KIT
   OWN_SHOOT
   OTHER
@@ -110,6 +114,8 @@ enum ImageStatus {
   DRAFT
   APPROVED
   ARCHIVED
+  /// Taken down by the admin: never shown, its source never re-imported, its file deleted after a grace period
+  REJECTED
 }
 
 enum OrderStatus {
@@ -284,8 +290,6 @@ model Product {
   source            String        @default("seed")
   /// normalized brand + line + model, trigram-indexed: what stores search the catalog with
   searchText        String        @default("")
-  /// The model's official main photo (any color), shown when a color has no photo of its own
-  coverKey          String?
   slug              String        @unique
   kind              DeviceKind    @default(PHONE)
   /// Family shared by sibling products ("iphone-11" groups 11 / 11 Pro / 11 Pro Max)
@@ -305,6 +309,8 @@ model Product {
 
   category        Category         @relation(fields: [categoryId], references: [id])
   finishes        Finish[]
+  /// Official photos: per color (finishId set) or of the model whatever the color (finishId null, the "cover")
+  images          CatalogImage[]
   variants        Variant[]
   specSuggestions SpecSuggestion[]
 
@@ -419,14 +425,18 @@ model Finish {
   @@map("finishes")
 }
 
-/// Bonétat-owned catalog photo of one finish from one angle. Only APPROVED ones are shown.
+/// An official photo of a model. Attached to the MODEL and, usually, one of its colors: every configuration
+/// (storage, RAM, CPU) of that color shows it, since they look the same. finishId null = the model's photo
+/// whatever the color (shown, flagged as indicative, when a color has none). Only APPROVED ones are shown.
 model CatalogImage {
   id           String      @id @default(cuid())
-  finishId     String
+  productId    String
+  finishId     String?
   angle        ImageAngle
   position     Int         @default(0)
-  /// Storage path without size suffix, content-hashed: catalog/<product>/<finish>/<hash>
-  key          String      @unique
+  /// Storage key without size suffix, named by content: catalog/<2 first chars of the hash>/<hash>.
+  /// Not unique: the same file can illustrate two colors that really look the same.
+  key          String
   width        Int
   height       Int
   /// Original resolution, so the review screen can warn about blurry upscales
@@ -434,16 +444,62 @@ model CatalogImage {
   sourceHeight Int?
   /// Tiny base64 placeholder shown while the image loads
   blurDataUrl  String?
+  /// Visual fingerprint (64-bit difference hash, hex): catches the same photo resized or re-encoded
+  phash        String?
   source       ImageSource
-  /// Icecat id or original URL, for audit
+  /// Where it came from (Icecat id, original URL), for audit
   sourceRef    String?
+  /// The original file's URL: a rejected one is never downloaded again
+  sourceUrl    String?
   status       ImageStatus @default(DRAFT)
+  rejectReason String?
+  rejectedAt   DateTime?
   createdAt    DateTime    @default(now())
 
-  finish Finish @relation(fields: [finishId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  finish  Finish? @relation(fields: [finishId], references: [id], onDelete: Cascade)
 
+  @@index([productId, finishId, status])
   @@index([finishId, status])
+  @@index([key])
+  @@index([sourceUrl])
   @@map("catalog_images")
+}
+
+/// One item fetched from an outside source (an Icecat product, a brand's product page…).
+/// (source, externalId) is unique: re-running an import updates its row instead of adding a duplicate.
+model SourceRecord {
+  id         String   @id @default(cuid())
+  /// "icecat", "apple", "samsung"…
+  source     String
+  /// The source's own id for the item
+  externalId String
+  url        String?
+  productId  String?
+  finishId   String?
+  /// imported | skipped:refurbished | skipped:duplicate | no-match | rejected | error
+  outcome    String
+  detail     String?
+  fetchedAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([source, externalId])
+  @@index([productId])
+  @@map("source_records")
+}
+
+/// Storage files waiting to be deleted (rejected photos, withdrawn offers, ended warranties).
+/// A grace period lets a mistake be undone; the cleanup job (npm run media:cleanup) deletes them.
+model PendingDeletion {
+  id          String   @id @default(cuid())
+  /// Storage key without size suffix: every width of it goes
+  key         String
+  reason      String
+  deleteAfter DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([deleteAfter])
+  @@map("pending_deletions")
 }
 
 /// What the device IS: one combination of the product's spec axes.
@@ -531,7 +587,7 @@ model IcecatCandidate {
 model OfferPhoto {
   id        String   @id @default(cuid())
   offerId   String
-  /// Storage path without size suffix: offers/<offerId>/<hash>
+  /// Storage key without size suffix: units/<offerId>/<hash> (one folder per offer, deleted with it)
   key       String   @unique
   width     Int
   height    Int

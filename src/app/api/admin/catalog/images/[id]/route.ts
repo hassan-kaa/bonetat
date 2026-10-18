@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { approveCatalogImage } from "@/lib/catalog-import";
+import { approveCatalogImage, rejectCatalogImage } from "@/lib/catalog-photos";
 
 const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("approve") }),
   z.object({ action: z.literal("draft") }),
   z.object({ action: z.literal("archive") }),
+  /** Wrong device, wrong color, someone else's branding: hidden, never re-imported, file deleted after 7 days */
+  z.object({ action: z.literal("reject"), reason: z.string().trim().min(2, "Indiquez la raison").max(200) }),
   z.object({ action: z.literal("angle"), angle: z.enum(["FRONT", "BACK", "SIDE", "DETAIL"]) }),
 ]);
 
@@ -23,6 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (d.action === "approve") await approveCatalogImage(id);
     else if (d.action === "draft") await prisma.catalogImage.update({ where: { id }, data: { status: "DRAFT" } });
     else if (d.action === "archive") await prisma.catalogImage.update({ where: { id }, data: { status: "ARCHIVED" } });
+    else if (d.action === "reject") await rejectCatalogImage(id, d.reason);
     else {
       // Changing the angle of a live image takes it offline: re-approve it in its new slot
       await prisma.catalogImage.update({ where: { id }, data: { angle: d.angle, status: img.status === "APPROVED" ? "DRAFT" : img.status } });

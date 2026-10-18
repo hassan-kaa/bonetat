@@ -25,6 +25,8 @@ export async function mergeProducts(sourceId: string, targetId: string) {
       if (same) finishMap.set(f.id, same.id);
       else {
         await tx.finish.update({ where: { id: f.id }, data: { productId: target.id, position: target.finishes.length + finishMap.size } });
+        // Its photos follow it: a photo belongs to a model and one of its colors
+        await tx.catalogImage.updateMany({ where: { finishId: f.id }, data: { productId: target.id } });
         finishMap.set(f.id, f.id);
       }
     }
@@ -48,6 +50,9 @@ export async function mergeProducts(sourceId: string, targetId: string) {
     }
     // Colors left behind on the source are now empty
     await tx.finish.deleteMany({ where: { productId: source.id } });
+    // The model's photo whatever the color: moved over when the target has none
+    const targetHasModelPhoto = await tx.catalogImage.count({ where: { productId: target.id, finishId: null, status: "APPROVED" } });
+    if (!targetHasModelPhoto) await tx.catalogImage.updateMany({ where: { productId: source.id, finishId: null }, data: { productId: target.id } });
 
     return tx.product.update({
       where: { id: source.id },

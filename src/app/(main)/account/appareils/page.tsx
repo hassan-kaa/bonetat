@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { coverOf, modelPhoto } from "@/lib/queries";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
@@ -24,7 +25,7 @@ export default async function DevicesPage() {
           variant: {
             select: {
               finish: { select: { hex: true, images: { where: { status: "APPROVED", angle: "FRONT" }, orderBy: { position: "asc" }, take: 1, select: { key: true } } } },
-              product: { select: { kind: true, cameraCount: true, coverKey: true } },
+              product: { select: { kind: true, cameraCount: true, images: modelPhoto } },
             },
           },
         },
@@ -53,7 +54,7 @@ export default async function DevicesPage() {
           <article key={item.id} className="flex flex-wrap items-center gap-[26px] rounded-panel border border-line bg-white p-6">
             <span className="grid h-[190px] w-[150px] flex-none place-items-center overflow-hidden rounded-panel bg-brand">
               <DeviceVisual
-                imageKey={item.offer.variant.finish.images[0]?.key ?? item.offer.variant.product.coverKey}
+                imageKey={item.offer.variant.finish.images[0]?.key ?? coverOf(item.offer.variant.product)}
                 kind={kind}
                 colorHex={item.offer.variant.finish.hex}
                 cameras={item.offer.variant.product.cameraCount}

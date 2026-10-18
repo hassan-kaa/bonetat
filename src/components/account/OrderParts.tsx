@@ -1,4 +1,5 @@
 import type { ConditionGrade, DeviceKind, OrderStatus } from "@prisma/client";
+import { coverOf, modelPhoto } from "@/lib/queries";
 import DeviceVisual from "@/components/products/DeviceVisual";
 import { GRADES } from "@/lib/catalog";
 import { formatPrice } from "@/lib/money";
@@ -73,7 +74,7 @@ export const orderItemInclude = {
       variant: {
         select: {
           finish: { select: { hex: true, images: { where: { status: "APPROVED", angle: "FRONT" }, orderBy: { position: "asc" }, take: 1, select: { key: true } } } },
-          product: { select: { kind: true, cameraCount: true, slug: true, coverKey: true } },
+          product: { select: { kind: true, cameraCount: true, slug: true, images: modelPhoto } },
         },
       },
     },
@@ -82,12 +83,12 @@ export const orderItemInclude = {
 
 export function toItemView(i: {
   id: string; title: string; configLabel: string; grade: ConditionGrade; batteryHealth: number | null; warrantyMonths: number; priceMillimes: number;
-  offer: { variant: { finish: { hex: string; images: { key: string }[] }; product: { kind: DeviceKind; cameraCount: number | null; coverKey: string | null } } };
+  offer: { variant: { finish: { hex: string; images: { key: string }[] }; product: { kind: DeviceKind; cameraCount: number | null; images: { key: string }[] } } };
 }): ItemView {
   return {
     id: i.id, title: i.title, configLabel: i.configLabel, grade: i.grade, batteryHealth: i.batteryHealth, warrantyMonths: i.warrantyMonths,
     priceMillimes: i.priceMillimes, kind: i.offer.variant.product.kind, colorHex: i.offer.variant.finish.hex,
-    imageKey: i.offer.variant.finish.images[0]?.key ?? i.offer.variant.product.coverKey, cameras: i.offer.variant.product.cameraCount,
+    imageKey: i.offer.variant.finish.images[0]?.key ?? coverOf(i.offer.variant.product), cameras: i.offer.variant.product.cameraCount,
   };
 }
 

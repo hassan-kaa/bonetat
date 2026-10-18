@@ -12,10 +12,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!user) redirect("/auth/login?redirect=/admin");
   if (user.role !== "ADMIN") redirect("/");
 
-  const [toReview, toConfirm, toApprove] = await Promise.all([
+  const [toReview, toConfirm, toApprove, photosToCheck] = await Promise.all([
     prisma.offer.count({ where: { status: "PENDING_REVIEW" } }),
     prisma.order.count({ where: { status: "PENDING" } }),
     prisma.vendor.count({ where: { status: "PENDING" } }),
+    prisma.catalogImage.count({ where: { status: "DRAFT", source: { in: ["RETAILER", "BRAND_SITE"] } } }),
   ]);
   const nav = [
     { href: "/admin", label: "Vue d’ensemble", n: 0 },
@@ -23,6 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/listings", label: "Offres à contrôler", n: toReview },
     { href: "/admin/vendors", label: "Ateliers partenaires", n: toApprove },
     { href: "/admin/catalog/new-models", label: "Modèles ajoutés", n: 0 },
+    { href: "/admin/catalog/review", label: "Photos à vérifier", n: photosToCheck },
     { href: "/admin/catalog", label: "Photos du catalogue", n: 0 },
   ];
 

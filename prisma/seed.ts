@@ -450,16 +450,25 @@ function lineup(p: ProductSeed) {
   return rows;
 }
 
-/** Curated catalog photos and Icecat links survive a reseed: they are set aside and reattached by product + color */
+/**
+ * Every catalog photo survives a reseed, rejected ones included (so a rejected source stays rejected):
+ * set aside, then reattached by product slug + color slug. Photos of a model with no color ("covers")
+ * are reattached after the catalog is rebuilt, since most models come from buildCatalog.
+ */
 async function keepCatalogPhotos() {
-  return prisma.finish.findMany({
+  const finishes = await prisma.finish.findMany({
     where: { OR: [{ images: { some: {} } }, { icecatId: { not: null } }] },
     select: {
       slug: true, icecatId: true, icecatMatch: true, aliases: true,
       product: { select: { slug: true } },
-      images: { select: { angle: true, position: true, key: true, width: true, height: true, sourceWidth: true, sourceHeight: true, blurDataUrl: true, source: true, sourceRef: true, status: true } },
+      images: { select: { angle: true, position: true, key: true, width: true, height: true, sourceWidth: true, sourceHeight: true, blurDataUrl: true, phash: true, source: true, sourceRef: true, sourceUrl: true, status: true, rejectReason: true, rejectedAt: true } },
     },
   });
+  const models = await prisma.catalogImage.findMany({
+    where: { finishId: null },
+    select: { angle: true, position: true, key: true, width: true, height: true, sourceWidth: true, sourceHeight: true, blurDataUrl: true, phash: true, source: true, sourceRef: true, sourceUrl: true, status: true, rejectReason: true, rejectedAt: true, product: { select: { slug: true } } },
+  });
+  return { finishes, models };
 }
 
 async function wipe() {
@@ -487,8 +496,8 @@ async function wipe() {
 }
 
 async function main() {
-  const kept = await keepCatalogPhotos();
-  console.log(`Wiping dev database (keeping ${kept.reduce((n, f) => n + f.images.length, 0)} catalog photos)…`);
+  const { finishes: kept, models: keptModelPhotos } = await keepCatalogPhotos();
+  console.log(`Wiping dev database (keeping ${kept.reduce((n, f) => n + f.images.length, 0) + keptModelPhotos.length} catalog photos)…`);
   await wipe();
 
   // ── People ──
@@ -603,7 +612,7 @@ async function main() {
         },
       });
       if (old?.images.length) {
-        await prisma.catalogImage.createMany({ data: old.images.map((img) => ({ ...img, finishId: finish.id })) });
+        await prisma.catalogImage.createMany({ data: old.images.map((img) => ({ ...img, productId: product.id, finishId: finish.id })) });
         photoCount += old.images.length;
       }
       finishes.push(finish);
@@ -768,6 +777,15 @@ async function main() {
   // ── The full catalog (curated + Icecat reference + Wikidata), so stores just pick their model ──
   const built = await buildCatalog();
   console.log(`✓ Catalogue complet : ${built.total} modèles (${Object.entries(built.added).map(([k, n]) => `${n} ${k}`).join(", ")})`);
+
+  // Photos of each model with no color ("covers"), reattached now that the catalog is rebuilt
+  const slugToId = new Map((await prisma.product.findMany({ select: { id: true, slug: true } })).map((p) => [p.slug, p.id]));
+  const modelPhotos = keptModelPhotos.flatMap(({ product, ...img }) => {
+    const productId = slugToId.get(product.slug);
+    return productId ? [{ ...img, productId, finishId: null }] : [];
+  });
+  await prisma.catalogImage.createMany({ data: modelPhotos });
+  console.log(`✓ ${modelPhotos.length} model photos reattached`);
 
   console.log("\nSeed complete.\n");
   console.log("Test accounts (the OTP code prints in the server console):");

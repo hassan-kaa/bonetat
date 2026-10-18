@@ -1,5 +1,6 @@
 import "server-only";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { IMAGE_WIDTHS } from "./image-url";
 import path from "node:path";
 import { AwsClient } from "aws4fetch";
 
@@ -42,11 +43,35 @@ function r2Url(filePath: string) {
 async function putR2(files: StoredFile[]) {
   for (const f of files) {
     const { client: r2, url } = r2Url(f.path);
+    // R2 refuses an upload without a length, and Next's patched fetch may stream the body without one
+    // (411 MissingContentLength): a plain ArrayBuffer plus an explicit Content-Length works in both runtimes.
+    const body = f.body.buffer.slice(f.body.byteOffset, f.body.byteOffset + f.body.byteLength) as ArrayBuffer;
     const res = await r2.fetch(url, {
       method: "PUT",
-      body: new Uint8Array(f.body),
-      headers: { "Content-Type": f.contentType, "Cache-Control": CACHE_FOREVER },
+      body,
+      headers: { "Content-Type": f.contentType, "Cache-Control": CACHE_FOREVER, "Content-Length": String(body.byteLength) },
     });
     if (!res.ok) throw new Error(`R2 upload failed for ${f.path}: ${res.status} ${await res.text()}`);
+  }
+}
+
+/**
+ * Deletes a stored image in every width (key without size suffix). Missing files are fine:
+ * deleting twice, or a key that was never uploaded, is not an error.
+ */
+export async function deleteImage(key: string): Promise<void> {
+  const paths = IMAGE_WIDTHS.map((w) => `${key}-${w}.webp`);
+  if ((process.env.STORAGE_DRIVER ?? "local") === "r2") {
+    for (const p of paths) {
+      const { client, url } = r2Url(p);
+      const res = await client.fetch(url, { method: "DELETE" });
+      if (!res.ok && res.status !== 404) throw new Error(`R2 delete failed for ${p}: ${res.status}`);
+    }
+    return;
+  }
+  const root = path.join(process.cwd(), "public", "media");
+  for (const p of paths) {
+    const target = path.join(root, p);
+    if (target.startsWith(root + path.sep)) await rm(target, { force: true });
   }
 }

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { SELLABLE, finishWithFront, productHref } from "@/lib/queries";
+import { SELLABLE, coverOf, finishWithFront, modelPhoto, productHref } from "@/lib/queries";
 import { displayName, variantLabel } from "@/lib/catalog";
 import FollowRow from "./FollowRow";
 
@@ -19,7 +19,7 @@ export default async function FollowsPage() {
     include: {
       variant: {
         include: {
-          product: true,
+          product: { include: { images: modelPhoto } },
           finish: finishWithFront,
           offers: { where: SELLABLE, orderBy: { priceMillimes: "asc" }, take: 1 },
         },
@@ -52,7 +52,7 @@ export default async function FollowsPage() {
                 kind: p.kind,
                 cameras: p.cameraCount,
                 colorHex: f.variant.finish.hex,
-                imageKey: f.variant.finish.images[0]?.key ?? p.coverKey,
+                imageKey: f.variant.finish.images[0]?.key ?? coverOf(p),
                 href: productHref(p.slug, f.variantId, best?.conditionGrade),
                 currentPriceMillimes: best?.priceMillimes ?? null,
                 startPriceMillimes: f.startPriceMillimes,

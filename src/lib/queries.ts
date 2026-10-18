@@ -13,6 +13,18 @@ export const SELLABLE: Prisma.OfferWhereInput = {
 };
 
 /** A finish with its main catalog photo, if one is approved. No photo → DeviceArt illustration. */
+/**
+ * The model's photo whatever the color (the "cover"): shown, flagged as indicative, when a color has
+ * no photo of its own. Include it as `images: modelPhoto` on a product; read it with `coverOf`.
+ */
+export const modelPhoto = {
+  where: { finishId: null, status: "APPROVED" as const },
+  orderBy: { position: "asc" as const },
+  take: 1,
+  select: { key: true },
+};
+export const coverOf = (p: { images?: { key: string }[] }) => p.images?.[0]?.key ?? null;
+
 export const finishWithFront = {
   include: {
     images: {
@@ -99,6 +111,7 @@ export async function getVariantCards(opts: {
   const products = await prisma.product.findMany({
     where: { ...opts.where, variants: { some: { offers: { some: SELLABLE } } } },
     include: {
+      images: modelPhoto,
       variants: {
         include: {
           finish: finishWithFront,
@@ -150,8 +163,8 @@ export async function getVariantCards(opts: {
         gpu: p.kind === "LAPTOP" && hasDedicatedGpu(laptopText(p, v)),
         cameras: p.cameraCount,
         colorHex: v.finish.hex,
-        imageKey: v.finish.images[0]?.key ?? p.coverKey,
-        imageIsCover: !v.finish.images[0] && !!p.coverKey,
+        imageKey: v.finish.images[0]?.key ?? coverOf(p),
+        imageIsCover: !v.finish.images[0] && !!coverOf(p),
         vendorName: best.vendorName,
         offerCount: v.offers.length,
         grade: best.grade,

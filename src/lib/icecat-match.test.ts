@@ -56,6 +56,8 @@ describe("rankRows", () => {
     expect(m({ brand: "Lenovo", model: "ThinkPad T14 Gen 2" }, "Lenovo", "Lenovo ThinkPad T14 G2 (Refurbished) A")).toBe(true);
     expect(isRefurbished("Apple iPhone 12 (Refurbished) Grade A")).toBe(true);
     expect(isRefurbished("Samsung Galaxy S23")).toBe(false);
+    expect(isRefurbished("Teqcycle Apple iPhone 13 128GB Blue")).toBe(true);
+    expect(isRefurbished("Apple iPhone 13 128 Go Bleu Reconditionné")).toBe(true);
     const refurb = row({ icecatId: 9, modelName: "Galaxy S23 Refurbished", picWidth: 4000, picHeight: 4000 });
     const plain = row({ icecatId: 8, quality: "SUPPLIER", picWidth: 300, picHeight: 300 });
     expect(rankRows([refurb, plain]).map((r) => r.icecatId)).toEqual([8, 9]);

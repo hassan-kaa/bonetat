@@ -1,4 +1,5 @@
 import Link from "next/link";
+import UnitPhoto from "./UnitPhoto";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { GRADES, displayName, variantLabel } from "@/lib/catalog";
@@ -14,7 +15,7 @@ export default async function AdminListings() {
   const pending = await prisma.offer.findMany({
     where: { status: "PENDING_REVIEW" },
     orderBy: { createdAt: "asc" },
-    include: { vendor: true, variant: { include: { product: true, finish: true } }, photos: { orderBy: { position: "asc" }, select: { key: true } } },
+    include: { vendor: true, variant: { include: { product: true, finish: true } }, photos: { orderBy: { position: "asc" }, select: { id: true, key: true } } },
   });
   // Market reference for each pending config: the current best live price
   const refs = await prisma.offer.findMany({
@@ -47,10 +48,7 @@ export default async function AdminListings() {
                       {o.photos.length > 0 && (
                         <span className="mt-1.5 flex gap-1.5">
                           {o.photos.map((ph) => (
-                            <a key={ph.key} href={imageUrl(ph.key, 1600)} target="_blank" rel="noreferrer" title="Photo de l’atelier : vérifier qu’aucun numéro ni lien n’apparaît">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={imageUrl(ph.key, 400)} alt="Photo de l’appareil" className="h-12 w-12 rounded-lg border border-line object-cover" />
-                            </a>
+                            <UnitPhoto key={ph.id} id={ph.id} thumb={imageUrl(ph.key, 400)} full={imageUrl(ph.key, 1600)} />
                           ))}
                         </span>
                       )}

@@ -1,8 +1,8 @@
 import "server-only";
 import type { ImageAngle } from "@prisma/client";
 import { prisma } from "./prisma";
-import { normalizeCatalogImage } from "./images";
-import { putFiles } from "./storage";
+import { isRefurbished } from "./icecat-match";
+import { approveCatalogImage, recordSource, storeOfficialPhoto } from "./catalog-photos";
 import { IcecatError, downloadIcecatImage, fetchIcecatProduct, parseIcecatRef, type IcecatProduct } from "./icecat";
 
 /** Icecat galleries have no angle labels: main image first, then a best guess Kaa corrects on review */
@@ -26,11 +26,11 @@ export type ImportOptions = {
 };
 
 /**
- * Link a finish (one color of one product) to an Icecat product and import its gallery as DRAFT
- * catalog images. Safe to run again: images already imported (same pixels) are skipped.
+ * Link a finish (one color of one product) to an Icecat product and import its gallery. Goes through
+ * storeOfficialPhoto: rejected sources, identical files and near-identical shots are skipped.
  */
 export async function importIcecatForFinish(finishId: string, refInput: string, opts: ImportOptions = {}): Promise<ImportResult> {
-  const finish = await prisma.finish.findUnique({ where: { id: finishId }, include: { product: true, images: { select: { key: true } } } });
+  const finish = await prisma.finish.findUnique({ where: { id: finishId }, include: { product: true } });
   if (!finish) throw new IcecatError("Couleur introuvable");
   let product = opts.product;
   if (!product) {
@@ -38,48 +38,38 @@ export async function importIcecatForFinish(finishId: string, refInput: string, 
     if (!ref) throw new IcecatError("Collez un code produit, un EAN ou un identifiant Icecat");
     product = await fetchIcecatProduct(ref);
   }
+  const record = (outcome: string, detail?: string) =>
+    recordSource("icecat", String(product!.icecatId), { productId: finish.productId, finishId, outcome, detail });
+  if (isRefurbished(product.title)) {
+    await record("skipped:refurbished", product.title);
+    throw new IcecatError(`« ${product.title} » est une annonce de reconditionneur, pas de la marque : ses photos portent sa marque`);
+  }
   if (product.images.length === 0) throw new IcecatError(`« ${product.title} » n’a aucune image sur Icecat`);
 
-  const known = new Set(finish.images.map((i) => i.key));
-  const prefix = `catalog/${finish.product.slug}/${finish.slug}`;
   let imported = 0;
   let skipped = 0;
   let failed = 0;
-  let frontId: string | null = null;
-
   for (const [i, img] of product.images.slice(0, MAX_IMAGES).entries()) {
     try {
-      const normalized = await normalizeCatalogImage(await downloadIcecatImage(img.url), prefix);
-      if (known.has(normalized.key) || (await prisma.catalogImage.findUnique({ where: { key: normalized.key } }))) {
-        skipped++;
-        continue;
-      }
-      await putFiles(normalized.files);
-      const created = await prisma.catalogImage.create({
-        data: {
-          finishId,
-          angle: angleGuess(i),
-          position: i,
-          key: normalized.key,
-          width: normalized.width,
-          height: normalized.height,
-          sourceWidth: normalized.sourceWidth,
-          sourceHeight: normalized.sourceHeight,
-          blurDataUrl: normalized.blurDataUrl,
-          source: "ICECAT",
-          sourceRef: `icecat:${product.icecatId} ${img.url}`,
-          status: "DRAFT",
-        },
+      const r = await storeOfficialPhoto({
+        productId: finish.productId,
+        finishId,
+        angle: angleGuess(i),
+        position: i,
+        source: "ICECAT",
+        sourceRef: `icecat:${product.icecatId}`,
+        sourceUrl: img.url,
+        download: () => downloadIcecatImage(img.url),
+        approve: opts.approveAll || (opts.approveFront && i === 0),
       });
-      if (i === 0) frontId = created.id;
-      if (opts.approveAll) await approveCatalogImage(created.id);
-      known.add(normalized.key);
-      imported++;
+      if (r === "imported") imported++;
+      else skipped++;
     } catch (err) {
       console.error(`Icecat image import failed (${img.url})`, err);
       failed++;
     }
   }
+  await record(imported ? "imported" : "skipped:duplicate", `${imported} new, ${skipped} skipped, ${failed} failed`);
 
   // A confirmed match teaches us the manufacturer's color name: the next model with "Phantom Black" matches by itself
   const learned = product.colorName && ![finish.nameFr, ...finish.aliases].some((n) => n.toLowerCase() === product.colorName!.toLowerCase());
@@ -92,30 +82,8 @@ export async function importIcecatForFinish(finishId: string, refInput: string, 
     },
   });
   await prisma.icecatCandidate.deleteMany({ where: { finishId } });
-
-  let approvedFront = false;
-  if (opts.approveFront && frontId) {
-    const live = await prisma.catalogImage.count({ where: { finishId, angle: "FRONT", status: "APPROVED" } });
-    if (live === 0) {
-      await approveCatalogImage(frontId);
-      approvedFront = true;
-    }
-  }
+  const approvedFront = !!(opts.approveFront || opts.approveAll) && imported > 0;
   return { icecatId: product.icecatId, title: product.title, imported, skipped, failed, approvedFront };
 }
 
-/**
- * Approve one image for its angle. Any other approved image of the same finish and angle
- * goes back to DRAFT (not archived), so swapping the photo shown is always reversible.
- */
-export async function approveCatalogImage(imageId: string) {
-  const img = await prisma.catalogImage.findUnique({ where: { id: imageId } });
-  if (!img) return null;
-  return prisma.$transaction(async (tx) => {
-    await tx.catalogImage.updateMany({
-      where: { finishId: img.finishId, angle: img.angle, status: "APPROVED", id: { not: img.id } },
-      data: { status: "DRAFT" },
-    });
-    return tx.catalogImage.update({ where: { id: img.id }, data: { status: "APPROVED" } });
-  });
-}
+export { approveCatalogImage };

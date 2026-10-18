@@ -103,7 +103,37 @@ export async function searchReference(query: string, brand?: string | null, limi
  * Every Icecat entry of one model (all colors, regions, storages), best pictures first.
  * Used to find official photos for a given color. Refurbished reseller listings are excluded.
  */
+/** "Watch4" → "Watch 4": brands glue a series word to its number ("Galaxy Watch4"), our catalog doesn't */
+const unglue = (name: string) => name.replace(/([a-z])(\d)/gi, "$1 $2");
+
+/** A trailing machine code ("TUF Gaming A15 FA506NCG", "Vivobook 15 X1504VA"): Icecat files the laptop under it */
+const MACHINE_CODE = /\b([A-Z]{1,3}\d{3,4}[A-Z]{0,4})$/;
+/** Asus TUF names without a code, and the code families Icecat files them under */
+const CODE_FAMILIES: Record<string, string[]> = {
+  "TUF Gaming F15": ["FX506", "FX507"], "TUF Gaming A15": ["FA506", "FA507"],
+  "TUF Gaming F17": ["FX706", "FX707"], "TUF Gaming A17": ["FA706", "FA707"],
+  "TUF Gaming F16": ["FX607"], "TUF Gaming A16": ["FA607"], "TUF Gaming A14": ["FA401"],
+};
+
+/**
+ * Icecat rows named by the model's machine code plus a SKU suffix: "FA506NCG" → "FA506NCG-HN184W".
+ * Strict on purpose: "FA506NC-HN036" never feeds "FA506NCG" (a different GPU, sometimes a different body).
+ */
+async function entriesByCode(brand: string, model: string, limit: number) {
+  const families = CODE_FAMILIES[model];
+  const code = model.match(MACHINE_CODE)?.[1];
+  if (!families && !code) return [];
+  const brandIs = { equals: brand, mode: "insensitive" as const };
+  const OR = families
+    ? families.map((f) => ({ modelName: { startsWith: f, mode: "insensitive" as const } }))
+    : [{ modelName: { equals: code!, mode: "insensitive" as const } }, { modelName: { startsWith: `${code}-`, mode: "insensitive" as const } }];
+  const rows = await prisma.referenceProduct.findMany({ where: { brand: brandIs, OR }, orderBy: { picWidth: "desc" }, take: 300, select: { icecatId: true, modelName: true } });
+  return rows.filter((r) => !isRefurbished(r.modelName)).slice(0, limit);
+}
+
 export async function referenceEntriesForModel(brand: string, model: string, limit = 25): Promise<{ icecatId: number; modelName: string }[]> {
+  const byCode = await entriesByCode(brand, model, limit);
+  if (byCode.length) return byCode;
   const q = normalize(model);
   const rows = await prisma.$queryRaw<{ icecatId: number; brand: string; modelName: string }[]>`
     SELECT "icecatId", brand, "modelName" FROM reference_products
@@ -111,9 +141,10 @@ export async function referenceEntriesForModel(brand: string, model: string, lim
       AND (lower(brand) = lower(${brand}) OR (lower(${brand}) = 'sony' AND lower(brand) = 'sony interactive entertainment'))
     ORDER BY word_similarity(${q}, "searchText") DESC, "picWidth" DESC
     LIMIT 300`;
-  const wanted = { brand, model };
+  // Unglued BEFORE the cleanup: cleanModelName drops letter+digit tokens as SKUs, "Watch4" included
+  const wanted = { brand, model: unglue(model) };
   return rows
-    .filter((r) => !isRefurbished(r.modelName) && modelMatches(wanted, { brand: r.brand, modelName: cleanModelName(r.modelName, brand) }))
+    .filter((r) => !isRefurbished(r.modelName) && modelMatches(wanted, { brand: r.brand, modelName: cleanModelName(unglue(r.modelName), brand) }))
     .slice(0, limit)
     .map((r) => ({ icecatId: r.icecatId, modelName: r.modelName }));
 }

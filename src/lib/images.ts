@@ -14,8 +14,10 @@ const DEVICE_BOX = Math.round(CANVAS * 0.8);
 const WHITE = { r: 255, g: 255, b: 255, alpha: 1 };
 
 export type NormalizedImage = {
-  /** Storage key without size suffix: catalog/<product>/<finish>/<hash> */
+  /** Storage key without size suffix: catalog/<2 first chars>/<hash> (see catalogKey) */
   key: string;
+  /** Visual fingerprint, for near-duplicates (see dhash) */
+  phash: string;
   files: StoredFile[];
   width: number;
   height: number;
@@ -24,7 +26,43 @@ export type NormalizedImage = {
   blurDataUrl: string;
 };
 
-export async function normalizeCatalogImage(input: Buffer, prefix: string): Promise<NormalizedImage> {
+/**
+ * Where an official photo is stored: named by its content, never by product. Which model and color it
+ * shows lives in the database, so renaming or merging products moves no file, and two colors that look
+ * the same share one file. The 2-character folder spreads files over 256 folders.
+ */
+export const catalogKey = (hash: string) => `catalog/${hash.slice(0, 2)}/${hash}`;
+
+/** Where a shop's photo of its unit is stored: one folder per offer, deleted with it */
+export const unitPrefix = (offerId: string) => `units/${offerId}`;
+
+/**
+ * Visual fingerprint (64-bit difference hash, as 16 hex chars). Two photos of the same shot, even resized
+ * or re-encoded, differ by only a few bits; different shots differ by many (see sameShot).
+ */
+export async function dhash(input: Buffer): Promise<string> {
+  const px = await sharp(input).flatten({ background: WHITE }).grayscale().resize(9, 8, { fit: "fill" }).raw().toBuffer();
+  let bits = "";
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) bits += px[y * 9 + x] > px[y * 9 + x + 1] ? "1" : "0";
+  let hex = "";
+  for (let i = 0; i < 64; i += 4) hex += parseInt(bits.slice(i, i + 4), 2).toString(16);
+  return hex;
+}
+
+/** Two fingerprints of the same shot: at most 6 of the 64 bits differ */
+export function sameShot(a: string, b: string): boolean {
+  let differing = 0;
+  for (let i = 0; i < 16; i++) {
+    let x = parseInt(a[i], 16) ^ parseInt(b[i], 16);
+    while (x) {
+      differing += x & 1;
+      x >>= 1;
+    }
+  }
+  return differing <= 6;
+}
+
+export async function normalizeCatalogImage(input: Buffer): Promise<NormalizedImage> {
   // Auto-rotate from camera metadata, flatten any transparency onto white. Output never carries metadata.
   const flat = await sharp(input, { failOn: "none" }).rotate().flatten({ background: WHITE }).toBuffer({ resolveWithObject: true });
 
@@ -48,7 +86,7 @@ export async function normalizeCatalogImage(input: Buffer, prefix: string): Prom
 
   // Same pixels → same key, so re-importing the same image is a no-op
   const hash = createHash("sha256").update(master).digest("hex").slice(0, 16);
-  const key = `${prefix}/${hash}`;
+  const key = catalogKey(hash);
 
   const files: StoredFile[] = [];
   for (const w of IMAGE_WIDTHS) {
@@ -59,6 +97,7 @@ export async function normalizeCatalogImage(input: Buffer, prefix: string): Prom
 
   return {
     key,
+    phash: await dhash(master),
     files,
     width: CANVAS,
     height: CANVAS,

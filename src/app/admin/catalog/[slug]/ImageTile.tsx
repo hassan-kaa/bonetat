@@ -63,7 +63,19 @@ export default function ImageTile({ image, colorName }: Props) {
         ) : (
           <button type="button" disabled={busy} onClick={() => act({ action: "approve" })} className="btn-primary btn-sm flex-1">Valider</button>
         )}
-        <button type="button" disabled={busy} onClick={() => act({ action: "archive" })} aria-label="Archiver" className="btn-secondary btn-sm">✕</button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => {
+            const reason = window.prompt("Pourquoi rejeter cette photo ? (mauvais appareil, mauvaise couleur, marque d’un autre vendeur…)");
+            if (reason?.trim()) act({ action: "reject", reason: reason.trim() });
+          }}
+          aria-label="Rejeter la photo"
+          title="Rejeter : retirée du site, jamais réimportée, fichier supprimé après 7 jours"
+          className="btn-secondary btn-sm"
+        >
+          ✕
+        </button>
       </div>
     </div>
   );
