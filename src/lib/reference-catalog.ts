@@ -131,9 +131,52 @@ async function entriesByCode(brand: string, model: string, limit: number) {
   return rows.filter((r) => !isRefurbished(r.modelName)).slice(0, limit);
 }
 
+/** HP's sales code "15-fa1003na" belongs to the series "15-fa1000" (same rule as the Tunisianet source) */
+const hpSeries = (s: string) => s.replace(/\b(\d{2})-([a-z]{2})(\d)\d{3}[a-z]{2}\b/gi, (_, a, b, c) => `${a}-${b.toLowerCase()}${c}000`);
+
+/**
+ * Icecat rows whose name STARTS with our model, the rest being a configuration suffix:
+ *   MSI   "Katana 15 B13V"   → "Katana 15 B13VFK-1850ID"
+ *   Acer  "Nitro 5 AN515-57" → "AN515-57-757K" (Icecat names Acer by code only)
+ *   HP    "EliteBook 835 G9" → "835 G9" (no line name), "Victus 15-fa1000" → "Victus 15-fa1003na",
+ *         "EliteBook x360 1040 G10" → "Elite x360 1040 G10 …"
+ * The character after our name may never be a digit ("840 G1" never takes "840 G10"). Dell is left out: its
+ * Icecat names collide across years ("E7450" is 2015, our Latitude 7450 is 2024).
+ */
+async function entriesByPrefix(brand: string, model: string, limit: number) {
+  if (!/\d/.test(model) || !["msi", "acer", "hp"].includes(brand.toLowerCase())) return [];
+  const prefixes = new Set([model]);
+  const acerCode = model.match(/\b([A-Z]{2,4}\d{2,3}-\d{2})$/)?.[1];
+  if (acerCode) prefixes.add(acerCode);
+  if (brand.toLowerCase() === "hp") {
+    const noLine = model.replace(/^(EliteBook|ProBook|ZBook)\s+/i, "");
+    if (noLine !== model && /^\d/.test(noLine)) prefixes.add(noLine);
+    if (/^EliteBook x360 /i.test(model)) prefixes.add(model.replace(/^EliteBook x360/i, "Elite x360"));
+  }
+  const brandIs = { equals: brand, mode: "insensitive" as const };
+  // HP series ("15-fa1000"): fetch on the series stem, compare after reducing each row's sales code
+  const hpStem = brand.toLowerCase() === "hp" ? model.match(/^(.*\b\d{2}-[a-z]{2}\d)000$/i)?.[1] : null;
+  const rows = await prisma.referenceProduct.findMany({
+    where: { brand: brandIs, OR: [...[...prefixes].map((p) => ({ modelName: { startsWith: p, mode: "insensitive" as const } })), ...(hpStem ? [{ modelName: { startsWith: hpStem, mode: "insensitive" as const } }] : [])] },
+    orderBy: { picWidth: "desc" },
+    take: 300,
+    select: { icecatId: true, modelName: true },
+  });
+  const ok = (name: string) =>
+    [...prefixes].some((p) => {
+      const n = (hpStem ? hpSeries(name) : name).toLowerCase();
+      if (!n.startsWith(p.toLowerCase())) return false;
+      const next = n.charAt(p.length);
+      return !/\d/.test(next); // "G1" must not take "G10"
+    });
+  return rows.filter((r) => !isRefurbished(r.modelName) && ok(r.modelName)).slice(0, limit);
+}
+
 export async function referenceEntriesForModel(brand: string, model: string, limit = 25): Promise<{ icecatId: number; modelName: string }[]> {
   const byCode = await entriesByCode(brand, model, limit);
   if (byCode.length) return byCode;
+  const byPrefix = await entriesByPrefix(brand, model, limit);
+  if (byPrefix.length) return byPrefix;
   const q = normalize(model);
   const rows = await prisma.$queryRaw<{ icecatId: number; brand: string; modelName: string }[]>`
     SELECT "icecatId", brand, "modelName" FROM reference_products

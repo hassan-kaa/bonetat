@@ -32,6 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const offer = await prisma.offer.findFirst({ where: { id, vendorId: auth.vendor.id } });
     if (!offer) return NextResponse.json({ error: "Offre introuvable" }, { status: 404 });
     if (offer.status === "SOLD") return NextResponse.json({ error: "Cet appareil est déjà vendu" }, { status: 400 });
+    if (offer.status === "WITHDRAWN") return NextResponse.json({ error: "Cette offre a été supprimée" }, { status: 400 });
 
     if (data.status && !["ACTIVE", "INACTIVE"].includes(offer.status)) {
       return NextResponse.json({ error: "Cette offre doit d’abord être validée par Bonétat" }, { status: 400 });
@@ -72,12 +73,31 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+const withdrawSchema = z.object({ reason: z.enum(["SOLD_ELSEWHERE", "UNAVAILABLE", "MISTAKE"], { message: "Choisissez une raison" }) });
+
+/**
+ * Delete an offer: it disappears for the shop and the buyers, its photos are released. Kept in the database
+ * (past orders point to it, and the reason tells Bonétat how often units sell elsewhere). Not while in an order.
+ */
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await getVendorUser();
   if (!auth) return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
   const { id } = await params;
-  const res = await prisma.offer.updateMany({ where: { id, vendorId: auth.vendor.id, status: { not: "SOLD" } }, data: { status: "INACTIVE" } });
-  if (res.count === 0) return NextResponse.json({ error: "Offre introuvable" }, { status: 404 });
-  await dropOfferPhotos(id, "offer withdrawn");
-  return NextResponse.json({ success: true });
+  try {
+    const { reason } = withdrawSchema.parse(await req.json().catch(() => ({})));
+    const res = await prisma.offer.updateMany({
+      where: { id, vendorId: auth.vendor.id, status: { notIn: ["SOLD", "WITHDRAWN"] } },
+      data: { status: "WITHDRAWN", withdrawnReason: reason, withdrawnAt: new Date() },
+    });
+    if (res.count === 0) {
+      const sold = await prisma.offer.count({ where: { id, vendorId: auth.vendor.id, status: "SOLD" } });
+      return NextResponse.json({ error: sold ? "Cet appareil est dans une commande : il ne peut pas être supprimé" : "Offre introuvable" }, { status: sold ? 400 : 404 });
+    }
+    await dropOfferPhotos(id, `offer deleted by the shop (${reason})`);
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    if (err instanceof z.ZodError) return NextResponse.json({ error: err.errors[0].message }, { status: 400 });
+    console.error(err);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
 }

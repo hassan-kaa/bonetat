@@ -16,7 +16,7 @@ export default async function VendorListingsPage() {
 
   const [offers, competitors] = await Promise.all([
     prisma.offer.findMany({
-      where: { vendorId: vendor.id, status: { not: "DRAFT" } },
+      where: { vendorId: vendor.id, status: { notIn: ["DRAFT", "WITHDRAWN"] } },
       include: { variant: { include: { product: true, finish: true } } },
       orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
     }),

@@ -66,12 +66,12 @@ export async function sweepOfferPhotos(log: (m: string) => void = () => {}) {
     select: { id: true },
   });
   for (const o of abandoned) {
-    await prisma.offer.update({ where: { id: o.id }, data: { status: "INACTIVE" } });
+    await prisma.offer.update({ where: { id: o.id }, data: { status: "WITHDRAWN", withdrawnReason: "CORRECTION_ABANDONED", withdrawnAt: new Date() } });
     log(`offer ${o.id}: correction abandoned, withdrawn (${await dropOfferPhotos(o.id, "correction abandoned")} photos)`);
   }
 
-  // Withdrawn offers that still have photos (safety net)
-  for (const o of await prisma.offer.findMany({ where: { status: "INACTIVE", photos: { some: {} } }, select: { id: true } })) {
+  // Withdrawn offers that still have photos (safety net). Never INACTIVE: that is a pause, the shop comes back.
+  for (const o of await prisma.offer.findMany({ where: { status: "WITHDRAWN", photos: { some: {} } }, select: { id: true } })) {
     log(`offer ${o.id}: withdrawn (${await dropOfferPhotos(o.id, "offer withdrawn")} photos)`);
   }
 

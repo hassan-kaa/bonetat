@@ -7,6 +7,7 @@ import { ImagePlus, Loader2, X } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { storedImageLoader } from "@/lib/image-url";
 import { shrinkImage } from "@/lib/client/shrink-image";
+import { usePasteImages } from "@/hooks/usePasteImages";
 
 /** The store's own photos of this unit: shown to buyers with the offer, whether or not the model has catalog photos */
 export default function OfferPhotos({ offerId, photos, editable }: { offerId: string; photos: { id: string; key: string }[]; editable: boolean }) {
@@ -14,7 +15,7 @@ export default function OfferPhotos({ offerId, photos, editable }: { offerId: st
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
 
-  async function add(files: FileList | null) {
+  async function add(files: FileList | File[] | null) {
     const list = [...(files ?? [])].filter((f) => f.type.startsWith("image/")).slice(0, 3 - photos.length);
     if (!list.length) return;
     setBusy(true);
@@ -30,6 +31,8 @@ export default function OfferPhotos({ offerId, photos, editable }: { offerId: st
     toast(d.added ? "Photos ajoutées" : "Ces photos sont déjà là");
     router.refresh();
   }
+
+  usePasteImages((files) => add(files), editable && !busy && photos.length < 3);
 
   async function remove(id: string) {
     setBusy(true);
@@ -63,6 +66,7 @@ export default function OfferPhotos({ offerId, photos, editable }: { offerId: st
             <input type="file" accept="image/*" multiple className="sr-only" disabled={busy} onChange={(e) => { add(e.target.files); e.target.value = ""; }} />
           </label>
         )}
+        {editable && photos.length < 3 && <span className="hidden text-[13px] text-ink-muted md:inline">ou collez une image (Ctrl+V)</span>}
         {!editable && photos.length === 0 && <p className="text-sm text-ink-muted">Aucune photo.</p>}
       </div>
     </div>

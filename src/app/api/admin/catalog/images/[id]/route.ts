@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { approveCatalogImage, rejectCatalogImage } from "@/lib/catalog-photos";
+import { approveCatalogImage, rejectCatalogImage, scheduleDeletion } from "@/lib/catalog-photos";
 
 const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("approve") }),
@@ -36,4 +36,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     console.error(err);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
+}
+
+/**
+ * Delete a photo: gone from the site, its file freed by the nightly cleanup (kept while another row uses it).
+ * Unlike a rejection, its source isn't blacklisted: the same photo can be added again. When it also served
+ * as the model's photo (a copy sharing its file), that copy goes too.
+ */
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await getAdminUser())) return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+  const { id } = await params;
+  const img = await prisma.catalogImage.findUnique({ where: { id } });
+  if (!img) return NextResponse.json({ error: "Image introuvable" }, { status: 404 });
+  await prisma.$transaction(async (tx) => {
+    await tx.catalogImage.delete({ where: { id } });
+    if (img.finishId) await tx.catalogImage.deleteMany({ where: { productId: img.productId, finishId: null, key: img.key } });
+    await scheduleDeletion(img.key, "photo deleted by admin", 0, tx);
+  });
+  return NextResponse.json({ success: true });
 }

@@ -6,6 +6,7 @@ import { ImagePlus, Link2, Loader2, PenLine, Search, Sparkles, X } from "lucide-
 import DeviceArt from "@/components/products/DeviceArt";
 import { cn } from "@/lib/utils";
 import { shrinkImage, type ShrunkImage } from "@/lib/client/shrink-image";
+import { usePasteImages } from "@/hooks/usePasteImages";
 import NewModelForm from "./NewModelForm";
 import type { BrandOption, CatalogProduct, ChosenProduct, ResolvedListing } from "./types";
 
@@ -58,11 +59,14 @@ export default function SourceStep({ recent, brands, onChosen }: { recent: Catal
     return () => clearTimeout(t);
   }, [mode, query]);
 
-  async function addShots(files: FileList | null) {
+  async function addShots(files: FileList | File[] | null) {
     if (!files) return;
     const added = await Promise.all([...files].filter((f) => f.type.startsWith("image/")).slice(0, 3 - shots.length).map((f) => shrinkImage(f)));
-    setShots([...shots, ...added]);
+    setShots((cur) => [...cur, ...added].slice(0, 3));
   }
+
+  // A screenshot pasted on the "Coller mon annonce" tab joins the others (pasted text still goes in the box)
+  usePasteImages(addShots, mode === "paste" && !result?.resolved && shots.length < 3);
 
   async function analyse() {
     setBusy(true);
@@ -147,9 +151,10 @@ export default function SourceStep({ recent, brands, onChosen }: { recent: Catal
                   <label className="opt flex h-16 cursor-pointer items-center gap-2 px-4 text-sm">
                     <ImagePlus className="h-[18px] w-[18px]" aria-hidden="true" />
                     Captures d’écran (3 max.)
-                    <input type="file" accept="image/*" multiple className="sr-only" onChange={(e) => addShots(e.target.files)} />
+                    <input type="file" accept="image/*" multiple className="sr-only" onChange={(e) => { addShots(e.target.files); e.target.value = ""; }} />
                   </label>
                 )}
+                {shots.length < 3 && <span className="hidden text-[13px] text-ink-muted md:inline">ou collez une capture (Ctrl+V)</span>}
               </div>
             </>
           ) : (

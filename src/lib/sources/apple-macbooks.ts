@@ -77,4 +77,16 @@ export const APPLE_MACBOOKS: AppleMacModel[] = [
   { model: "MacBook Pro 16 M3 Max", stem: "mbp16", dates: order("202311", MBP16), colors: [spaceBlack, silver] },
   { model: "MacBook Pro 16 M4 Pro", stem: "mbp16", dates: order("202410", MBP16), colors: [spaceBlack, silver] },
   { model: "MacBook Pro 16 M4 Max", stem: "mbp16", dates: order("202410", MBP16), colors: [spaceBlack, silver] },
+
+  // --- Intel (2018 to 2020): Apple's store renders of their time, "mbp16touch-space-select-201911". A 2019
+  // model shares the 2018 body, the Intel 2020 Air the 2018 Air's. 2016 and 2017 renders are no longer served. ---
+  { model: "MacBook Pro 16 2019", stem: "mbp16touch", dates: ["201911"], colors: [spaceGray, silver] },
+  { model: "MacBook Pro 13 2020", stem: "mbp13touch", dates: ["202005"], colors: [spaceGray, silver] },
+  { model: "MacBook Pro 13 2019", stem: "mbp13touch", dates: ["201807", "202005"], colors: [spaceGray, silver] },
+  { model: "MacBook Pro 13 2018", stem: "mbp13touch", dates: ["201807"], colors: [spaceGray, silver] },
+  { model: "MacBook Pro 15 2019", stem: "mbp15touch", dates: ["201807"], colors: [spaceGray, silver] },
+  { model: "MacBook Pro 15 2018", stem: "mbp15touch", dates: ["201807"], colors: [spaceGray, silver] },
+  { model: "MacBook Air 13 2018", stem: "macbook-air", dates: ["201810"], colors: [spaceGray, silver, gold] },
+  { model: "MacBook Air 13 2019", stem: "macbook-air", dates: ["201810"], colors: [spaceGray, silver, gold] },
+  { model: "MacBook Air 13 2020", stem: "macbook-air", dates: ["201810"], colors: [spaceGray, silver, gold] },
 ];

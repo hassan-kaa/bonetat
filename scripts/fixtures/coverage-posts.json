@@ -1,0 +1,197 @@
+{
+ "_note": "Real Tunisian used-laptop posts (shop phone numbers blanked), sent by Kaa 2026-10-18. 'family' = what the catalog name must start with; 'model' = the exact model when the post pins it down; 'vague' = the post doesn't give the model; 'unsure' = expected answer read from the specs, to confirm. Run: npm run coverage:eval",
+ "cases": [
+  {
+   "post": "💻 DELL GAMING G16 – PUISSANCE EXTRÊME À 4680 DT ! 💻🔥\n🚀 Core i9 13ème Génération | RTX 4070 | 32Go RAM\n⚡ FICHE TECHNIQUE\n🖥️ Écran : 16\" QHD+ IPS (2560 × 1600) – 240Hz – G-SYNC\n🔥 Processeur : Intel Core i9-13900HX\n24 cœurs – Jusqu’à 5.4GHz\n36Mo de cache\n🎮 Carte graphique : NVIDIA GeForce RTX 4070\n8Go GDDR6 dédiée\nPuissance graphique jusqu’à 140W\n⚡ Mémoire RAM : 32Go DDR5 4800MHz\n💾 Stockage : SSD NVMe 1To\n🌈 Clavier rétroéclairé RGB\n🔌 HDMI – USB 3.2\n💰 PRIX CHOC : 4680 DT 💰\n✅ Neuf importé\n✅ Produit testé avec garantie",
+   "family": "Dell G16",
+   "model": "Dell G16 7630",
+   "note": "i9-13900HX + RTX 4070 = G16 7630 (2023)"
+  },
+  {
+   "post": "HP EliteBook 835 G9 – Puissance & Performance Professionnelle ! 🔥💻\n🚀 RYZEN 5 PRO / 16Go DDR5 / 512Go SSD 🚀\n⚡ Caractéristiques principales :\n🖥️ Écran 13.3” Full HD+ IPS (1920 × 1200)\n🔥 Processeur AMD Ryzen 5 PRO 6650U – jusqu’à 4.5 GHz\n🎮 Graphique AMD Radeon intégré\n🚀 Mémoire RAM 16Go DDR5\n💾 SSD NVMe 512Go ultra rapide\n🔐 Reconnaissance faciale\n⌨️ Clavier rétroéclairé\n🔌 HDMI • USB-C • USB 3.1\n💰 Prix : 1780 DT\n✅ Produit testé avec garantie 💼 Gamme professionnelle HP EliteBook 🚚 Livraison possible sur toute la Tunisie",
+   "family": "HP EliteBook 835 G9",
+   "model": "HP EliteBook 835 G9"
+  },
+  {
+   "post": "🔥 MSI STEALTH 16 AI STUDIO A1V – RTX 4080 🚀\n💻 HIGH PERFORMANCE GAMING PC | 5780 DT\n⚡ MAIN FEATURES\n✅ Processor: Intel Core Ultra 9-185H (up to 5.1 GHz)\n🎮 Graphics Card: NVIDIA GeForce RTX 4080 12GB\n🧠 RAM: 32GB DDR5\n🚀 Storage: NVMe Gen4 1TB SSD\n🖥️ Screen: 16\" QHD+ IPS – 2560 × 1600 – 240Hz\n🌈 Keyboard: RGB touch by touch\n🔌 Connectivity: HDMI 2.1 – Thunderbolt Type-C – USB 3.1\n🔌 Original charger included\n💰 PRICE: 5780 DT\n📦 Condition: Excellent condition\n🛡️ Product tested with warranty",
+   "family": "MSI Stealth 16",
+   "model": "MSI Stealth 16 AI Studio A1V"
+  },
+  {
+   "post": "💻🔥 Lenovo LOQ 15IRX10 — PC Gamer Puissant ! 🔥💻\n🚀 Core i7 13ᵉ Gén. | RTX 5050 8Go | 16Go DDR5\n🎮 Caractéristiques :\n🖥️ Écran 15.6” Full HD IPS — 144Hz\n⚡ Processeur Intel Core i7-13645HX — jusqu’à 4.9GHz\n🎮 Carte graphique NVIDIA GeForce RTX 5050 — 8Go dédiés\n💾 Stockage 512Go SSD NVMe\n🧠 Mémoire 16Go DDR5 — extensible\n⌨️ Clavier rétroéclairé\n🔌 USB Type-C, USB 3.1, HDMI 2.1\n💰 PRIX : 3680 DT\n✅ Très bon état",
+   "family": "Lenovo LOQ 15IRX10",
+   "model": "Lenovo LOQ 15IRX10"
+  },
+  {
+   "post": "💻🔥 MacBook Pro 14” M3 Pro — Puissance & Élégance ! 🔥💻\n🚀 Apple M3 Pro | 18Go RAM | 1To SSD ✨ Officiel — Excellent état !\n⚡ Caractéristiques :\n🖥️ Écran Retina XDR 14” — 3024 × 1964, ProMotion 120Hz\n🚀 Processeur Apple M3 Pro — CPU 11 cœurs / GPU 14 cœurs\n🧠 18Go de mémoire unifiée\n💾 1To SSD Apple\n🔌 3× Thunderbolt 4, HDMI, lecteur SD\n🔐 Touch ID\n🔋 Batterie : 41 cycles — Santé 99% 🔌 Chargeur original inclus\n💰 PRIX : 4780 DT",
+   "family": "MacBook Pro 14",
+   "model": "MacBook Pro 14 M3 Pro"
+  },
+  {
+   "post": "🔥 Mac mini Apple M4 – Puissance & Compacité ! 🔥\n💻 Mac mini M4 | 16Go RAM | 512Go SSD ✨ Neuf emballé • Officiel\n⚡ Caractéristiques : 🔹 Processeur Apple M4 – CPU 10 cœurs 🔹 GPU 10 cœurs + Neural Engine 16 cœurs 🔹 Mémoire unifiée 16Go 🔹 Stockage SSD 512Go 🔹 3 ports Thunderbolt + HDMI\n💰 Prix : 3380 DT\n✅ Produit neuf, emballé et officiel 🚚",
+   "out": true,
+   "note": "Mac mini: desktop, no desktop category"
+  },
+  {
+   "post": "🔥 HP EliteBook 8 G1i – Puissance & Élégance Professionnelle 🔥\n💻 Neuf emballé | Garantie | 2680 DT\n⚡ Core Ultra 5-235U vPro – 2ème génération\n🚀 Jusqu’à 4.9 GHz | 12 cœurs | 12 Mo Cache\n🧠 24 Go DDR5\n💾 512 Go SSD NVMe\n🖥️ 14\" Full HD+ IPS – 1920×1200\n🎨 Intel Graphics\n✨ Points forts :\n🔐 Lecteur d’empreintes digitales\n⌨️ Clavier rétro-éclairé\n⚡ Thunderbolt USB-C\n🖥️ HDMI\n🔌 Chargeur original\n🛡️ Produit testé avec garantie\n💰 Prix : 2680 DT",
+   "family": "HP EliteBook 8 G1i",
+   "note": "sold in 14 and 16 inch versions (separate models); the post says 14 inch"
+  },
+  {
+   "post": "🔥 MSI RAIDER A18 HX AI A2WX — LE MONSTRE GAMING ULTIME 🔥\n💻 18\" 4K Mini LED • RTX 5080 16Go • Ultra 9 HX • 32Go DDR5 • 2To SSD\n⚡ ÉCRAN PREMIUM\n🖥️ 18\" 4K Mini LED\n🎯 120Hz • HDR1000\n🔥 PERFORMANCES EXTRÊMES\n🚀 Intel Core Ultra 9-285HX\n• Jusqu'à 5.5GHz Turbo\n• 24 Cœurs • 36Mo Cache\n🎮 CARTE GRAPHIQUE\n🟢 NVIDIA RTX 5080 16Go GDDR7\n💾 STOCKAGE & MÉMOIRE\n⚡ 2To SSD NVMe Gen4\n⚡ 32Go DDR5\n🔐 Lecteur d'empreintes\n🔌 HDMI 2.1 • USB-C • USB 3.1\n🔋 Chargeur Original\n✨ Neuf Importé\n💰 PRIX : 8 180 DT 💰",
+   "family": "MSI Raider",
+   "unsure": true,
+   "note": "title says A18 HX AI (AMD) but the CPU is Intel Ultra 9 285HX: really a Raider 18 HX AI. Either Raider is fair"
+  },
+  {
+   "post": "🔥 HP OMEN 17 — PC GAMER PREMIUM 🔥\n💻 HP OMEN 17 — puissance et fluidité réunies !\n✨ Comme neuf • Importé • Testé & Garanti\n⚡ Écran 17.3\" WQHD+ IPS — 2560×1600 • 240Hz\n🚀 AMD Ryzen 9 AI 365 — jusqu’à 5.0GHz • 10 Cœurs • 34Mo Cache\n🎮 NVIDIA RTX 5070 8Go GDDR6 + AMD Radeon 880M\n💾 SSD NVMe 1To\n🧠 32Go DDR5 — extensible\n⌨️ Clavier rétro-éclairé\n🔌 USB-C • USB 3.1 • HDMI • Jack 3.5mm\n💰 PRIX : 5580 DT 🔥",
+   "family": "HP OMEN 17",
+   "unsure": true,
+   "note": "Ryzen AI 9 365 + RTX 5070: 2025 OMEN 17, exact code unsure"
+  },
+  {
+   "post": "🔥 DELL ALIENWARE AURORA 16 — GAMING PREMIUM 🔥\n🖥️ 16\" QHD+ IPS 120Hz — 2560×1600 | 100% sRGB\n⚡ Intel Core 5-210H — jusqu’à 4.8GHz | 8 Cœurs | 12Mo Cache\n🎮 RTX 3050 6Go dédiée + Intel Arc\n🤖 Intel AI Boost — NPU pour les traitements IA\n💾 512Go SSD NVMe\n🚀 16Go DDR5\n⌨️ Clavier rétro-éclairé\n🔌 Thunderbolt Type-C • HDMI • USB 3.1\n✨ Excellent état — PC Gamer Premium\n💰 PRIX : 2 980 DT",
+   "family": "Dell Alienware 16 Aurora",
+   "model": "Dell Alienware 16 Aurora"
+  },
+  {
+   "post": "🔥 MacBook Air 13.6\" M4 — 16Go RAM / 256Go SSD 🔥\n✨ Comme Neuf • OFFICIEL • Garantie ✨\n💻 MacBook Air Retina 13.6\" — 2560 × 1664\n⚡ Apple M4 — 10-Core CPU / 8-Core GPU / 16-Core Neural Engine\n🧠 16Go RAM Unified\n💾 256Go Apple Flash SSD\n🔐 Touch ID\n🔌 USB-C + Jack 3.5mm\n🔋 Batterie : 100% • Seulement 8 cycles\n🔌 Chargeur Original\n✅ Activité Officielle\n🛡️ Produit testé avec garantie\n💰 Prix : 3280 DT",
+   "family": "MacBook Air 13",
+   "model": "MacBook Air 13 M4"
+  },
+  {
+   "post": "✔MacBook Pro 16\" 2019 Touchbar OFFICIEL 🔥 Core i9🔥16G🔥1To 🔥Cycle 147 Batterie normal 💰PRIX 2180 ✔\n____________________________\n✔Article disponible avec GARANTIE",
+   "family": "MacBook Pro 16",
+   "model": "MacBook Pro 16 2019",
+   "note": "Intel Core i9, 2019"
+  },
+  {
+   "post": "✔🔥 DELL Latitude  7450  / Core Ultra 7 / 16 Go DDR5 / 512  SSD  - Full HD / Prix 2380  DT\n           ☎️XX XXX XXX 📞XX XXX XXX ✔\n** La nouvelle Génération des pc Gamme Pro etat  Neuf **\n⚡ Écran 14   » FULLHD+ IPS (1920 x 1080)  ⚡\n🔥 Processeur: Intel Core Ultra 7-165U V-Pro ( up to 4.90 GHz Turbo, 12Mo de cache, ) 🔥\n🔥 Graphique: Intel ARC 🔥\n🔥 NPU: Intel AI Boost pour les traitements d’intelligence Artificielle 🔥\n⚡ Stockage: SSD 512 Go NVMe Gen4⚡\n⚡ Mémoire 16 Go DDR5 6400 MHz⚡\n⚡ Clavier Rétro-éclairé - Reconnaissance Faciale - Lecteur d’empreintes digitales - HDMI -  Thunderbolt Type-C - USB 3.2⚡\n🔋 Chargeur Original 🔋\n💰 Prix 2380 DT 💰",
+   "family": "Dell Latitude 7450",
+   "model": "Dell Latitude 7450"
+  },
+  {
+   "post": "🚀Omen 16, Ryzen 9 8940HX, RTX 5070 (8 Go), 32 Go, 1To, 💰 Prix: 5580Dt\n🎮 ALERTE BON PLAN GAMING & CRÉATION ! 🔥\nVous cherchez la puissance ultime sans vous ruiner ? Ce monstre de compétition est fait pour vous. Nous mettons en vente un HP Omen 16  Neuf à un prix tout simplement imbattable ! 🚀\n📩 Intéressé(e) ? Envoyez-nous un message privé (DM) dès maintenant pour réserver votre machine ou obtenir plus d'informations !\n✔Article disponible avec Garantie ✔",
+   "family": "HP OMEN 16",
+   "unsure": true,
+   "note": "Ryzen 9 8940HX + RTX 5070: 2025 OMEN 16, exact code unsure"
+  },
+  {
+   "post": "😍🥳Lenovo thinkpad  L380 / core i7-8eme  /8 Go RAM DDR4 / 256 Go SSD / Prix 1180 DT / Numéro: XX XXX XXX 😍🥳\n🔥 Laptop de très haute qualité pour les vrais connaisseurs état comme neuf avec garantie 🔥\n✅ Écran :  13.3 Pouces FULL HD\n✅ Résolution Full HD 1920x1080\n✅ Clavier Rétroéclairé\n✅ Processeur Intel Core i7 8250U\n✅ RAM : 8Go DDR4\n✅ Disque Dur : 256 Go SSD Nvme Samsung\n✅ Carte Graphique : Intel UHD Graphics 620\n➡️ Prix : 1180  DT 💰",
+   "family": "Lenovo ThinkPad L380",
+   "model": "Lenovo ThinkPad L380"
+  },
+  {
+   "post": "✔🔥 DELL Gaming G16 / Core i9 13th / 16GB DDR5 / 1TB SSD / RTX 4070 8GB GDDR6 / QHD+ IPS 240Hz / New Imported / PRICE 4680 DT 🔥 ✔\n⚡ 16\" QHD+ (2560 x 1600) IPS refresh 240Hz G-SYNC ⚡\n🔥 Processor: Core i9-13900HX (Up to 5.4GHz Turbo, 36MB cache, 24-Cores)🔥\n🔥 Graphics: NVIDIA RTX 4070 (8GB dedicated GDDR6, 140W) + Intel Iris Xe 🔥\n⚡ Storage: 1TB NVMe SSD ⚡\n⚡ Memory: 16GB DDR5 4800MHz ⚡\n🔥 Backlit RGB Keyboard - HDMI - USB 3.2 🔥\n💰 PRICE 4680 DT 💰",
+   "family": "Dell G16",
+   "model": "Dell G16 7630"
+  },
+  {
+   "post": "✔️🔥😍 HP ELITEBOOK 835 G9 — Ryzen 5 PRO 6650 U — RAM 16 Go DDR5 — RADEON GRAPHICS — 512 Go SSD 💰1780 DT💰\n☎ TEL : XX XXX XXX - XX XXX XXX\n🔥🔥 Élégant, robuste et puissant pour les professionnels exigeants 🔥🔥\n✅ Écran : 13,3 Full HD\n✅ Processeur : AMD Ryzen™ 5 PRO 6650 U  , jusqu’à 4.5 GHz\n✅ RAM : 16  Go DDR5\n✅ Disque Dur : 512 Go SSD NVMe\n✅ Carte Graphique : AMD Radeon™ Graphics\n➡️ Prix : 1780 DT 💰",
+   "family": "HP EliteBook 835 G9",
+   "model": "HP EliteBook 835 G9"
+  },
+  {
+   "post": "🔥Lenovo Ideapad 🔥i3- 7020U 🔥12 Go  DDR4🔥256 Go SSD 💰PRIX 780 ✔\n✔Article Disponible Avec Garantie ✔",
+   "family": "Lenovo IdeaPad",
+   "vague": true,
+   "note": "i3-7020U: IdeaPad 320/330 era, model not given"
+  },
+  {
+   "post": "✔️🔥😍 HP Elitebook x360 — i5-11ème— RAM 16 DDR4— 512 Go SSD - Écran 360 Tactile ❤️\n 😍. 1880  DT 💰\n🔥 HP  Elitebook 1040 X360 1030  G8  de très haute qualité 🔥\n☎️ TEL : XX XXX XXX☎️XX XXX XXX\n✅ Ecran 14.0 FULL HD IPS X 360 Tactile\n✅ Processeur Intel Core i5-1145G7  V-Pro , up to 4.40 Ghz, 8 Mo de mémoire cache)\n✅ RAM : 16 Go DDR4 3200 MHz\n✅ Disque Dur : 512  Go  SSD Nvme\n✅  Carte Graphique : - Iris Xe\n☑️Clavier Lumineux ❤️\n➡️ Prix : 1880 DT 💰",
+   "family": "HP EliteBook x360 10",
+   "model": "HP EliteBook x360 1040 G8",
+   "unsure": true,
+   "note": "post says 1040 and 1030; 14 inch = 1040 G8"
+  },
+  {
+   "post": "🔥Asus ExperBooK 🔥Ultra 5 226V 🔥16Go  DDR5🔥1To NVMe💰PRIX 1980 ✔",
+   "family": "Asus ExpertBook",
+   "vague": true,
+   "note": "Ultra 5 226V: ExpertBook P5 or B5, model not given"
+  },
+  {
+   "post": "Lenovo ideapad Gaming 3   /  GTX 1650 Ti  / 16GO  / 512 GO\nPrix 1550DT 🚚 Livraison gratuite • 🛡️ Garantie 1 mois\n☎️ Numéro : XX XXX XXX • WhatsApp XX XXX XXX\n💸prix : 1550DT\n✅Dispo : Manouba\n🚚 Livraison à Domicile Disponible — partout en Tunisie\n🛡️GARANTIE VENDEUR 1 Mois\n🔍Configuration\n✅ CPU : i5 10300H 10eme\n✅Carte Graphique :  GTX 1650 Ti 4GB GDDR6\n✅RAM : 16 GB\n✅SSD : 512 GB M.2 NVMe™\n✅Écran 15.6\" FULL HD 120HZ\n✅Clavier Lumineux\n✅Chargeur Originale",
+   "family": "Lenovo IdeaPad Gaming 3",
+   "model": "Lenovo IdeaPad Gaming 3 15IMH05",
+   "note": "i5-10300H + GTX 1650 Ti"
+  },
+  {
+   "post": "🤩 Dell Latitude 5520 /  i5 / 16GO / 512Go SSD\n 🚚 Livraison gratuite • 🛡️ Garantie 1 mois\n👌Prix : 1250DT\n☎️ Numéro : XX XXX XXX • WhatsApp XX XXX XXX\n✅Dispo : Manouba\n🚚 Livraison à Domicile Disponible — partout en Tunisie\n🛡️GARANTIE VENDEUR 1 Mois\n👌Prix : 1250DT\n🔍Configuration\n✅ CPU : i5-1145G7\n✅RAM : 16 GB  DDR4\n✅SSD : 512 SSD Nvme M.2\n✅Écran 15.6\" FULL HD\n✅Carte Graphique : intel iRis Xe Graphics\n✅ Clavier Lumineux",
+   "family": "Dell Latitude 5520",
+   "model": "Dell Latitude 5520"
+  },
+  {
+   "post": "🤩 ASUS VIVOBOOK /   i3 12TH  / 8GO  / 256 SSD\n 🚚 Livraison gratuite • 🛡️ Garantie 1 mois\n👌Prix : 980Dt\n☎️ Numéro : XX XXX XXX • WhatsApp XX XXX XXX\n✅Dispo : Manouba\n🚚 Livraison à Domicile Disponible — partout en Tunisie\n🛡️GARANTIE VENDEUR 1 Mois\n👌Prix : 980DT\n🔍Configuration\n✅ CPU : Intel Core i3-1251U 12éme\n✅RAM : 8 GB  DDR4\n✅SSD : 256 GB M.2 NVMe™\n✅Écran 15.6\" FULL HD\n✅Carte Graphique : Intel UHD Graphics",
+   "family": "Asus VivoBook 15",
+   "vague": true,
+   "note": "i3-1251U 15.6: Vivobook 15 X1502ZA likely, model not given"
+  },
+  {
+   "post": "✔🔥 HP EliteBook 840 G8 / i5 11éme V-Pro / 32Go DDR4 / 256 Go SSD / FULLD IPS  ❤️\n         💰Prix 1580 DT ✔️\n** Ultrabook gamme pro de très haute qualité importés **\n⚡ Ecran 14.0” FullHD IPS (1920 X 1080 ) ⚡Tactile\n🔥 Processeur: Core i5-1145G7 V-Pro up to 4.4GHz 8Mo de Cache, Quad-Core 🔥\n🔥 Graphique Intel Iris Xe 🔥\n⚡ Stockage SSD 256  Go NVMe ⚡\n⚡ Mémoire 32Go DDR4 3200Mhz ⚡\n⚡️ Clavier rétro-éclairé - Lecteur d’empreintes digitales - Reconnaissance faciale - USB 3.0 - HDMI - Type C ⚡️\n*** Windows 11 PRO Authentique ***\n💰 PRIX 1580 DT 💰",
+   "family": "HP EliteBook 840 G8",
+   "model": "HP EliteBook 840 G8"
+  },
+  {
+   "post": "✔🔥Lenovo Gaming/ i5 10éme Hexa-Core /32 Go / 512 SSD / GTX 1650 Ti 4Go/  💰PRIX 1790dt✔\n🔥 IdeaPad Gaming 3 🔥 Ecran 15.6’’ Full HD iPS 🔥 Processeur intel core i5-10300H(8 Mo Cache, up to 4.50 GHz)Hexa-Core🔥 Graphique NVIDIA GeForce GTX 1650 Ti 4Go GDDR6 dédiée 🔥 Mémoire 32 Go DDR4🔥 Stockage 512 SSD NVMe  🔥 Webcam HD 720p + micro - 2 haut-parleurs,Dolby Audio 🔥 Clavier rétroéclairé 🔥 1xUSB 3.2 Type-C - 2xUSB 3.2 - HDMI 🔥 WiFi ac, Bluetooth",
+   "family": "Lenovo IdeaPad Gaming 3",
+   "model": "Lenovo IdeaPad Gaming 3 15IMH05"
+  },
+  {
+   "post": "✔️🔥😍 MSI THIN 15 — Core i7-13620H 13éme gén — RAM 16 Go — NVIDIA RTX 2050  4Go — 512 Go SSD — Prix : 2280 DT 💰\n✅ Ecran 15.6  FHD 144 Hz\n✅ Resolution : 1920*1080\n✅ Processeur : Intel Core i7-13620H (up to 4,90 GHz, 24 Mo de mémoire cache, 10 Cores)\n✅ RAM : 16  Go DDR 4 3200 MHz\n✅ Disque Dur : 512 Go SSD\n✅ Carte Graphique : NVIDIA RTX 2050  ( 4 Go dédiée GDDR6 )\n✅ Windows 11",
+   "family": "MSI Thin 15",
+   "note": "i7-13620H + RTX 2050"
+  },
+  {
+   "post": "✔🔥 HP 15 / i7 11th / 16GB DDR4 / 512 SSD / Nvidia MX450 2GB 🔥 Price 1390 ✔️\n⚡ 15.6 FULL HD Screen ⚡\n🔥 Intel Core i7-1165G7 Processor, 11th Generation, up to 4.7 Ghz, 12 MB cache )   🔥\n🔥 Graphics:  Nvidia MX450 2GB 🔥\n⚡ Storage:   512 GB SSD    ⚡\n⚡ Memory: 16  GB DDR4 3200MHz ⚡\n HDMI - + USB 3.0 ⚡\n🔥 Brand new PC with warranty 🔥\n💰PRICE💰1390dt✔",
+   "family": "HP",
+   "vague": true,
+   "note": "HP 15 i7-1165G7 MX450: 15-dw3000 / 15s-fq, model not given"
+  },
+  {
+   "post": "😍🥳 ASUS V16 / 16P WUXGA FHD+ 144Hz / Core 5 210H / 32 Go DDR5 / 1TO Go SSD / RTX 4050 💰 Prix 3150 DT 💰\n✅ Écran : Écran 16 » WUXGA (1920 x 1200), rétroéclairage LED, 144 Hz, écran antireflet\n✅ Résolution 1920x1080 Pixels\n✅ Design Gaming moderne\n✅ Processeur Intel® Core™ 5 210H\n✅ RAM : 32 Go DDR5\n✅ Disque Dur : 1 TO Go SSD NVMe\n✅ Double Carte Graphique : NVIDIA GeForce RTX 4050 + Intel Graphics",
+   "family": "Asus V16",
+   "model": "Asus V16 V3607VU",
+   "note": "RTX 4050 = V3607VU (VJ is RTX 3050)"
+  },
+  {
+   "post": "✔HP Gaming AMD Ryzen 5 / 32 Go/ 256 SSD +1TO HDD / GTX 1650 4Go 💰PRIX 1750dt✔\n⚡Pavilion 15-EC1001NK🔥 Ecran 15.6 iPS Full HD antireflet🔥 Processeur AMD Ryzen 5 5600H (16Mo cache ,up to 4.2GHz)🔥 Mémoire 32 Go DDR4 🔥 Graphique NVIDIA GeForce GTX 1650 4Go GDDR5 dédiée 🔥Stockage 256 SSD  + 1To HDD 🔥 Clavier rétroéclairé🔥 Webcam Wide Vision HD avec microphone🔥Bang & Olufsen HP Audio Boost ⚡ Lecteur cartes - 1xUSB 3.1 Type C - 3xUSB 3.1 ⚡ HDMI - WiFi ac, Bluetooth\n✔PC Comme Neuf Avec Garantie💰PRIX 1750dt✔",
+   "family": "HP Pavilion",
+   "model": "HP Pavilion 15-ec1000",
+   "note": "15-EC1001NK"
+  },
+  {
+   "post": "✔🔥MSI THIN i7 12ém / 16 Go/ 512 SSD / RTX 2050 4Go GDDR6/144 Hz/\n🔥 GF63 12UCX🔥 Ecran 15.6’’ Full HD IPS 144 Hz🔥 Processeur Intel Core i7-12650H (24 Mo cache, up to 4.70 GHz) 🔥 Graphique NVIDIA GeForce RTX 2050 4Go GDDR6 dédiée 🔥 Mémoire 16Go DDR4 3200 MHz 🔥Stockage 512 SSD NVMe + emplacement HDD Vide🔥 Clavier rétroéclairé 🔥 haut-parleurs Nahimic Audio Boost 🔥  2xUSB 3.2 Type A+ 1xUSB 3.2 Type-C - 1xUSB 2.0-HDMI @4K🔥 WiFi ac, Bluetooth\n✔PC comme neuf avec garantie 💰PRIX💰1990dt",
+   "family": "MSI Thin GF63",
+   "model": "MSI Thin GF63 12UCX"
+  },
+  {
+   "post": "MSI Gaming i5 13ém/ 16 Go/ 512 SSD / RTX 2050 4Go GDDR6/144 Hz/ PRIX💰1890dt✔\n🔥 MSI THIN 15🔥 Ecran 15.6’’ Full HD 144 Hz🔥 Processeur Intel Core i5-13420H (12 Mo cache, up to 4.60GHz)🔥 Graphique NVIDIA GeForce RTX 2050 4Go GDDR6 dédiée 🔥 Mémoire 16Go DDR4 3200 MHz 🔥Stockage 512 SSD NVMe + emplacement HDD Vide🔥 Clavier chiclet rétroéclairé🔥 Webcam HD 720p+micro 🔥 haut-parleurs Nahimic 3 Audio Boost 🔥  Lecteur cartes - 3xUSB 3.2 Type A+ 1xUSB 3.2 Type-C - HDMI 🔥 WiFi ac, Bluetooth\n✔Pc Comme Neuf Avec Garantie 💰PRIX💰1890dt✔",
+   "family": "MSI Thin 15",
+   "note": "i5-13420H + RTX 2050"
+  },
+  {
+   "post": "🔥 Acer Nitro V 15 | i7-13th / 16 Go DDR5 / RTX 4060 (8 Go) / 512 Go NVMe / 144Hz\n💰 Prix : 3390 DT seulement ! (Livraison express disponible sur toute la Tunisie 🇹🇳)\nFiche technique détaillée :\n🔹 Processeur : Intel Core i7-13620H (10 cœurs, jusqu'à 4.90 GHz Turbo)\n🔹 Carte graphique : NVIDIA GeForce RTX 4060 (8 Go GDDR6 dédiés) avec DLSS 3\n🔹 Mémoire RAM : 16 Go DDR5 haute fréquence (évolutive)\n🔹 Stockage : 512 Go SSD NVMe PCIe ultra-rapide\n🔹 Écran : 15,6 pouces Full HD IPS, taux de rafraîchissement 144 Hz",
+   "family": "Acer Nitro V 15"
+  },
+  {
+   "post": "✔Alienware 16X Aurora🔥WQXGA 240 Hz G-SYNC🔥Ultra 9 275HX (Up to 5.4 GHz,36 Mo cache)🔥RTX 5070 8G GDDR7🔥32G DDR5 5600MT🔥1To SSD NVMe💰PRIX 5990d✔\n- Clavier RVB AlienFX\n- Webcam infrarouge FHD RVB HDR\n- Wi-Fi 7 - Bluetooth\n- 2x ports USB 3.2 - 1x port USB-C 3.2 - 1x port Thunderbolt 4 - 1x port HDMI 2.1 - 1x port Ethernet RJ45",
+   "family": "Dell Alienware 16X Aurora",
+   "model": "Dell Alienware 16X Aurora"
+  },
+  {
+   "post": "🔥MacBook Pro 14\" 🚀 (M4 Pro) 🔥24G 🔥 512G 📦 New sealed 👉💰PRICE 4990d",
+   "family": "MacBook Pro 14",
+   "model": "MacBook Pro 14 M4 Pro"
+  },
+  {
+   "post": "🔥Predator Helios NEO🔥OLED 🔥Utra 9 275HX🔥16G🔥1To SSD🔥RTX 5060 8G🔥NEUF Jamais servi💰PRIX 5590d✔\n🔥 Acer Predator Helios Neo 16 🔥 Écran 16\" iPS 2,5K 180Hz 🔥 Processeur Intel Core Ultra 9  275HX (36M Cache, up to 5.40 GHz) 24 Coeurs, Intel Arc 140T 🔥 Mémoire 16 Go DDR5 6400 🔥 Stockage SSD 1 To (NVMe PCIe 4.0 x4) 🔥 Graphique NVIDIA GeForce RTX 5060 8 Go GDDR7, 115W 🔥 Clavier rétro éclairé RGB 4 zones 🔥 Wi-Fi 6E ax, Bluetooth 5.4 💰PRIX 5490d✔",
+   "family": "Acer Predator Helios Neo 16"
+  },
+  {
+   "post": "🔥 LE MONSTRE EST DISPONIBLE ! 🔥\n💥MSI Crosshair 18 HX AI | 18\" QHD+ 240Hz | Intel Ultra 9 | RTX 5070 8GB | 32GB DDR5 | 1TB SSD💥NEUF💰 Prix: 5990d\n▪️ Processeur : Intel® Core™ Ultra 9 275HX (Puissance AI)\n▪️ Écran : 18\" QHD+ (2560 x 1600) - 240Hz (Fluidité hbal!)\n▪️ Carte Graphique : NVIDIA® GeForce RTX™ 5070 (8 Go GDDR6)\n▪️ Mémoire RAM : 32 GB DDR5\n▪️ Stockage : 1 TB SSD NVMe (Rapidité extrême)\n💰 Prix: 5990d",
+   "family": "MSI Crosshair 18 HX",
+   "model": "MSI Crosshair 18 HX AI"
+  }
+ ]
+}

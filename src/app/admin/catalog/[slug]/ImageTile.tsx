@@ -16,7 +16,7 @@ const ANGLES: { value: ImageAngle; label: string }[] = [
 ];
 
 type Props = {
-  image: { id: string; key: string; angle: ImageAngle; status: ImageStatus; source: string; lowRes: boolean };
+  image: { id: string; key: string; angle: ImageAngle; status: ImageStatus; source: string; lowRes: boolean; /** added by hand on this page */ manual?: boolean };
   colorName: string;
 };
 
@@ -25,6 +25,16 @@ export default function ImageTile({ image, colorName }: Props) {
   const { toast } = useToast();
   const [busy, setBusy] = useState(false);
   const live = image.status === "APPROVED";
+
+  async function remove() {
+    if (!window.confirm("Supprimer cette photo ?")) return;
+    setBusy(true);
+    const res = await fetch(`/api/admin/catalog/images/${image.id}`, { method: "DELETE" });
+    setBusy(false);
+    if (!res.ok) return toast("Suppression impossible", "error");
+    toast("Photo supprimée");
+    router.refresh();
+  }
 
   async function act(body: object) {
     setBusy(true);
@@ -63,6 +73,11 @@ export default function ImageTile({ image, colorName }: Props) {
         ) : (
           <button type="button" disabled={busy} onClick={() => act({ action: "approve" })} className="btn-primary btn-sm flex-1">Valider</button>
         )}
+        <button type="button" disabled={busy} onClick={remove} aria-label="Supprimer la photo" title="Supprimer la photo" className="btn-secondary btn-sm">
+          ✕
+        </button>
+      </div>
+      {!image.manual && (
         <button
           type="button"
           disabled={busy}
@@ -70,13 +85,12 @@ export default function ImageTile({ image, colorName }: Props) {
             const reason = window.prompt("Pourquoi rejeter cette photo ? (mauvais appareil, mauvaise couleur, marque d’un autre vendeur…)");
             if (reason?.trim()) act({ action: "reject", reason: reason.trim() });
           }}
-          aria-label="Rejeter la photo"
-          title="Rejeter : retirée du site, jamais réimportée, fichier supprimé après 7 jours"
-          className="btn-secondary btn-sm"
+          title="Retirée du site et jamais réimportée par les synchros automatiques"
+          className="self-start text-[12px] text-ink-muted hover:text-pop-dark hover:underline"
         >
-          ✕
+          Rejeter (ne plus jamais l’importer)
         </button>
-      </div>
+      )}
     </div>
   );
 }

@@ -58,6 +58,18 @@ enum OfferStatus {
   REJECTED
   /// The unit is in an order. Back to ACTIVE if that order is cancelled.
   SOLD
+  /// Taken down for good (deleted by the shop, or a correction never made). Hidden everywhere, kept for
+  /// order history and for the reasons; its photos are released. INACTIVE is only a pause.
+  WITHDRAWN
+}
+
+/// Why an offer was withdrawn: tells Bonétat how often units sell outside the platform
+enum WithdrawReason {
+  SOLD_ELSEWHERE
+  UNAVAILABLE
+  MISTAKE
+  /// Bonétat asked for a correction that never came
+  CORRECTION_ABANDONED
 }
 
 /// Coarse color, shared across brands: drives the "Couleur" filter and
@@ -546,6 +558,8 @@ model Offer {
   sellerNote            String?
   status                OfferStatus    @default(PENDING_REVIEW)
   rejectionReason       String?
+  withdrawnReason       WithdrawReason?
+  withdrawnAt           DateTime?
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 

@@ -7,6 +7,7 @@ import { GRADES, displayName, variantLabel } from "@/lib/catalog";
 import EditOffer from "./EditOffer";
 import SuggestSpecs from "./SuggestSpecs";
 import OfferPhotos from "./OfferPhotos";
+import DeleteOffer from "../DeleteOffer";
 
 export const metadata: Metadata = { title: "Modifier l’offre" };
 
@@ -15,7 +16,7 @@ export default async function EditOfferPage({ params }: { params: Promise<{ id: 
   if (!auth) redirect("/vendor/apply");
   const { id } = await params;
   const offer = await prisma.offer.findFirst({
-    where: { id, vendorId: auth.vendor.id },
+    where: { id, vendorId: auth.vendor.id, status: { not: "WITHDRAWN" } },
     include: { variant: { include: { product: true, finish: true } }, photos: { orderBy: { position: "asc" }, select: { id: true, key: true } } },
   });
   if (!offer) notFound();
@@ -24,7 +25,10 @@ export default async function EditOfferPage({ params }: { params: Promise<{ id: 
   return (
     <>
       <Link href="/vendor/listings" className="text-sm text-ink-muted hover:text-ink">Mes offres</Link>
-      <h1 className="page-title">{displayName(p)}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="page-title">{displayName(p)}</h1>
+        {offer.status !== "SOLD" && <DeleteOffer offerId={offer.id} name={displayName(p)} afterDelete="/vendor/listings" />}
+      </div>
       <p className="-mt-2 text-[15px] text-ink-muted">
         {variantLabel(offer.variant, p.kind)}, {GRADES[offer.conditionGrade].label.toLowerCase()}
         {offer.batteryHealth ? `, batterie ${offer.batteryHealth} %` : ""}

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ConditionGrade } from "@prisma/client";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { shrinkImage, type ShrunkImage } from "@/lib/client/shrink-image";
+import { usePasteImages } from "@/hooks/usePasteImages";
 import { GRADES, GRADE_ORDER, MIN_BATTERY_HEALTH, MIN_WARRANTY_MONTHS, WARRANTY_CHOICES, batteryProblem, formatStorage, variantLabel } from "@/lib/catalog";
 import { familyOf } from "@/lib/icecat-match";
 import { COMMISSION_LABEL, COMMISSION_RATE, formatPrice } from "@/lib/money";
@@ -52,7 +53,16 @@ export default function PublishFlow({
   const [price, setPrice] = useState(prefill ? String(prefill.priceMillimes / 1000) : "");
   /** Real photos of this unit, optional */
   const [unitPhotos, setUnitPhotos] = useState<ShrunkImage[]>([]);
+  /** From the gallery or pasted (Ctrl/Cmd+V): shrunk in the browser, 3 at most */
+  async function addUnitPhotos(files: File[]) {
+    const list = files.filter((f) => f.type.startsWith("image/")).slice(0, 3 - unitPhotos.length);
+    if (!list.length) return;
+    const shrunk = await Promise.all(list.map((f) => shrinkImage(f, 1600)));
+    setUnitPhotos((cur) => [...cur, ...shrunk].slice(0, 3));
+  }
   const [sending, setSending] = useState(false);
+  // Pasting a photo only means something on the step that shows the photos
+  usePasteImages(addUnitPhotos, step === 2 && !!product && unitPhotos.length < 3);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
 
@@ -359,13 +369,10 @@ export default function PublishFlow({
                   <label className="opt flex h-20 cursor-pointer items-center gap-2 px-4 text-sm">
                     <ImagePlus className="h-[18px] w-[18px]" aria-hidden="true" />
                     Ajouter des photos
-                    <input type="file" accept="image/*" multiple className="sr-only" onChange={async (e) => {
-                      const files = [...(e.target.files ?? [])].filter((f) => f.type.startsWith("image/")).slice(0, 3 - unitPhotos.length);
-                      setUnitPhotos([...unitPhotos, ...(await Promise.all(files.map((f) => shrinkImage(f, 1600))))]);
-                      e.target.value = "";
-                    }} />
+                    <input type="file" accept="image/*" multiple className="sr-only" onChange={(e) => { addUnitPhotos([...(e.target.files ?? [])]); e.target.value = ""; }} />
                   </label>
                 )}
+                {unitPhotos.length < 3 && <span className="hidden text-[13px] text-ink-muted md:inline">ou collez une image (Ctrl+V)</span>}
               </div>
             </div>
           </>

@@ -7,6 +7,8 @@ import { LOW_RES_PX } from "@/lib/images";
 import FinishImporter from "./FinishImporter";
 import ImageTile from "./ImageTile";
 import CandidateList from "./CandidateList";
+import PhotoAdder from "./PhotoAdder";
+import AddFinish from "./AddFinish";
 
 const MATCH_LABELS: Record<string, string> = { exact: "lié automatiquement", family: "lié automatiquement (par famille de couleur)", manual: "lié à la main" };
 
@@ -20,6 +22,8 @@ export default async function ProductPhotos({ params }: { params: Promise<{ slug
   const product = await prisma.product.findUnique({
     where: { slug },
     include: {
+      // The model's photos whatever the color
+      images: { where: { finishId: null, status: { not: "ARCHIVED" } }, orderBy: { position: "asc" } },
       finishes: {
         orderBy: { position: "asc" },
         include: {
@@ -39,7 +43,32 @@ export default async function ProductPhotos({ params }: { params: Promise<{ slug
         Une couleur = un produit Icecat. Collez son code fabricant (ex. SM-S911BZKDEUB), son EAN ou son identifiant Icecat.
         Les images arrivent en brouillon : vérifiez l’angle, puis validez une image par angle.
         La synchro automatique (<code>npm run images:sync</code>) remplit ces champs et propose des suggestions quand elle n’est pas sûre.
+        Les photos ajoutées à la main ici sont en ligne tout de suite.
       </p>
+      <section className="flex flex-col gap-4 rounded-panel border border-line bg-white p-6">
+        <div>
+          <h2 className="text-lg font-semibold">Photo du modèle</h2>
+          <p className="text-[13px] text-ink-muted">Affichée pour toutes les couleurs qui n’ont pas leur propre photo. Utile quand vous n’avez qu’une seule photo du modèle.</p>
+        </div>
+        {product.images.length > 0 && (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
+            {product.images.map((img) => (
+              <ImageTile
+                key={img.id}
+                image={{
+                  id: img.id, key: img.key, angle: img.angle, status: img.status,
+                  source: `${img.sourceWidth ?? "?"} × ${img.sourceHeight ?? "?"} px`,
+                  lowRes: Math.max(img.sourceWidth ?? 0, img.sourceHeight ?? 0) < LOW_RES_PX,
+                  manual: img.sourceRef?.startsWith("admin:") ?? false,
+                }}
+                colorName="Toutes couleurs"
+              />
+            ))}
+          </div>
+        )}
+        <PhotoAdder productId={product.id} finishId={null} />
+      </section>
+      <AddFinish productId={product.id} />
       {product.finishes.map((f) => {
         const images = [...f.images].sort((a, b) => a.status.localeCompare(b.status) || ANGLE_ORDER[a.angle] - ANGLE_ORDER[b.angle] || a.position - b.position);
         return (
@@ -66,7 +95,7 @@ export default async function ProductPhotos({ params }: { params: Promise<{ slug
               />
             )}
             {images.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-line-strong p-4 text-sm text-ink-muted">Pas encore de photo : la fiche affiche l’illustration.</p>
+              <p className="text-sm text-ink-muted">Pas encore de photo pour cette couleur : la fiche affiche la photo du modèle, ou l’illustration.</p>
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3">
                 {images.map((img) => (
@@ -79,12 +108,14 @@ export default async function ProductPhotos({ params }: { params: Promise<{ slug
                       status: img.status,
                       source: `${img.sourceWidth ?? "?"} × ${img.sourceHeight ?? "?"} px`,
                       lowRes: Math.max(img.sourceWidth ?? 0, img.sourceHeight ?? 0) < LOW_RES_PX,
+                  manual: img.sourceRef?.startsWith("admin:") ?? false,
                     }}
                     colorName={f.nameFr}
                   />
                 ))}
               </div>
             )}
+            <PhotoAdder productId={product.id} finishId={f.id} />
           </section>
         );
       })}

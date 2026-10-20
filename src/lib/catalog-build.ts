@@ -3,6 +3,7 @@ import type { DeviceKind } from "@prisma/client";
 import { prisma } from "./prisma";
 import { BRAND_LINES } from "./brands";
 import { CURATED_MODELS } from "../data/curated-models";
+import { CURATED_LAPTOPS } from "../data/curated-laptops";
 import { cleanModelName, isAccessory, isRefurbished, normalize } from "./icecat-match";
 import { canonicalKey, modelName, splitModel } from "./product-identity";
 import { slugify } from "./utils";
@@ -14,8 +15,9 @@ import { laptopModels, readLaptopListings } from "./sources/tunisianet-laptops";
 //   2. Icecat reference catalog: laptops above all (only names with a recognised line)
 //   3. Wikidata (CC0): older phones and tablets, names only
 //   4. Tunisianet's laptop listings: current laptops as sold here (LOQ, Vivobook Go, Dell Pro…)
+//   5. Manufacturer references: every Lenovo laptop since about 2017, verified on PSREF (npm run sync:psref)
 
-const CATEGORY_FOR: Record<DeviceKind, (brand: string) => string> = {
+export const CATEGORY_FOR: Record<DeviceKind, (brand: string) => string> = {
   PHONE: (b) => (b === "Apple" ? "iphone" : "android"),
   TABLET: (b) => (b === "Apple" ? "ipad" : "tablettes-android"),
   LAPTOP: (b) => (b === "Apple" ? "macbook" : "ordinateurs"),
@@ -46,7 +48,7 @@ const JUNK = [
 const isBundle = (name: string) => JUNK.some((r) => r.test(name));
 
 function curatedModels(): CatalogModel[] {
-  return Object.entries(CURATED_MODELS).flatMap(([brand, lines]) =>
+  return [...Object.entries(CURATED_MODELS), ...Object.entries(CURATED_LAPTOPS)].flatMap(([brand, lines]) =>
     Object.entries(lines).flatMap(([line, [kind, numbers]]) => numbers.map((modelNumber) => ({ brand, line, modelNumber, kind, source: "curated" })))
   );
 }
@@ -126,6 +128,15 @@ async function tunisianetLaptops(log: (m: string) => void): Promise<CatalogModel
   return laptopModels(titles.map((title) => ({ title }))).map((m) => ({ ...m, source: "tunisianet" }));
 }
 
+/** Lenovo laptops verified on PSREF (written by `npm run sync:psref`); nothing when it hasn't been run */
+async function psrefLaptops(): Promise<CatalogModel[]> {
+  const { readFile } = await import("node:fs/promises");
+  const rows: { brand: string; line: string; modelNumber: string }[] = await readFile(`${process.cwd()}/.cache/lenovo-psref.json`, "utf8")
+    .then((t) => JSON.parse(t))
+    .catch(() => []);
+  return rows.map((r) => ({ ...r, kind: "LAPTOP" as const, source: "psref" }));
+}
+
 /** Build (or extend) the catalog. Existing products are never changed; only missing models are added. */
 export async function buildCatalog(log: (m: string) => void = () => {}) {
   const categories = new Map((await prisma.category.findMany()).map((c) => [c.slug, c.id]));
@@ -134,7 +145,7 @@ export async function buildCatalog(log: (m: string) => void = () => {}) {
   const keys = new Set(existing.map((p) => p.canonicalKey));
   const slugs = new Set(existing.map((p) => p.slug));
 
-  const sources = [curatedModels(), await tunisianetLaptops(log), await icecatModels(), await wikidataModels(log)];
+  const sources = [curatedModels(), await tunisianetLaptops(log), await psrefLaptops(), await icecatModels(), await wikidataModels(log)];
   const counts: Record<string, number> = {};
   const toCreate = [];
   const lines = new Map<string, { brandId: string; name: string; kind: DeviceKind }>();

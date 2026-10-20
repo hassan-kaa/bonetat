@@ -26,6 +26,9 @@ const BRAND_WORDS: Record<string, string> = {
 const SPECS = /\s(?:[iu][3579]-|ultra \d|core\b|ryzen|intel|amd|celeron|pentium|snapdragon|\d+\s*(?:go|gb|to|tb)\b|rtx|gtx|win(?:dows)?\b|avec\b|with\b|\d{1,2}(?:[.,]\d)?\s*(?:"|''|”|″|pouces?))/i;
 /** HP's SKU "15-fd0418nk" belongs to the series HP itself calls "15-fd0000" */
 const HP_SKU = /\b(\d{2})-([a-z]{2})(\d)\d{3}[a-z]{2}\b/i;
+
+/** "Pavilion 15-EC1001NK" → "Pavilion 15-ec1000": an HP sales code replaced by its series, the rest untouched */
+export const hpSeries = (s: string) => s.replace(new RegExp(HP_SKU.source, "gi"), (_, a, b, c) => `${a}-${b.toLowerCase()}${c}000`);
 /** Words that stay as written: acronyms, and short platform codes like "IAL", "BZH" */
 const KEEP_CASE = /^(OLED|AI|HX|[A-Z0-9]{1,3})$/;
 const CAPITALIZE = /^(PRO|MAX|PLUS)$/;
